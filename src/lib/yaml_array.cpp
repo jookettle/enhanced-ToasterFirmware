@@ -2,6 +2,7 @@
 #include "yaml_node.h"
 #include <string>
 #include <memory>
+#include "strutil.h"
 
 
 namespace toaster {
@@ -164,6 +165,7 @@ static uint8_t parse_key_value(const char* str, std::string& out_key, std::strin
   if (*ptr == ' ') {
     out_key = std::string(str, ptr2 - str);
     out_value = parse_value(ptr + 1);
+    out_value = trim(out_value);
 
     return is_array ? YamlNode::YAML_ARRAY : YamlNode::YAML_STRING;
   }
@@ -172,6 +174,7 @@ static uint8_t parse_key_value(const char* str, std::string& out_key, std::strin
       //return YamlNode::YAML_NONE;
       out_key = "";
       out_value = parse_value(str);
+      out_value = trim(out_value);
 
       return YamlNode::YAML_ARRAY;
     }

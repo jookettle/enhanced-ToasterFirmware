@@ -53,6 +53,12 @@ public:
   void addEmotion(const char* text, const char* emotion);
   void addHUD(const char* text, HUDBase* hud);
 
+  bool removeEmotion(const char* emotion);
+
+  bool isEmpty() const {
+    return _menuData.empty();
+  }
+
 protected:
   void drawMenu(Adafruit_SSD1306& oled);
   size_t getMenuCount() const {

@@ -13,16 +13,39 @@ bool Effect::_staticMode = false;
 timer_us_t Effect::_static_mode_tick_us = 0;
 timer_us_t Effect::_color_tick_us = 0;
 PROTOGEN_COLOR_MODE Effect::_colorMode = PCM_DEFAULT;
+uint8_t Effect::_personalIndex = 0;
 COLOR_FUNC Effect::_colorFunc = color_func_personal;
-uint8_t Effect::_personalColor[8][3] = {
-  {0, 255, 0, },
-  {0, 255, 0, },
-  {0, 255, 0, },
-  {0, 255, 0, },
-  {0, 255, 0, },
-  {0, 255, 0, },
-  {0, 255, 0, },
-  {0, 255, 0, },
+uint8_t Effect::_personalColor[3][8][3] = {
+  {
+    {0, 255, 0, },
+    {0, 255, 0, },
+    {0, 255, 0, },
+    {0, 255, 0, },
+    {0, 255, 0, },
+    {0, 255, 0, },
+    {0, 255, 0, },
+    {0, 255, 0, },
+  },
+  {
+    {0, 0, 255, },
+    {0, 0, 255, },
+    {0, 0, 255, },
+    {0, 0, 255, },
+    {0, 0, 255, },
+    {0, 0, 255, },
+    {0, 0, 255, },
+    {0, 0, 255, },
+  },
+  {
+    {255, 0, 0, },
+    {255, 0, 0, },
+    {255, 0, 0, },
+    {255, 0, 0, },
+    {255, 0, 0, },
+    {255, 0, 0, },
+    {255, 0, 0, },
+    {255, 0, 0, },
+  },
 };
 uint32_t Effect::_rainbowSingleSpeed_ms = 20;
 uint32_t Effect::_rainbowSpeed_ms = 10;
@@ -160,9 +183,32 @@ void Effect::color_func_personal(int x, int y, uint8_t& r, uint8_t& g, uint8_t& 
     return;
   }
 
-  r = _personalColor[param][0];
-  g = _personalColor[param][1];
-  b = _personalColor[param][2];
+  _personalIndex = 0;
+  r = _personalColor[_personalIndex][param][0];
+  g = _personalColor[_personalIndex][param][1];
+  b = _personalColor[_personalIndex][param][2];
+}
+
+void Effect::color_func_personal2(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
+  if (param >= PC_MAX) {
+    return;
+  }
+
+  _personalIndex = 1;
+  r = _personalColor[_personalIndex][param][0];
+  g = _personalColor[_personalIndex][param][1];
+  b = _personalColor[_personalIndex][param][2];
+}
+
+void Effect::color_func_personal3(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
+  if (param >= PC_MAX) {
+    return;
+  }
+
+  _personalIndex = 2;
+  r = _personalColor[_personalIndex][param][0];
+  g = _personalColor[_personalIndex][param][1];
+  b = _personalColor[_personalIndex][param][2];
 }
 
 void Effect::color_func_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
@@ -254,9 +300,33 @@ void Effect::color_func_gray_personal(int x, int y, uint8_t& r, uint8_t& g, uint
 
   // Rec. 601
   uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_personalColor[param][0] * gray / 255);
-  g = (uint8_t)((uint16_t)_personalColor[param][1] * gray / 255);
-  b = (uint8_t)((uint16_t)_personalColor[param][2] * gray / 255);
+  r = (uint8_t)((uint16_t)_personalColor[0][param][0] * gray / 255);
+  g = (uint8_t)((uint16_t)_personalColor[0][param][1] * gray / 255);
+  b = (uint8_t)((uint16_t)_personalColor[0][param][2] * gray / 255);
+}
+
+void Effect::color_func_gray_personal2(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
+  if (param >= PC_MAX) {
+    return;
+  }
+
+  // Rec. 601
+  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t)((uint16_t)_personalColor[1][param][0] * gray / 255);
+  g = (uint8_t)((uint16_t)_personalColor[1][param][1] * gray / 255);
+  b = (uint8_t)((uint16_t)_personalColor[1][param][2] * gray / 255);
+}
+
+void Effect::color_func_gray_personal3(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
+  if (param >= PC_MAX) {
+    return;
+  }
+
+  // Rec. 601
+  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t)((uint16_t)_personalColor[2][param][0] * gray / 255);
+  g = (uint8_t)((uint16_t)_personalColor[2][param][1] * gray / 255);
+  b = (uint8_t)((uint16_t)_personalColor[2][param][2] * gray / 255);
 }
 
 void Effect::color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {

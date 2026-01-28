@@ -9,6 +9,6 @@ typedef struct _ESP_NOW_DATA_BASE {
 
 typedef struct _ESP_NOW_DATA_REMOTE : _ESP_NOW_DATA_BASE {
   uint8_t data;
-  uint8_t spare;
+  uint8_t msgid;
   uint16_t battery;
 } ESP_NOW_DATA_REMOTE;

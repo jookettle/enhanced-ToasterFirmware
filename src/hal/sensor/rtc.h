@@ -54,6 +54,7 @@ public:
   }
 
 	void setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+	void setTime(uint8_t hour, uint8_t minute, uint8_t second);
   bool sync();
   
   static bool isLeapYear(uint16_t year);

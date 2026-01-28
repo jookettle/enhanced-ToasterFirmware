@@ -46,10 +46,12 @@ void Display::clear() {
 
 
 void Display::fill(uint8_t r, uint8_t g, uint8_t b) {
-  for (int i = 0; i < _width * _height * 3; i += 3) {
-    _buffer[i + 0] = r;
-    _buffer[i + 1] = g;
-    _buffer[i + 2] = b;
+  const int pixels = _width * _height * 3;
+  uint8_t *ptr = _buffer;
+  for (int i = 0; i < pixels; i += 3) {
+    *ptr++ = r;
+    *ptr++ = g;
+    *ptr++ = b;
   }
 }
 

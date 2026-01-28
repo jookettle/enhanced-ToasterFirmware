@@ -2,10 +2,6 @@
 #include <vector>
 
 #include <IRrecv.h>
-#include <IRremoteESP8266.h>
-#include <IRac.h>
-#include <IRtext.h>
-#include <IRutils.h>
 
 
 namespace toaster {

@@ -52,6 +52,7 @@ protected:
   EffectParser _parser;
   std::string _script_name;
   std::string _base_path;
+  bool _from_sd{false};
   bool _boop{false};
 
 protected:

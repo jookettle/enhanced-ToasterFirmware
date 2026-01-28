@@ -9,3 +9,4 @@
 #include "hud_shortcut.h"
 #include "hud_options.h"
 #include "hud_selector.h"
+#include "hud_timeset.h"

@@ -17,6 +17,10 @@ my_protogen:
   # color_right_mouth: color_right_eyes
   # color_right_side: color_right_eyes
   
+  color2_eyes: '#ff0000'
+  
+  color3_eyes: '#0000ff'
+  
   # 기본 표정
   # Default emotion
   default_emotion: normal
@@ -96,10 +100,10 @@ hardware:
     # oe_pin: 15
     # clk_pin: 18
 
-    # 화면 최소 갱신 주기 (1 ~ 255, 기본값: 240)
-    # 사진 촬영시 플리커링이 발생한다면 50이나 60의 배수를 사용하되 가능한 높은 값을 사용해보세요.
-    # Minimum refresh rate (1 to 255, default: 240)
-    # If flickering occurs when taking photos, try using a multiple of 50 or 60, but as high as possible.
+    # 화면 최소 갱신 주기 (1 ~ 1220, 기본값: 240)
+    # 사진 촬영시 플리커링이 발생한다면 가능한 높은 값을 사용해보세요. 대신 이미지에 노이즈가 발생 할 수 있습니다.
+    # Minimum refresh rate (1 to 1220, default: 240)
+    # If flickering occurs when taking photos, try using as high as possible. Instead, it may introduce noise into the image.
     # min_refresh_rate: 240
 
     # RGB565 변환 여부 (기본값: true)
@@ -150,7 +154,12 @@ hardware:
     dithering: true
 
   # ESP-Now
-  i2c_esp_now:
+  esp_now:
+    # 종류: none, i2c, local
+    # local은 PSRAM 모델이 있는 모듈만 지원합니다.
+    # type: none, i2c, local
+    # local is only supported on modules with PSRAM models.
+    type: i2c
     i2c: 0x15
 
     # whitelist:

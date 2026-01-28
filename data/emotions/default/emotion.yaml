@@ -21,6 +21,9 @@ emotions:
     nose: nose_default_boop
     mouth: mouth_normal_boop
     special: blushing
+  - name: angy
+    eyes: eyes_closed_boop
+    mouth: mouth_normal_boop2
   - name: badass
     eyes: eyes_badass
   - name: badass_alt
@@ -53,9 +56,14 @@ emotions:
     special: blushing
   - name: bean
     eyes: eyes_bean
+  - name: bean2
+    eyes: eyes_bean2
   - name: smirk
     eyes: eyes_smirk
     mouth: mouth_smirk
+  - name: ded
+    eyes: eyes_ded
+    mouth: mouth_tongue
   - name: bsod
     eyes: bsod
     nose: ''

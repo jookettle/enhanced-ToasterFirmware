@@ -8,7 +8,7 @@ namespace toaster {
 
 class Asset {
 public:
-  Asset(const char* path, bool rgb565, uint32_t mjpeg_fps = 0);
+  Asset(const char* path, bool from_sd, bool rgb565, bool loop, uint32_t mjpeg_fps = 0);
   virtual ~Asset();
 
 public:

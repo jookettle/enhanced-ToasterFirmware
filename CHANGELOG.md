@@ -1,17 +1,58 @@
 # Changelog
 
 
+## 2026.1.1
+### 기능
+- ESP32-S3 지원 추가. `Adafruit MatrixPortal S3` 보드를 정식 지원합니다.
+- PSRAM 지원 추가
+  - 외부의 보드 없이 ESP-NOW 지원 추가
+  - SD 카드 리더 지원 추가. 용량 부족으로 재생하지 못하던 수 많은 영상들을 마음껏 뽐내주세요!
+  - (Beta) 영상 처리 로직 개선 (42x32 영상 기준 GIF 최대 50fps, MJPEG 최대 60fps 확인)
+- HUB75 패널 `min_refresh_rate` 상향. 이제 사진 촬영 시 플리커링을 더 줄일 수 있으며 최대 1220Hz까지 지원됩니다.
+- 개인 색상 설정 3개로 개선 (`personal2`, `personal3`)
+- 시간 설정 메뉴 추가
+- 기본 표정 3종이 추가되었습니다. (default: `ded`, `angy`, `bean2`)
+
+### 버그 수정
+- BH1750 설정 안 되는 버그 수정
+- MJPEG 로딩 실패 시 메모리 누수 수정
+
+### 기타
+- 비활성화 Timeout 게이지 모든 메뉴에 추가
+- 비활성화 Timeout 조정
+- 빠른 표정 변경 기능에서 표정 이름 미리보기 추가
+- IRremoteESP8266 컴파일 속도 개선 (NEC만 남기고 제거된 라이브러리로 교체)
+
+### Feature
+- Added ESP32-S3 support. Officially supports the `Adafruit MatrixPortal S3` board.
+- Added PSRAM support.
+  - Added ESP-NOW support without an external board.
+  - Added SD card reader support. Show off all the videos you couldn't play due to insufficient storage!
+  - (Beta) Improved video processing logic (up to 50fps for GIFs, up to 60fps for MJPEGs at 42x32)
+- Increased `min_refresh_rate` for the HUB75 panel. This further reduces flickering when taking photos and supports up to 1220Hz.
+- Improved personal color settings to 3 (`personal2`, `personal3`)
+- Added a time setting menu.
+- 3 emotions added. (default: `ded`, `angy`, `bean2`)
+
+### Bugfix
+- Fixed a bug that prevented BH1750 from being set up.
+- Fixed a memory leak when MJPEG loading failed.
+
+### Misc.
+- Added a Inactive Timeout Gauge to all menus
+- Adjusted Inactive Timeout
+- Added a preview of the emotion name in the Emotion Shortcut
+- Improved compilation speed for IRremoteESP8266 (replaced with the removed library, leaving only NEC)
+
+
 ## 2025.3.1
 ### 주의 사항
 - 빠른 표정 변경 설정을 저장하는 폴더 구조가 변경되었습니다. 여러 프리셋을 이용하여 표정을 더 편하게 바꾸세요! (`/shortcut`)
 
-### CAUTION
-- The folder structure for saving quick emotion change settings has been changed. Change your emotion more easily using multiple presets! (`/shortcut`)
-
 ### 기능
 - 그 공룡 게임을 할 수 있습니다. Boop 센서를 활용해 점프하세요! (유진님 아이디어 제공 고맙습니다!!!)
 - 빛 퍼짐이 개선된 사이드 패널 V2를 지원합니다.
-- 기본 표정 5종이 추가되었습니다. (default: `closed`, `smirk`, eyelash: `normal_blushing_e`, `closed_e`, `smirk_e`, )
+- 기본 표정 5종이 추가되었습니다. (default: `closed`, `smirk`, eyelash: `normal_blushing_e`, `closed_e`, `smirk_e`)
 - 이제 얼굴색을 좌/우 다르게 설정 할 수 있습니다. (`color_right_eyes`, `color_right_nose`, `color_right_mouth`, `color_right_side`)
 - 그라데이션도 좌/우 다르게 설정 할 수 있도록 변경 (`my_protogen:gradation_right_points`)
 - 사이드 패널 LED 순서를 반대로 사용 할 수 있는 설정 추가 (`hardware:side_panel:reversed`)
@@ -19,18 +60,6 @@
 - 빠른 표정 변경 기능에 프리셋이 추가되었습니다. 이제 여러 프리셋을 이용하여 더욱 편하게 사용할 수 있습니다.
 - Uptime 표시가 추가되어 퍼슈팅을 한 시간을 편하게 확인 할 수 있습니다. 또한 DS3231 RTC를 연결하여 시간을 확인 할 수 있습니다.
 - 투명도가 없는 흑백 동영상도 무지개빛으로 재생 할 수 있는 기능이 추가되었습니다.
-
-### Feature
-- You can play that dinosaur game. Jump using the Boop sensor! (Thank you for the idea, Yujin!!!)
-- Supports Side Panel V2 with improved light diffusion.
-- 5 basic emotions added. (default: `closed`, `smirk`, eyelash: `normal_blushing_e`, `closed_e`, `smirk_e`, )
-- You can set the left/right face color differently. (`color_right_eyes`, `color_right_nose`, `color_right_mouth`, `color_right_side`)
-- You can also set the the gradient to be set differently for left/right (`my_protogen:gradation_right_points`)
-- Added a setting to reverse the order of the side panel LEDs (`hardware:side_panel:reversed`)
-- Emotion shuffle function added. Use it when you are wondering what kind of acting to do!
-- Presets added to the quick emotion change function. Now you can use it more conveniently with multiple presets.
-- Uptime display added so you can easily check the time of the fursuit. You can also check the time by connecting the DS3231 RTC.
-- Added a function to play black and white video without transparency in rainbow colors.
 
 ### 버그 수정
 - IR 리모컨으로 사진 모드 동작하지 않는 문제 수정 (Fallen_Servoh 님 고맙습니다!)
@@ -41,6 +70,27 @@
 - 특정 조건의 gif 파일이 정상적으로 표시되지 않는 문제 수정
 - 간헐적으로 프로그램이 멈추는 문제 해결
 
+### 기타
+- HUD 폰트 개선
+- `Hub75Display::draw_image_newcolor` 코드 간결하게 수정
+- 밝기 조절 메뉴 위치 이동
+- ESP-Now 장갑 컨트롤러 프로토콜 수정
+
+### CAUTION
+- The folder structure for saving Emotion Shortcut settings has been changed. Change your emotion more easily using multiple presets! (`/shortcut`)
+
+### Feature
+- You can play that dinosaur game. Jump using the Boop sensor! (Thank you for the idea, Yujin!!!)
+- Supports Side Panel V2 with improved light diffusion.
+- 5 emotions added. (default: `closed`, `smirk`, eyelash: `normal_blushing_e`, `closed_e`, `smirk_e`, )
+- You can set the left/right face color differently. (`color_right_eyes`, `color_right_nose`, `color_right_mouth`, `color_right_side`)
+- You can also set the the gradient to be set differently for left/right (`my_protogen:gradation_right_points`)
+- Added a setting to reverse the order of the side panel LEDs (`hardware:side_panel:reversed`)
+- Emotion shuffle function added. Use it when you are wondering what kind of acting to do!
+- Presets added to the quick emotion change function. Now you can use it more conveniently with multiple presets.
+- Uptime display added so you can easily check the time of the fursuit. You can also check the time by connecting the DS3231 RTC.
+- Added a function to play black and white video without transparency in rainbow colors.
+
 ### Bugfix
 - Fixed an issue where photo mode did not work with IR remote control (Thank you, Fallen_Servoh!)
 - Fixed an issue where there was a time difference between concurrently running scripts
@@ -49,12 +99,6 @@
 - Fixed an issue where the side panel was adjusted to an incorrect brightness when adjusting brightness in the brightness control menu
 - Fixed an issue where gif files under certain conditions were not displayed properly
 - Fixed an issue where the program would intermittently freeze
-
-### 기타
-- HUD 폰트 개선
-- `Hub75Display::draw_image_newcolor` 코드 간결하게 수정
-- 밝기 조절 메뉴 위치 이동
-- ESP-Now 장갑 컨트롤러 프로토콜 수정
 
 ### Misc.
 - Improved HUD font
@@ -66,9 +110,6 @@
 ## 2024.5.2
 ### 주의 사항
 - 표정을 저장하는 폴더 구조가 변경되었습니다. 이제 다른 사람에게 공유받은 표정을 더 편리하게 추가하세요! (`/emotions`)
-
-### CAUTION
-- The folder structure for storing emotion has changed. Now you can more conveniently add emotions shared by others! (`/emotions`)
 
 ### 기능
 - GIF, MJPEG 지원
@@ -92,6 +133,9 @@
 - 내부 이미지 버퍼 RGB888 대신 RGB565로 사용하도록 변경 (`hardware:hub75:use_rgb565`)
 - 화면 주사율 변경시 HUD도 변경되도록 수정
 
+### CAUTION
+- The folder structure for storing emotion has changed. Now you can more conveniently add emotions shared by others! (`/emotions`)
+
 ### Feature
 - Add support for GIF, MJPEG
 - Add support for command in emotion (`video`, `video_loop`)
@@ -101,7 +145,7 @@
 - Add emotions group with eyelashes (`eyelash`)
 - Add 2 layers for special effect (`special`, `special2`)
 - Add support for ESP-Now glove controller (Beta)
-- Add emotion shortcut
+- Add Emotion Shortcut
 
 ### Bugfix
 - Fix dynamic image loading do not work as intended
@@ -126,9 +170,6 @@
 ## 2024.4.1
 ### 주의 사항
 SPIFFS에서 FFAT으로 저장소 형식이 변경되었습니다. 프로그램 뿐만 아니라 파일 시스템도 다시 업로드해야 정상 사용 가능합니다.
-
-### CAUTION
-Storage format changed from SPIFFS to FFAT. You will need to re-upload not only the program but also the file system.
 
 ### 기능
 - Boop 센서 VL53L1X 지원 추가
@@ -168,6 +209,9 @@ Storage format changed from SPIFFS to FFAT. You will need to re-upload not only 
   - 애플리케이션 용량 감소 (1.25MB -> 1MB)
   - 저장소 용량 증가 (1.375MB -> 2.875MB)
 - HUD 미러링 성능 개선
+
+### CAUTION
+Storage format changed from SPIFFS to FFAT. You will need to re-upload not only the program but also the file system.
 
 ### Feature
 - Add support for VL53L1X, Boop sensor

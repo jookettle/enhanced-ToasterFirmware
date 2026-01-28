@@ -4,6 +4,10 @@
 
 #include <FFat.h>
 
+#ifdef USE_SD
+#include "SD.h"
+#endif
+
 #include "effect_base.h"
 #include "lib/strutil.h"
 #include "lib/logger.h"
@@ -40,11 +44,24 @@ static const std::map<std::string, uint8_t> MODES = {
 };
 
 
-bool EffectParser::open(const char* filename) {
+bool EffectParser::open(const char* filename, bool from_sd) {
   release();
 
   timer_us_t tick = Timer::get_micros();
-  YamlNodeArray yaml = YamlNodeArray::fromFile(filename, FFat);
+  YamlNodeArray yaml;
+  if (from_sd) {
+#ifdef USE_SD
+    yaml = YamlNodeArray::fromFile(filename, SD);
+#endif
+  }
+  else {
+    yaml = YamlNodeArray::fromFile(filename, FFat);
+  }
+
+  if (yaml.isError()) {
+    _error = yaml.getLastError();
+    return false;
+  }
 
   _version = atoi(yaml.getString("version", "0").c_str());
 

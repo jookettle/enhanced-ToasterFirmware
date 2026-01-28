@@ -20,7 +20,7 @@ bool Hub75Display::begin(int width, int height, int chain) {
     LAT_PIN_DEFAULT, OE_PIN_DEFAULT, CLK_PIN_DEFAULT}, 240);
 }
 
-bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pins pins, uint8_t min_refresh_rate) {
+bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pins pins, uint16_t min_refresh_rate) {
   if (!Display::begin(width * chain, height)) {
     return false;
   }
@@ -34,7 +34,11 @@ bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pi
 
   mxconfig.clkphase = false;
   mxconfig.latch_blanking = 4;
-  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
+
+  // max 488@HZ_10M
+  // max 1220@HZ_20M
+  mxconfig.i2sspeed = (min_refresh_rate > 480) ? HUB75_I2S_CFG::HZ_20M : HUB75_I2S_CFG::HZ_10M;
+  
   mxconfig.min_refresh_rate = min_refresh_rate;
 
   _dma_display = new MatrixPanel_I2S_DMA(mxconfig);
@@ -44,6 +48,8 @@ bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pi
 
   _dma_display->setBrightness8(0);
   _dma_display->clearScreen();
+
+  _applied_refresh_rate = _dma_display->calculated_refresh_rate;
 
   return true;
 }

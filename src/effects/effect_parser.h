@@ -40,7 +40,7 @@ class EffectParser {
 public:
   EffectParser() {}
 
-  bool open(const char* filename);
+  bool open(const char* filename, bool from_sd);
   
   void release() {
     _images.clear();

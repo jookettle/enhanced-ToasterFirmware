@@ -17,8 +17,13 @@
 #include "hal/sensor/boopsensor.h"
 #include "hal/sensor/thermometer.h"
 #include "hal/sensor/rtc.h"
-#include "hal/controller/i2c_esp_now.h"
+#include "hal/controller/esp_now.h"
 #include "hal/controller/ir_remote.h"
+
+
+#ifdef USE_SD
+#include "SD.h"
+#endif
 
 
 namespace toaster {
@@ -45,6 +50,14 @@ enum {
   SIDE_PANEL_CIRCLE,
 };
 
+
+enum {
+  ESP_NOW_NONE = 0,
+  ESP_NOW_I2C,
+  ESP_NOW_LOCAL,
+};
+
+
 extern const std::vector<std::pair<float, float>> SIDE_PANEL_CIRCLE_DATA;
 
 
@@ -61,6 +74,7 @@ protected:
   virtual bool workPerSecond();
 
 public:
+  void setNextEmotion(const char* emotion);
   bool setEmotion(const char* emotion);
   bool setEmotion(size_t index);
   const char* getEmotion() const {
@@ -79,12 +93,15 @@ public:
 
   void shuffleEmotion();
 
-  bool setNextEmotion();
+  bool setEmotionNext();
   void displayEmotionList();
 
 public:
   bool loadShortcut(const char* shortcut);
-  bool setEmotionShortcut(uint8_t hand, uint8_t finger, uint8_t action);
+  const char* getEmotionShortcut(uint8_t hand, uint8_t finger, uint8_t action);
+  bool setEmotionShortcut(uint8_t hand, uint8_t finger, uint8_t action) {
+    return setEmotion(getEmotionShortcut(hand, finger, action));
+  }
 
   const std::vector<std::string>& getShortcutList() const {
     return _shortcut_list;
@@ -111,9 +128,11 @@ public:
     return Effect::getColorMode();
   }
 
-  void setColorMode(PROTOGEN_COLOR_MODE mode) {
-    Effect::setColorMode(mode);
+  bool setColorMode(PROTOGEN_COLOR_MODE mode) {
+    return Effect::setColorMode(mode);
   }
+
+  bool setColorMode(const char* mode);
   
   void refreshAutoBrightness();
   void refreshAutoBrightness(float brightness);
@@ -166,7 +185,7 @@ public:
   BoopSensor _boopsensor;
   Thermometer _thermometer;
   HeadUpDisplay _hud;
-  I2CESPNowRemote _i2c_espnow;
+  ESPNowRemote _espnow;
   IRRemote _ir_remote;
   RTC _rtc;
 
@@ -181,6 +200,7 @@ protected:
   bool _ir_remote_use{false};
   bool _rtc_use{false};
   uint8_t _rtc_format{0};
+  bool _sd_use{false};
 
 protected:
   uint32_t _hub75_fps{60};
@@ -188,6 +208,7 @@ protected:
   bool _festive_face{true};
   bool _use_rgb565{true};
   uint8_t _side_panel_type{0};
+  uint8_t _esp_now_type{0};
   float _default_brightness{1.0f};
   float _side_brightness_rate{1.0f};
   LinearCalibrate<float, float> _ls_auto;
@@ -198,6 +219,7 @@ protected:
   Effect* _effect[EFFECT_MAX]{nullptr,};
   Effect* _side_effect{nullptr};
   size_t _emotion_index{0};
+  std::string _next_emotion;
 
 protected:
   // LR, Finger, Clicks (0 to 2, 3: Long-click)
@@ -224,7 +246,10 @@ protected:
 
 protected:
   bool isEmotionExist(const char* name) const;
+  int findEmotion(const char* name) const;
   void addHUDEmotion(const char* base_path, const char* emotion, const char* display_name = nullptr);
+  bool removeHUDEmotion(const char* base_path, const char* emotion);
+  void clearEmptyHUDEmotions();
 
 protected:
   bool loadHub75(const YamlNodeArray& yaml);
@@ -238,8 +263,9 @@ protected:
   bool loadRemote(const YamlNodeArray& yaml);
   bool loadPersonality(const YamlNodeArray& yaml);
   void loadGradation(uint8_t index, const YamlNode* node);
+  size_t loadEmotionsFromFS(const char* path, bool from_sd);
   bool loadEmotions(const YamlNodeArray& yaml);
-  size_t loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_path);
+  size_t loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_path, bool from_sd);
   bool loadDefaultEmotion(const YamlNodeArray& yaml);
   bool loadNEC(const YamlNodeArray& yaml);
   bool loadShortcutList();

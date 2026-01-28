@@ -84,7 +84,7 @@ static const uint8_t PROGMEM DEFAULT_LOGO_BMP[] = {
 void HUDSplash::init() {
   HUDBase::init();
 
-  _splash = new Image("/splash.png", true);
+  _splash = new Image("/splash.png", false, true);
 }
 
 

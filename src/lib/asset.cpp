@@ -8,7 +8,7 @@ namespace toaster {
 static const char* TAG = "Asset";
 
 
-Asset::Asset(const char* path, bool rgb565, uint32_t mjpeg_fps) {
+Asset::Asset(const char* path, bool from_sd, bool rgb565, bool loop, uint32_t mjpeg_fps) {
   const char* ext = strrchr(path, '.');
   if (ext == nullptr) {
     return;
@@ -35,11 +35,11 @@ Asset::Asset(const char* path, bool rgb565, uint32_t mjpeg_fps) {
 
   if (image_type != Image::IMAGE_NONE) {
     _type = ASSET_IMAGE;
-    _image = new Image(path, rgb565);
+    _image = new Image(path, from_sd, rgb565);
   }
   else if (video_type != Video::VIDEO_NONE) {
     _type = ASSET_VIDEO;
-    _video = new Video(path, mjpeg_fps);
+    _video = new Video(path, from_sd, loop, mjpeg_fps);
   }
 }
 

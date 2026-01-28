@@ -1,0 +1,336 @@
+version: 2
+
+# 나만의 프로토젠을 만들어보세요.
+# Create your own Protogen.
+my_protogen:
+  # 눈, 코, 입, 사이드 패널 색상
+  # Color of eyes, nose, mouth, side panel.
+  color_eyes: '#00ff00'
+  color_nose: color_eyes
+  color_mouth: color_eyes
+  color_side: color_eyes
+  
+  # 오른쪽 눈, 코, 입, 사이드 패널 색상
+  # Color of eyes, nose, mouth, side panel on the right.
+  # color_right_eyes: '#ff0000'
+  # color_right_nose: color_right_eyes
+  # color_right_mouth: color_right_eyes
+  # color_right_side: color_right_eyes
+  
+  color2_eyes: '#ff0000'
+  
+  color3_eyes: '#0000ff'
+  
+  # 기본 표정
+  # Default emotion
+  default_emotion: normal
+  
+  # 색상 모드
+  #   original: 이미지의 원래 색상
+  #   personal: 나만의 색상
+  #   rainbow_single: 무지개 단색
+  #   rainbow: 무지개
+  #   gradation: 그라데이션
+  # Color modes
+  #   original: the original color of the image
+  #   personal: your own color
+  #   rainbow_single: rainbow single
+  #   rainbow: rainbow
+  #   gradation: gradation
+  color_mode: personal
+  
+  # 무지개(단색) 전환 속도 (ms)
+  # Transition speed of Rainbow Single (ms)
+  rainbow_single_speed: 20ms
+  
+  # 무지개 전환 속도 (ms)
+  # Transition speed of Rainbow (ms)
+  rainbow_speed: 10ms
+  
+  # 무지개 전환 픽셀 (숫자를 낮추면 좌우 고르게, 높이면 좌우 급격하게 변화합니다)
+  # Transition pixels of Rainbow (if you lower the number, it will change evenly, if you increase it, it will change drastically)
+  rainbow_transition_pixels: 4
+
+  # 그라데이션 색상
+  # Gradient color
+  # gradation_points:
+  #   - 0.0 -> '#0000ff'
+  #   - 0.4 -> '#00ff00'
+  #   - 0.5 -> '#00ff00'
+  #   - 0.8 -> '#00ff00'
+  #   - 1.0 -> '#ffff00'
+  
+  # gradation_right_points:
+  #   - 0.0 -> '#0000ff'
+  #   - 0.4 -> '#00ff00'
+  #   - 0.5 -> '#00ff00'
+  #   - 0.8 -> '#00ff00'
+  #   - 1.0 -> '#ffff00'
+
+  # festive에 얼굴 표시 여부
+  # face Visibility in festive
+  festive_face: true
+
+hardware:
+  # 메인 디스플레이 (HUB75)
+  # Main display (HUB75)
+  hub75:
+    # 초당 프레임 개수 (1 ~ 60, 기본값: 60)
+    # Target frames per second (1 to 60, default: 60)
+    fps: 60
+
+    # 기본 밝기 (조도 센서가 없을 때, 0.0 ~ 1.0)
+    # Default brightness (when there is no photoresistor, 0.0 to 1.0)
+    default_brightness: 1.0
+
+    # 핀맵
+    # Pinout
+    r1_pin: 42
+    g1_pin: 41
+    b1_pin: 40
+    r2_pin: 38
+    g2_pin: 39
+    b2_pin: 37
+    a_pin: 45
+    b_pin: 36
+    c_pin: 48
+    d_pin: 35
+    e_pin: 21
+    lat_pin: 47
+    oe_pin: 14
+    clk_pin: 2
+
+    # 화면 최소 갱신 주기 (1 ~ 1220, 기본값: 480)
+    # 사진 촬영시 플리커링이 발생한다면 가능한 높은 값을 사용해보세요. 대신 이미지에 노이즈가 발생 할 수 있습니다.
+    # Minimum refresh rate (1 to 1220, default: 480)
+    # If flickering occurs when taking photos, try using as high as possible. Instead, it may introduce noise into the image.
+    min_refresh_rate: 480
+
+    # RGB565 변환 여부 (기본값: true)
+    # RGB888 대신 RGB565로 변환하면 화질이 미세하게 저하되지만, 메모리를 절약 할 수 있습니다.
+    # (대부분의 프로토젠 표정은 투명도만 사용하므로, 화질 저하의 영향이 없습니다.)
+    # Whether to convert to RGB565 (default: true)
+    # If you use RGB565 instead of RGB888, the image quality will slightly reduced, but you can save memory.
+    # (Most Protogen emotions only use transparency, there is no loss of image quality.)
+    # use_rgb565: true
+
+  # 사이드 패널 (NeoPixel)
+  # Side panel (NeoPixel)
+  side_panel:
+    # 종류 (strip, circle, 기본값: strip)
+    # Type (strip, circle, default: strip)
+    type: strip
+    
+    num_leds: 72
+    pin: 9
+    # NeoPixelBus 종류 변경은 컴파일이 필요합니다.
+    # Changing NeoPixelBus type requires compilation.
+
+    # 사이드 패널 밝기 비율
+    # 1.0보다 작으면 사이드가 어두워지고, 크면 사이드가 밝아짐
+    # Side panel brightness rate
+    # less than 1.0, the side becomes darker, and larger than 1.0, the side becomes brighter.
+    brightness_rate: 0.05
+
+    # 순서 뒤집기
+    # Reverse order
+    reversed: true
+
+  # I2C Bus
+  i2c:
+    # 속도 (1 ~ 1000000, 기본값: 100000)
+    # Speed (1 to 1000000, default: 100000)
+    frequency: 100000
+
+  # HUD (SSD1306 128x64)
+  hud:
+    fps: 30
+    # i2c: 0x3C
+
+    # 디더링 (기본값: true)
+    # 디더링을 켜면 가시성이 향상됩니다.
+    # Dithering (default: true)
+    # Turning on dithering improves visibility.
+    dithering: true
+
+  # ESP-Now
+  esp_now:
+    # 종류: none, i2c, local
+    # local은 PSRAM 모델이 있는 모듈만 지원합니다.
+    # type: none, i2c, local
+    # local is only supported on modules with PSRAM models.
+    type: local
+    # i2c: 0x15
+
+    # whitelist:
+    #   - 00:00:00:00:00:00
+
+  # IR 리모컨
+  # IR remote
+  ir_remote:
+    pin: 3
+    # 디버그 모드 활성화 시, 리모컨의 코드를 모니터링 할 수 있습니다.
+    # 현재는 NEC 타입만 지원합니다.
+    # When debug mode is activated, you can monitor the remote control's code.
+    # Currently only NEC type is supported.
+    debug: true
+
+    nec:
+      # 예제
+      # 
+      # 1. 해당 코드의 리모컨 신호를 받으면 표정 변화
+      # - code: 0xba45ff00 # 리모컨의 1번 버튼을 누르면
+      #   emotion: normal  # 일반 표정으로 변경
+      # 
+      # 2. 해당 코드의 리모컨 신호를 받으면 특수 동작 (이 부분은 변경될 수 있음)
+      # - code: 0xe31cff00 # 리모컨의 ok 버튼을 누르면
+      #   keypress: s      # 사진모드 토글
+      # 
+      - code: 0xba45ff00 # 1
+        emotion: normal
+      - code: 0xb946ff00 # 2
+        emotion: badass
+      - code: 0xb847ff00 # 3
+        emotion: grin
+      - code: 0xbb44ff00 # 4
+        emotion: worry
+      - code: 0xbf40ff00 # 5
+        emotion: love
+      - code: 0xbc43ff00 # 6
+        emotion: confusion
+      - code: 0xf807ff00 # 7
+        emotion: qmark
+      - code: 0xea15ff00 # 8
+        emotion: unyuu
+      - code: 0xf609ff00 # 9
+        emotion: bean
+      - code: 0xe619ff00 # 0
+        emotion: blank
+      - code: 0xe916ff00 # *
+        emotion: festive
+      - code: 0xf20dff00 # #
+        emotion: bsod
+      - code: 0xf708ff00 # left
+        keypress: 0x25
+        mode: keycode
+      - code: 0xad52ff00 # down
+        keypress: 0x28
+        mode: keycode
+      - code: 0xe718ff00 # up
+        keypress: 0x26
+        mode: keycode
+      - code: 0xa55aff00 # right
+        keypress: 0x27
+        mode: keycode
+      - code: 0xe31cff00 # ok
+        keypress: E
+
+  # 조도 센서
+  # Light Sensor
+  lightsensor:
+    # 현재 2가지 종류를 지원하지만 사용하지 않는 것을 권장드립니다.
+    # (HUB75 특성상 밝기 조정시 플리커링이 발생하여, 사진 촬영시 표정 깨짐 발생)
+
+    # ----------------
+    # 미 사용
+    # Unused
+    type: none
+
+    # ----------------
+    # CDS (LDR)
+    # type: ldr
+    # pin: 34
+
+    # # 히스테리시스 (밝기를 변경할 최소 센서 변화량 비율 (0.0 ~ 1.0))
+    # # Hysteresis (minimum sensor change rate to change brightness (0.0 to 1.0))
+    # hysteresis: 0.05
+
+    # calibration:
+    #   # 이동평균 알파값
+    #   # 0에 가까울수록 빠르게 변화하지만 노이즈 많음
+    #   # 1에 가까울수록 천천히 변화하지만 노이즈 적음
+    #   # SMA alpha value
+    #   # The closer it is to 0, the faster it changes, but more noisy.
+    #   # The closer it is to 1, the slowler it changes, but less noisy.
+    #   alpha: 0.98
+    #   alpha_init: 0.9
+      
+    #   # 자동 밝기 구간 (센서 -> 밝기)
+    #   # 최소 2개는 존재해야 하며, 사용하지 않는 구간은 비활성화 가능
+    #   # Auto brightness (Sensor -> Brightness)
+    #   # Must be at least two, and unused sections can be deactivated.
+    #   points:
+    #     - 0.25 -> 0.25
+    #     - 0.75 -> 1.0
+
+    # ----------------
+    # # BH1750
+    # type: bh1750
+    # # i2c: 0x23
+    
+    # # 히스테리시스 (밝기를 변경할 최소 센서 변화량 (0 ~ ?))
+    # # Hysteresis (minimum sensor change value to change brightness (0.0 to ?))
+    # hysteresis: 50
+
+    # calibration:
+    #   # 이동평균 알파값
+    #   # 0에 가까울수록 빠르게 변화하지만 노이즈 많음
+    #   # 1에 가까울수록 천천히 변화하지만 노이즈 적음
+    #   # SMA alpha value
+    #   # The closer it is to 0, the faster it changes, but more noisy.
+    #   # The closer it is to 1, the slowler it changes, but less noisy.
+    #   alpha: 0.98
+    #   alpha_init: 0.9
+      
+    #   # 자동 밝기 구간 (센서 -> 밝기)
+    #   # 최소 2개는 존재해야 하며, 사용하지 않는 구간은 비활성화 가능
+    #   # Auto brightness (Sensor -> Brightness)
+    #   # Must be at least two, and unused sections can be deactivated.
+    #   points:
+    #     - 5 -> 0.25
+    #     - 40 -> 1.0
+
+  # Boop 센서
+  # Boop sensor
+  boopsensor:
+    # 종류: VL53L1X (현재는 이것만 지원)
+    # type: VL53L1X (currently only support this)
+    type: vl53l1x
+    # i2c: 0x29
+
+    # Boop으로 인식할 거리 (mm)
+    # Distance to be Boop (mm)
+    threshold: 20
+
+    # 노이즈 제거를 위한 샘플링 횟수 (현재 30Hz)
+    # Smooth out measurements from this number of readings (currently 30Hz)
+    sampling: 6
+
+  # 온도 센서
+  # Thermometer
+  thermometer:
+    # 종류: SHT31 (현재는 이것만 지원)
+    # type: SHT31 (currently only support this)
+    type: sht31
+
+    # 측정 주기
+    # period
+    period: 15s
+
+  # RTC
+  rtc:
+    # 종류: DS3231 (현재는 이것만 지원)
+    # type: DS3231 (currently only support this)
+    type: ds3231
+
+    # 연결 실패시 Uptime 표시 (기본값: true)
+    # Display uptime if failed to initialize (default: true)
+    nofail: true
+
+    # 표시 형식 (기본값: hm)
+    # Display format (default: hm)
+    # hm:              00:00    -> 00 00
+    # hms:             00:00:00 -> 00 00 00
+    # hm_no_blinking:  00:00
+    # hms_no_blinking: 00:00:00
+    format: hm

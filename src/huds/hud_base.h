@@ -127,6 +127,10 @@ extern const size_t BITMAP_PREV_WIDTH;
 extern const size_t BITMAP_PREV_HEIGHT;
 extern const uint8_t PROGMEM BITMAP_PREV[];
 
+extern const size_t BITMAP_NEXT_WIDTH;
+extern const size_t BITMAP_NEXT_HEIGHT;
+extern const uint8_t PROGMEM BITMAP_NEXT[];
+
 extern const size_t BITMAP_UP_WIDTH;
 extern const size_t BITMAP_UP_HEIGHT;
 extern const uint8_t PROGMEM BITMAP_UP[];
@@ -134,6 +138,10 @@ extern const uint8_t PROGMEM BITMAP_UP[];
 extern const size_t BITMAP_DOWN_WIDTH;
 extern const size_t BITMAP_DOWN_HEIGHT;
 extern const uint8_t PROGMEM BITMAP_DOWN[];
+
+extern const size_t BITMAP_OK_WIDTH;
+extern const size_t BITMAP_OK_HEIGHT;
+extern const uint8_t PROGMEM BITMAP_OK[];
 
 extern const uint8_t PROGMEM BITMAP_CELSIUS[];
 extern const uint8_t PROGMEM BITMAP_EX_MARK[];

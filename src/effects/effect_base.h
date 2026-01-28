@@ -92,36 +92,46 @@ public:
 
   }
 
-  static void setColorMode(PROTOGEN_COLOR_MODE mode) {
-    _colorMode = mode;
-
-    if (mode == PCM_ORIGINAL) {
+  static bool setColorMode(PROTOGEN_COLOR_MODE mode) {
+    switch (mode) {
+    case PCM_ORIGINAL:
       _colorFunc = color_func_original;
-    }
-    if (mode == PCM_PERSONAL) {
+      break;
+    case PCM_PERSONAL:
       _colorFunc = color_func_personal;
-    }
-    if (mode == PCM_RAINBOW_SINGLE) {
+      break;
+    case PCM_PERSONAL2:
+      _colorFunc = color_func_personal2;
+      break;
+    case PCM_PERSONAL3:
+      _colorFunc = color_func_personal3;
+      break;
+    case PCM_RAINBOW_SINGLE:
       _colorFunc = color_func_rainbow_single;
-    }
-    if (mode == PCM_RAINBOW) {
+      break;
+    case PCM_RAINBOW:
       _colorFunc = color_func_rainbow;
-    }
-    if (mode == PCM_GRADATION) {
+      break;
+    case PCM_GRADATION:
       _colorFunc = color_func_gradation;
+      break;
+    default:
+      return false;
     }
 
+    _colorMode = mode;
     setDirty();
+    return true;
   }
 
-  static void setPersonalColor(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
-    _personalColor[index][0] = r;
-    _personalColor[index][1] = g;
-    _personalColor[index][2] = b;
+  static void setPersonalColor(uint8_t personal_index, uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
+    _personalColor[personal_index][index][0] = r;
+    _personalColor[personal_index][index][1] = g;
+    _personalColor[personal_index][index][2] = b;
   }
 
-  static void setPersonalColor(uint8_t index, uint32_t rgb) {
-    setPersonalColor(index, (rgb & 0xff), ((rgb >> 8) & 0xff), ((rgb >> 16) & 0xff));
+  static void setPersonalColor(uint8_t personal_index, uint8_t index, uint32_t rgb) {
+    setPersonalColor(personal_index, index, (rgb & 0xff), ((rgb >> 8) & 0xff), ((rgb >> 16) & 0xff));
   }
 
   static void setRainbowSingleSpeed(uint32_t speed_ms) {
@@ -241,7 +251,8 @@ protected:
   static PROTOGEN_COLOR_MODE _colorMode;
 public:
   static COLOR_FUNC _colorFunc;
-  static uint8_t _personalColor[8][3];
+  static uint8_t _personalIndex;
+  static uint8_t _personalColor[3][8][3];
   static uint32_t _rainbowSingleSpeed_ms;
   static uint32_t _rainbowSpeed_ms;
   static uint32_t _rainbowTransitionPixels;
@@ -274,11 +285,15 @@ protected:
 public:
   static void color_func_original(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_personal(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
+  static void color_func_personal2(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
+  static void color_func_personal3(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_rainbow(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gradation(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   
   static void color_func_gray_personal(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
+  static void color_func_gray_personal2(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
+  static void color_func_gray_personal3(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gray_rainbow(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gray_gradation(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);

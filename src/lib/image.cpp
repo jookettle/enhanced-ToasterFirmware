@@ -3,6 +3,12 @@
 #include "logger.h"
 #include "upng.h"
 #include <JPEGDEC.h>
+#include "ram.h"
+
+
+#ifdef USE_SD
+#include "SD.h"
+#endif
 
 
 namespace toaster {
@@ -10,17 +16,17 @@ namespace toaster {
 static const char* TAG = "Image";
 
 
-Image::Image(const char* path, bool rgb565) {
+Image::Image(const char* path, bool from_sd, bool rgb565) {
   const char* ext = strrchr(path, '.');
   if (ext != nullptr) {
     if (strcasecmp(ext + 1, "png") == 0) {
       _type = IMAGE_PNG;
-      load_png(path, rgb565);
+      load_png(path, from_sd, rgb565);
     }
 
     if (strcasecmp(ext + 1, "jpg") == 0 || strcasecmp(ext + 1, "jpeg") == 0) {
       _type = IMAGE_JPEG;
-      load_jpeg(path);
+      load_jpeg(path, from_sd);
     }
   }
 }
@@ -48,7 +54,7 @@ Image::Image(size_t width, size_t height, uint8_t bpp, uint8_t has_alpha) {
   _has_alpha = has_alpha;
   _size = _width * _height * (_bpp + _has_alpha);
 
-  _buffer = new uint8_t[_size];
+  _buffer = (uint8_t *)malloc_auto(_size);
 }
 
 
@@ -59,7 +65,7 @@ Image::~Image() {
 
 void Image::release() {
   if (_buffer != nullptr) {
-    delete[] _buffer;
+    free_auto(_buffer);
     _buffer = nullptr;
   }
 }
@@ -93,7 +99,7 @@ bool Image::_load_png(void* ptr, bool rgb565) {
   _has_alpha = (upng_get_components(upng) == 4) ? 1 : 0;
   _size = _width * _height * (_bpp + _has_alpha);
 
-  _buffer = new uint8_t[_size];
+  _buffer = (uint8_t *)malloc_auto(_size);
   if (_buffer == nullptr) {
     TF_LOGE(TAG, "png memory allocation failed.");
     upng_free(upng);
@@ -104,7 +110,7 @@ bool Image::_load_png(void* ptr, bool rgb565) {
 
   if (rgb565) {
     size_t rgb888_size = _width * _height * (3 + _has_alpha);
-    buffer_rgb888 = new uint8_t[rgb888_size];
+    buffer_rgb888 = (uint8_t *)malloc_auto(rgb888_size);
     if (buffer_rgb888 == nullptr) {
       TF_LOGE(TAG, "png memory allocation failed.");
       release();
@@ -116,26 +122,46 @@ bool Image::_load_png(void* ptr, bool rgb565) {
   result = upng_decode(upng, rgb565 ? buffer_rgb888 : _buffer);
   if (result != UPNG_EOK) {
     TF_LOGE(TAG, "png decode failed (%d).", result);
-    delete[] buffer_rgb888;
+    free_auto(buffer_rgb888);
     release();
     upng_free(upng);
     return false;
   }
 
   if (rgb565) {
-    for (int y = 0; y < _height; y++) {
-      for (int x = 0; x < _width; x++) {
-        int index_in = (y * _width + x) * (3 + _has_alpha);
-        int index_out = (y * _width + x) * (2 + _has_alpha);
-        uint16_t* p = (uint16_t*)(_buffer + index_out);
-        *p = rgb888_to_rgb565be(buffer_rgb888[index_in + 0], buffer_rgb888[index_in + 1], buffer_rgb888[index_in + 2]);
-        if (_has_alpha) {
-          _buffer[index_out + 2] = buffer_rgb888[index_in + 3];
-        }
+    // for (int y = 0; y < _height; y++) {
+    //   for (int x = 0; x < _width; x++) {
+    //     int index_in = (y * _width + x) * (3 + _has_alpha);
+    //     int index_out = (y * _width + x) * (2 + _has_alpha);
+    //     uint16_t* p = (uint16_t*)(_buffer + index_out);
+    //     *p = rgb888_to_rgb565be(buffer_rgb888[index_in + 0], buffer_rgb888[index_in + 1], buffer_rgb888[index_in + 2]);
+    //     if (_has_alpha) {
+    //       _buffer[index_out + 2] = buffer_rgb888[index_in + 3];
+    //     }
+    //   }
+    // }
+    
+    uint8_t *ptr_in = buffer_rgb888;
+    uint8_t *ptr_out = _buffer;
+    const int pixels = _width * _height;
+    
+    if (_has_alpha) {
+      for (int i = 0; i < pixels; i++) {
+        *((uint16_t*)ptr_out) = rgb888_to_rgb565be(ptr_in[0], ptr_in[1], ptr_in[2]);
+        ptr_out[2] = ptr_in[3];
+        ptr_in += 4;
+        ptr_out += 3;
       }
     }
-
-    delete[] buffer_rgb888;
+    else {
+      for (int i = 0; i < pixels; i++) {
+        *((uint16_t*)ptr_out) = rgb888_to_rgb565be(ptr_in[0], ptr_in[1], ptr_in[2]);
+        ptr_in += 3;
+        ptr_out += 2;
+      }
+    }
+    
+    free_auto(buffer_rgb888);
   }
   
   upng_free(upng);
@@ -157,10 +183,18 @@ bool Image::load_png_from_bytes(const uint8_t* buffer, size_t size, bool rgb565)
 }
 
 
-bool Image::load_png(const char* path, bool rgb565) {
+bool Image::load_png(const char* path, bool from_sd, bool rgb565) {
   release();
 
-  upng_t* upng = upng_new_from_file(path, FFat);
+  upng_t* upng = nullptr;
+  if (from_sd) {
+#ifdef USE_SD
+    upng = upng_new_from_file(path, SD);
+#endif
+  }
+  else {
+    upng = upng_new_from_file(path, FFat);
+  }
   if (upng == nullptr) {
     TF_LOGE(TAG, "upng load failed (%s).", path);
     return false;
@@ -173,7 +207,7 @@ bool Image::load_png(const char* path, bool rgb565) {
 bool Image::load_jpeg_from_bytes(const uint8_t* buffer, size_t size) {
   release();
 
-  auto jpegdec = new JPEGDEC;
+  auto jpegdec = (JPEGDEC *)malloc_auto(sizeof(JPEGDEC));
   if (jpegdec == nullptr) {
     TF_LOGE(TAG, "JPEGDEC initialization failed.");
     return false;
@@ -190,9 +224,9 @@ bool Image::load_jpeg_from_bytes(const uint8_t* buffer, size_t size) {
     uint16_t* ptr_out = (uint16_t*)image->_buffer;
 
     for (int y = 0; y < draw->iHeight; y++) {
+      int index_base = (y + draw->y) * image->_width + draw->x;
       for (int x = 0; x < draw->iWidthUsed; x++) {
-        int index2 = ((y + draw->y) * image->_width + (x + draw->x));
-        ptr_out[index2] = *ptr_in++;
+        ptr_out[index_base + x] = *ptr_in++;
       }
       
       ptr_in += (draw->iWidth - draw->iWidthUsed);
@@ -202,7 +236,7 @@ bool Image::load_jpeg_from_bytes(const uint8_t* buffer, size_t size) {
   })) {
     TF_LOGE(TAG, "JPEGDEC openRAM failed (%d).", jpegdec->getLastError());
     jpegdec->close();
-    delete jpegdec;
+    free_auto(jpegdec);
     return false;
   }
 
@@ -212,11 +246,11 @@ bool Image::load_jpeg_from_bytes(const uint8_t* buffer, size_t size) {
   _has_alpha = 0;
   _size = _width * _height * (_bpp + _has_alpha);
   
-  _buffer = new uint8_t[_size];
+  _buffer = (uint8_t *)malloc_auto(_size);
   if (_buffer == nullptr) {
     TF_LOGE(TAG, "jpeg memory allocation failed.");
     jpegdec->close();
-    delete jpegdec;
+    free_auto(jpegdec);
     return false;
   }
 
@@ -228,36 +262,44 @@ bool Image::load_jpeg_from_bytes(const uint8_t* buffer, size_t size) {
     TF_LOGE(TAG, "JPEGDEC decode failed (%d).", jpegdec->getLastError());
     release();
     jpegdec->close();
-    delete jpegdec;
+    free_auto(jpegdec);
     return false;
   }
 
   jpegdec->close();
-  delete jpegdec;
+  free_auto(jpegdec);
 
   return true;
 }
 
 
-bool Image::load_jpeg(const char* path) {
-  File file = FFat.open(path);
+bool Image::load_jpeg(const char* path, bool from_sd) {
+  File file;
+  if (from_sd) {
+#ifdef USE_SD
+    file = SD.open(path);
+#endif
+  }
+  else {
+    file = FFat.open(path);
+  }
   if (!file) {
     TF_LOGE(TAG, "jpeg load failed (%s).", path);
     return false;
   }
 
   size_t size = file.size();
-  uint8_t* buffer = new uint8_t[size];
+  uint8_t* buffer = (uint8_t *)malloc_auto(size);
   if (buffer == nullptr) {
     TF_LOGE(TAG, "jpeg memory allocation failed (%s).", path);
     file.close();
     return false;
   }
-  file.readBytes((char *)buffer, size);
+  file.read(buffer, size);
   file.close();
 
   bool result = load_jpeg_from_bytes(buffer, size);
-  delete[] buffer;
+  free_auto(buffer);
   return result;
 }
 

@@ -16,7 +16,7 @@ public:
 
 public:
   virtual bool begin(int width, int height, int chain);
-  virtual bool begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pins pins, uint8_t min_refresh_rate);
+  virtual bool begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pins pins, uint16_t min_refresh_rate);
 
 public:
   virtual void beginDraw();
@@ -28,10 +28,16 @@ public:
     int offset_x = 0, int offset_y = 0, int w = 0, int h = 0, 
     int source_x = 0, int source_y = 0, int rotate_cw = 0);
 
+public:
+  int get_refresh_rate() const {
+    return _applied_refresh_rate;
+  }
+
 protected:
   MatrixPanel_I2S_DMA *_dma_display{nullptr};
   uint8_t _chain{0};
   size_t _panel_width{0};
+  int _applied_refresh_rate{0};
 
 };
 

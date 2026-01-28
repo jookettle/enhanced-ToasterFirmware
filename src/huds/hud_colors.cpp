@@ -15,6 +15,8 @@ void HUDColors::init() {
 
   clearMenu();
   addMenu("Personal",   [](HUDBase* p, const char*) { Protogen.setColorMode(PCM_PERSONAL); });
+  addMenu("Personal2",  [](HUDBase* p, const char*) { Protogen.setColorMode(PCM_PERSONAL2); });
+  addMenu("Personal3",  [](HUDBase* p, const char*) { Protogen.setColorMode(PCM_PERSONAL3); });
   addMenu("Original",   [](HUDBase* p, const char*) { Protogen.setColorMode(PCM_ORIGINAL); });
   addMenu("R. single",  [](HUDBase* p, const char*) { Protogen.setColorMode(PCM_RAINBOW_SINGLE); });
   addMenu("Rainbow",    [](HUDBase* p, const char*) { Protogen.setColorMode(PCM_RAINBOW); });

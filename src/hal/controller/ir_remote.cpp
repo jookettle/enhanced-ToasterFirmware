@@ -113,7 +113,9 @@ void IRRemote::loop() {
 bool IRRemote::processNEC_Emotion(uint32_t nec_code) {
   for (const auto& it : _event_emotions) {
     if (it.nec_code == nec_code) {
-      Protogen.setEmotion(it.emotion.c_str());
+      Protogen.syncLock();
+      Protogen.setNextEmotion(it.emotion.c_str());
+      Protogen.syncUnlock();
       return true;
     }
   }

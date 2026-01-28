@@ -41,14 +41,14 @@ void EffectFestive::init(Display& display) {
   if (Protogen.isFestiveFace()) {
     bool use_rgb565 = Protogen.isRGB565();
     std::string base_path = Toaster::DEFAULT_BASE_PATH;
-    _eyes[0] = new Image((base_path + "/png/eyes/eye_default_0.png").c_str(), use_rgb565);
-    _eyes[1] = new Image((base_path + "/png/eyes/eye_default_1.png").c_str(), use_rgb565);
-    _eyes[2] = new Image((base_path + "/png/eyes/eye_default_2.png").c_str(), use_rgb565);
-    _eyes[3] = new Image((base_path + "/png/eyes/eye_default_3.png").c_str(), use_rgb565);
-    _eyes[4] = new Image((base_path + "/png/eyes/eye_default_4.png").c_str(), use_rgb565);
-    _eyes[5] = new Image((base_path + "/png/eyes/eye_default_5.png").c_str(), use_rgb565);
-    _nose = new Image((base_path + "/png/nose/nose_default.png").c_str(), use_rgb565);
-    _mouth = new Image((base_path + "/png/mouth/mouth_default.png").c_str(), use_rgb565);
+    _eyes[0] = new Image((base_path + "/png/eyes/eye_default_0.png").c_str(), false, use_rgb565);
+    _eyes[1] = new Image((base_path + "/png/eyes/eye_default_1.png").c_str(), false, use_rgb565);
+    _eyes[2] = new Image((base_path + "/png/eyes/eye_default_2.png").c_str(), false, use_rgb565);
+    _eyes[3] = new Image((base_path + "/png/eyes/eye_default_3.png").c_str(), false, use_rgb565);
+    _eyes[4] = new Image((base_path + "/png/eyes/eye_default_4.png").c_str(), false, use_rgb565);
+    _eyes[5] = new Image((base_path + "/png/eyes/eye_default_5.png").c_str(), false, use_rgb565);
+    _nose = new Image((base_path + "/png/nose/nose_default.png").c_str(), false, use_rgb565);
+    _mouth = new Image((base_path + "/png/mouth/mouth_default.png").c_str(), false, use_rgb565);
   }
 
   _eye_frame = 0;

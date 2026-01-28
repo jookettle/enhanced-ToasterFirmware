@@ -307,7 +307,7 @@ bool SerialDebug::pressKey(uint16_t key, uint8_t mode) {
       break;
 
     case '\t':
-      Protogen.setNextEmotion();
+      Protogen.setEmotionNext();
       TF_LOGI(TAG, "Set Next Emotion: %s", Protogen.getEmotion());
       return true;
       break;
@@ -421,6 +421,15 @@ static const auto setdatetime_func = [](const char* param) {
   TF_LOGI(TAG, "setdatetime: %d-%02d-%02d %02d:%02d:%02d", year, month, day, h, m, s);
 };
 
+static const auto color_func = [](const char* param) {
+  if (Protogen.setColorMode(param)) {
+    TF_LOGI(TAG, "Color mode [%s].", param);
+  }
+  else {
+    TF_LOGW(TAG, "Invalid color mode [%s].", param);
+  }
+};
+
 
 static const size_t getCommandCount();
 
@@ -444,6 +453,7 @@ static const COMMAND COMMAND_LIST[] = {
   { "datetime",             "Display RTC time.",                      [](const char*) { TF_LOGI(TAG, "%d-%02d-%02d %02d:%02d:%02d", Protogen._rtc.getYear(), Protogen._rtc.getMonth(), Protogen._rtc.getDay(), Protogen._rtc.getHour(), Protogen._rtc.getMinute(), Protogen._rtc.getSecond()); } },
   { "settime",              "Set RTC time (HH:MM or HH:MM:SS).",      settime_func },
   { "setdatetime",          "Set RTC date and time (YYYY-mm-dd HH:MM:SS).", setdatetime_func },
+  { "color",                "Change the color preset.",               color_func },
 };
 
 static const size_t getCommandCount() {

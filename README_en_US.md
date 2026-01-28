@@ -33,10 +33,10 @@ Q: Can I use it commercially?<br>
 A: No.
 
 Q: Is there a board I can purchase?<br>
-A: Not yet, but we are currently testing a prototype!
+A: `Adafruit MatrixPortal S3` recommended.
 
 Q: Can I use another board instead of ESP32?<br>
-A: Tested only on ESP32, not on ESP32-C3, ESP32-S2, ESP32-S3, etc. boards. Since there are differences in the number of cores and RAM capacity, you must at least modify the source to run it, and even if you modify it, smooth use may be difficult.
+A: Tested only on ESP32, ESP32-S3, not on ESP32-C3, ESP32-S2, etc. boards. Since there are differences in the number of cores and RAM capacity, you must at least modify the source to run it, and even if you modify it, smooth use may be difficult.
 
 
 

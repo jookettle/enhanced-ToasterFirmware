@@ -17,6 +17,7 @@ protected:
 
 protected:
   static uint16_t upperToLower(uint16_t key);
+  const char* getShortcut();
 
 };
 

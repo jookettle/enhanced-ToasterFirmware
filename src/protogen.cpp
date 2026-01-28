@@ -14,7 +14,7 @@ static const char* TAG = "Protogen";
 
 
 Toaster Protogen;
-const char* Toaster::_tf_version = "2025.3.1";
+const char* Toaster::_tf_version = "2026.1.1";
 const char* Toaster::DEFAULT_BASE_PATH = "/emotions/default";
 
 
@@ -33,6 +33,11 @@ static const char* SHORTCUT_DEFAULT = "default";
 static const std::map<std::string, uint8_t> SIDE_PANEL_TYPE = {
   {"strip", SIDE_PANEL_STRIP},
   {"circle", SIDE_PANEL_CIRCLE},
+};
+
+static const std::map<std::string, uint8_t> ESP_NOW_TYPE = {
+  {"i2c", ESP_NOW_I2C},
+  {"local", ESP_NOW_LOCAL},
 };
 
 static const std::map<std::string, uint8_t> RTC_FORMAT = {
@@ -83,6 +88,15 @@ const std::vector<std::pair<float, float>> SIDE_PANEL_CIRCLE_DATA = {
     { 337.50f, 1.00f, },
 };
 
+static const std::map<std::string, PROTOGEN_COLOR_MODE> COLOR_MODE = {
+  {"personal", PCM_PERSONAL},
+  {"personal2", PCM_PERSONAL2},
+  {"personal3", PCM_PERSONAL3},
+  {"original", PCM_ORIGINAL},
+  {"rainbow_single", PCM_RAINBOW_SINGLE},
+  {"rainbow", PCM_RAINBOW},
+  {"gradation", PCM_GRADATION},
+};
 
 Toaster::Toaster() {
 }
@@ -96,6 +110,24 @@ bool Toaster::begin() {
   _serialdebug.begin();
 
   TF_LOGI(TAG, "ToasterFirmware %s", _tf_version);
+
+  if (psramFound()) {
+    psramInit();
+    TF_LOGI(TAG, "PSRAM found: %d", ESP.getPsramSize());
+  }
+
+#ifdef USE_SD
+  SPI.begin();
+
+  if (SD.begin(PIN_FSPI_CS, SPI)) {
+    _sd_use = true;
+
+    TF_LOGI(TAG, "SD card found (type: %d, size: %lld)", (int)SD.cardType(), SD.cardSize() / 1024 / 1024);
+  }
+  else {
+    TF_LOGW(TAG, "begin: SD begin failed");
+  }
+#endif
 
   if (!FFat.begin(false)) {
     TF_LOGE(TAG, "begin: FFat mount failed");
@@ -177,13 +209,15 @@ bool Toaster::begin() {
   _hub75_fps = config_yaml.getInt("hardware:hub75:fps", 60);
   Worker::begin(_hub75_fps);
 
+  loadDefaultEmotion(config_yaml);
+
   _init = true;
 
   auto core_result = xTaskCreatePinnedToCore([](void* param) {
     auto pthis = (Toaster*)param;
     while (1) {
       pthis->_hud.loop();
-      pthis->_i2c_espnow.loop();
+      pthis->_espnow.loop();
       pthis->_boopsensor.loop();
       pthis->_lightsensor.loop();
       pthis->_thermometer.loop();
@@ -191,7 +225,7 @@ bool Toaster::begin() {
 
       delay(1);
     }
-    }, "hud", 8192, this, 1, nullptr, PRO_CPU_NUM);
+    }, "hud", 4096, this, 1, nullptr, PRO_CPU_NUM);
   if (core_result != pdPASS) {
     TF_LOGE(TAG, "xTaskCreatePinnedToCore failed (%d).", core_result);
   }
@@ -212,6 +246,11 @@ void Toaster::loop() {
 
 bool Toaster::work() {
   syncLock();
+
+  if (!_next_emotion.empty()) {
+    setEmotion(_next_emotion.c_str());
+    _next_emotion.clear();
+  }
 
   _display.beginDraw();
   _display.clear();
@@ -292,6 +331,10 @@ bool Toaster::workPerSecond() {
   }
 
   p += sprintf(p, ", heap: %d", ESP.getFreeHeap());
+  
+  if (psramFound()) {
+  	p += sprintf(p, " (%d)", ESP.getFreePsram());
+  }
 
   TF_LOGD(TAG, sz);
 
@@ -299,7 +342,14 @@ bool Toaster::workPerSecond() {
 }
 
 
+void Toaster::setNextEmotion(const char* emotion) {
+  _next_emotion = emotion;
+}
+
+
 bool Toaster::setEmotion(const char* emotion) {
+  TF_LOGD(TAG, "setEmotion: %s", emotion);
+  
   for (size_t i = 0; i < _emotions.size(); i++) {
     if (strcasecmp(_emotions[i].name.c_str(), emotion) == 0) {
       return setEmotion(i);
@@ -379,7 +429,7 @@ void Toaster::shuffleEmotion() {
 }
 
 
-bool Toaster::setNextEmotion() {
+bool Toaster::setEmotionNext() {
   auto isExclude = [](const char* name) -> bool {
     return (strcasecmp(name, "white") == 0);
   };
@@ -460,17 +510,17 @@ bool Toaster::loadShortcut(const char* shortcut) {
 }
 
 
-bool Toaster::setEmotionShortcut(uint8_t hand, uint8_t finger, uint8_t action) {
+const char* Toaster::getEmotionShortcut(uint8_t hand, uint8_t finger, uint8_t action) {
   if (_shortcuts[hand][finger][action].empty()) {
     if (action == SHORTCUT_CLICK_COUNT_MAX) {
-      return setEmotionShortcut(hand, finger, 0);
+      return getEmotionShortcut(hand, finger, 0);
     }
     else if (action > 0) {
-      return setEmotionShortcut(hand, finger, action - 1);
+      return getEmotionShortcut(hand, finger, action - 1);
     }
   }
 
-  return setEmotion(_shortcuts[hand][finger][action].c_str());
+  return _shortcuts[hand][finger][action].c_str();
 }
 
 
@@ -482,7 +532,7 @@ void Toaster::setEffect(int index, const char* new_effect, const char* base_path
       _effect[index]->release(_display);
     }
 
-    _effect[index] = Effect::find(new_effect, index, base_path);
+    _effect[index] = Effect::find(new_effect, index, base_path[0] == 0 ? DEFAULT_BASE_PATH : base_path);
 
     if (_effect[index] != nullptr) {
       _effect[index]->init(_display);
@@ -510,6 +560,16 @@ void Toaster::setSideEffect(const char* new_effect1, const char* base_path) {
       _side_effect->init(_side_display);
     }
   }
+}
+
+
+bool Toaster::setColorMode(const char* mode) {
+  auto color_mode = COLOR_MODE.find(mode);
+  if (color_mode == COLOR_MODE.end()) {
+    return false;
+  }
+
+  return Effect::setColorMode(color_mode->second);
 }
 
 
@@ -615,9 +675,74 @@ const char* Toaster::getTimeStr() const {
 
 
 bool Toaster::isEmotionExist(const char* name) const {
+  return (findEmotion(name) >= 0);
+}
+
+
+int Toaster::findEmotion(const char* name) const {
   for (int i = 0; i < _emotions.size(); i++) {
     if (_emotions[i].name == name) {
-      return true;
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+
+static std::string makeGroupName(const char* base_path, bool nosd = false) {
+  std::string group;
+
+  if (base_path[0] == 0) {
+    group = EMOTION_DEFAULT;
+  }
+  else if (!nosd && strncmp(base_path, "/sd/", 4) == 0) {
+    const char* p = strrchr(base_path + 3, '/');
+    if (p == nullptr) {
+      return "";
+    }
+    
+    group = "sd/";
+    group += p + 1;
+  }
+  else {
+    const char* p = strrchr(base_path, '/');
+    if (p == nullptr) {
+      return "";
+    }
+    
+    group = p + 1;
+  }
+
+  return group;
+}
+
+
+void Toaster::addHUDEmotion(const char* base_path, const char* emotion, const char* display_name) {
+  std::string group = makeGroupName(base_path);
+
+  if (display_name == nullptr) {
+    display_name = emotion;
+  }
+
+  for (auto& it : hud_emotions) {
+    if (strcasecmp(it.getGroupName(), group.c_str()) == 0) {
+      it.addEmotion(display_name, emotion);
+      return;
+    }
+  }
+
+  hud_emotions.push_back(HUDEmotions(group.c_str()));
+  hud_emotions.back().addEmotion(display_name, emotion);
+}
+
+
+bool Toaster::removeHUDEmotion(const char* base_path, const char* emotion) {
+  std::string group = makeGroupName(base_path, true);
+
+  for (auto it = hud_emotions.begin(); it != hud_emotions.end(); ++it) {
+    if (strcasecmp(it->getGroupName(), group.c_str()) == 0) {
+      return it->removeEmotion(emotion);
     }
   }
 
@@ -625,34 +750,12 @@ bool Toaster::isEmotionExist(const char* name) const {
 }
 
 
-void Toaster::addHUDEmotion(const char* base_path, const char* emotion, const char* display_name) {
-  const char* group;
-
-  if (strcmp(base_path, DEFAULT_BASE_PATH) == 0) {
-    group = EMOTION_DEFAULT;
-  }
-  else {
-    const char* p = strrchr(base_path, '/');
-    if (p == nullptr) {
-      return;
-    }
-    
-    group = p + 1;
-  }
-
-  if (display_name == nullptr) {
-    display_name = emotion;
-  }
-
-  for (auto& it : hud_emotions) {
-    if (strcasecmp(it.getGroupName(), group) == 0) {
-      it.addEmotion(display_name, emotion);
-      return;
+void Toaster::clearEmptyHUDEmotions() {
+  for (auto it = hud_emotions.begin(); it != hud_emotions.end(); ++it) {
+    if (it->isEmpty()) {
+      hud_emotions.erase(it);
     }
   }
-
-  hud_emotions.push_back(HUDEmotions(group));
-  hud_emotions.back().addEmotion(display_name, emotion);
 }
 
 
@@ -676,13 +779,15 @@ bool Toaster::loadHub75(const YamlNodeArray& yaml) {
   hub75_pins.oe = yaml.getInt("hardware:hub75:oe_pin", 15);
   hub75_pins.clk = yaml.getInt("hardware:hub75:clk_pin", 18);
 
-  uint8_t min_refresh_rate = yaml.getInt("hardware:hub75:min_refresh_rate", 240);
+  uint16_t min_refresh_rate = yaml.getInt("hardware:hub75:min_refresh_rate", 480);
 
   if (!_display.begin(HUB75_PANEL_RES_X, HUB75_PANEL_RES_Y, HUB75_PANEL_CHAIN, hub75_pins, min_refresh_rate)) {
     return false;
   }
 
   _default_brightness = yaml.getFloat("hardware:hub75:default_brightness", 1.0);
+  
+  TF_LOGD(TAG, "HUB75 refresh rate: %d -> %d", (int)min_refresh_rate, _display.get_refresh_rate());
 
   return true;
 }
@@ -780,7 +885,11 @@ bool Toaster::loadLightSensor(const YamlNodeArray& yaml) {
     }
     else if (ls_type == "bh1750") {
       int ls_i2c = parse_hex(yaml.getString("hardware:lightsensor:i2c", "0x23").c_str());
-      _lightsensor.beginBH1750(ls_i2c, ls_alpha, ls_alpha_init);
+      if (!_lightsensor.beginBH1750(ls_i2c, ls_alpha, ls_alpha_init)) {
+        _lightsensor_use = false;
+        TF_LOGW(TAG, "loadLightSensor: BH1750(0x%02x) not found", ls_i2c);
+        return false;
+      }
       
       float hys = yaml.getFloat("hardware:lightsensor:hysteresis", 10);
       _ls_hys = hys;
@@ -920,19 +1029,33 @@ bool Toaster::loadRTC(const YamlNodeArray& yaml) {
 
 
 bool Toaster::loadRemote(const YamlNodeArray& yaml) {
-  _espnow_use = yaml.isKeysExist("hardware:i2c_esp_now");
+  bool key_exist = yaml.isKeysExist("hardware:esp_now");
+  bool key_exist2 = yaml.isKeysExist("hardware:i2c_esp_now");
+  _espnow_use = key_exist || key_exist2;
   if (_espnow_use) {
-    uint8_t i2c = parse_hex(yaml.getString("hardware:i2c_esp_now:i2c", "0x15").c_str());
-    if (_i2c_espnow.begin(i2c)) {
-      TF_LOGI(TAG, "loadRemote: ESP-Now Receiver (0x%02x) connected.", i2c);
+    auto type = ESP_NOW_TYPE.find(yaml.getString("hardware:esp_now:type", "none"));
+    _esp_now_type = (type != ESP_NOW_TYPE.end()) ? type->second : ESP_NOW_NONE;
+    if (_esp_now_type == ESP_NOW_I2C) {
+      uint8_t i2c = parse_hex(yaml.getString(key_exist ? "hardware:esp_now:i2c" : "hardware:i2c_esp_now:i2c", "0x15").c_str());
+      if (_espnow.beginI2C(i2c)) {
+        TF_LOGI(TAG, "loadRemote: ESP-Now Receiver (0x%02x) connected.", i2c);
+      }
+      else {
+        TF_LOGW(TAG, "loadRemote: ESP-Now Receiver (0x%02x) not found.", i2c);
+      }
     }
-    else {
-      TF_LOGW(TAG, "loadRemote: ESP-Now Receiver (0x%02x) not found.", i2c);
+    else if (_esp_now_type == ESP_NOW_LOCAL) {
+      if (_espnow.beginLocal()) {
+        TF_LOGI(TAG, "loadRemote: ESP-Now initialized.");
+      }
+      else {
+        TF_LOGW(TAG, "loadRemote: ESP-Now initialization failed.");
+      }
     }
 
-    _i2c_espnow.clearWhitelist();
+    _espnow.clearWhitelist();
 
-    auto whitelist = yaml.findKeys("hardware:i2c_esp_now:whitelist");
+    auto whitelist = yaml.findKeys(key_exist ? "hardware:esp_now:whitelist" : "hardware:i2c_esp_now:whitelist");
     if (whitelist != nullptr) {
       for (const auto& it : whitelist->asObjects()) {
         if (it.isString() == false) continue;
@@ -940,7 +1063,7 @@ bool Toaster::loadRemote(const YamlNodeArray& yaml) {
         uint8_t mac[6];
         if (parse_mac(it.asString().c_str(), mac)) {
           TF_LOGD(TAG, "loadRemote: whitelist added %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-          _i2c_espnow.addWhitelist(mac);
+          _espnow.addWhitelist(mac);
         }
       }
     }
@@ -976,8 +1099,28 @@ bool Toaster::loadPersonality(const YamlNodeArray& yaml) {
   color_map.insert({"color_right_mouth", yaml.getString("my_protogen:color_right_mouth", "color_mouth")});
   color_map.insert({"color_right_side", yaml.getString("my_protogen:color_right_side", "color_side")});
 
+  color_map.insert({"color2_eyes", yaml.getString("my_protogen:color2_eyes", "#0000ff")});
+  color_map.insert({"color2_nose", yaml.getString("my_protogen:color2_nose", "color2_eyes")});
+  color_map.insert({"color2_mouth", yaml.getString("my_protogen:color2_mouth", "color2_eyes")});
+  color_map.insert({"color2_side", yaml.getString("my_protogen:color2_side", "color2_eyes")});
+
+  color_map.insert({"color2_right_eyes", yaml.getString("my_protogen:color2_right_eyes", "color2_eyes")});
+  color_map.insert({"color2_right_nose", yaml.getString("my_protogen:color2_right_nose", "color2_nose")});
+  color_map.insert({"color2_right_mouth", yaml.getString("my_protogen:color2_right_mouth", "color2_mouth")});
+  color_map.insert({"color2_right_side", yaml.getString("my_protogen:color2_right_side", "color2_side")});
+
+  color_map.insert({"color3_eyes", yaml.getString("my_protogen:color3_eyes", "#ff0000")});
+  color_map.insert({"color3_nose", yaml.getString("my_protogen:color3_nose", "color3_eyes")});
+  color_map.insert({"color3_mouth", yaml.getString("my_protogen:color3_mouth", "color3_eyes")});
+  color_map.insert({"color3_side", yaml.getString("my_protogen:color3_side", "color3_eyes")});
+
+  color_map.insert({"color3_right_eyes", yaml.getString("my_protogen:color3_right_eyes", "color3_eyes")});
+  color_map.insert({"color3_right_nose", yaml.getString("my_protogen:color3_right_nose", "color3_nose")});
+  color_map.insert({"color3_right_mouth", yaml.getString("my_protogen:color3_right_mouth", "color3_mouth")});
+  color_map.insert({"color3_right_side", yaml.getString("my_protogen:color3_right_side", "color3_side")});
+
   if (!color_map.empty()) {
-    auto set_color = [&color_map](const char* name, uint8_t index, uint32_t def_color) -> bool {
+    auto set_color = [&color_map](const char* name, uint8_t personal_index, uint8_t index, uint32_t def_color) -> bool {
       std::string color_ref = name;
 
       for (int i = 0; i < 8; i++) {
@@ -988,45 +1131,50 @@ bool Toaster::loadPersonality(const YamlNodeArray& yaml) {
 
         if (find->second[0] != 'c') {
           uint32_t color = parse_hex(find->second.c_str());
-          Effect::setPersonalColor(index, color);
+          Effect::setPersonalColor(personal_index, index, color);
           return true;
         }
 
         color_ref = find->second;
       }
 
-      Effect::setPersonalColor(index, def_color);
+      Effect::setPersonalColor(personal_index, index, def_color);
       return false;
     };
 
-    set_color("color_eyes", Effect::PC_EYES, 0x00ff00);
-    set_color("color_nose", Effect::PC_NOSE, 0x00ff00);
-    set_color("color_mouth", Effect::PC_MOUTH, 0x00ff00);
-    set_color("color_side", Effect::PC_SIDE, 0x00ff00);
+    set_color("color_eyes", 0, Effect::PC_EYES, 0x00ff00);
+    set_color("color_nose", 0, Effect::PC_NOSE, 0x00ff00);
+    set_color("color_mouth", 0, Effect::PC_MOUTH, 0x00ff00);
+    set_color("color_side", 0, Effect::PC_SIDE, 0x00ff00);
     
-    set_color("color_right_eyes", Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
-    set_color("color_right_nose", Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
-    set_color("color_right_mouth", Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
-    set_color("color_right_side", Effect::PC_SIDE + Effect::PC_MAX, 0x00ff00);
+    set_color("color_right_eyes", 0, Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
+    set_color("color_right_nose", 0, Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
+    set_color("color_right_mouth", 0, Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
+    set_color("color_right_side", 0, Effect::PC_SIDE + Effect::PC_MAX, 0x00ff00);
+    
+    set_color("color2_eyes", 1, Effect::PC_EYES, 0x00ff00);
+    set_color("color2_nose", 1, Effect::PC_NOSE, 0x00ff00);
+    set_color("color2_mouth", 1, Effect::PC_MOUTH, 0x00ff00);
+    set_color("color2_side", 1, Effect::PC_SIDE, 0x00ff00);
+    
+    set_color("color2_right_eyes", 1, Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
+    set_color("color2_right_nose", 1, Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
+    set_color("color2_right_mouth", 1, Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
+    set_color("color2_right_side", 1, Effect::PC_SIDE + Effect::PC_MAX, 0x00ff00);
+    
+    set_color("color3_eyes", 2, Effect::PC_EYES, 0x00ff00);
+    set_color("color3_nose", 2, Effect::PC_NOSE, 0x00ff00);
+    set_color("color3_mouth", 2, Effect::PC_MOUTH, 0x00ff00);
+    set_color("color3_side", 2, Effect::PC_SIDE, 0x00ff00);
+    
+    set_color("color3_right_eyes", 2, Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
+    set_color("color3_right_nose", 2, Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
+    set_color("color3_right_mouth", 2, Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
+    set_color("color3_right_side", 2, Effect::PC_SIDE + Effect::PC_MAX, 0x00ff00);
   }
 
-  std::string color_mode = yaml.getString("my_protogen:color_mode", "personal");
-  PROTOGEN_COLOR_MODE pcm = PCM_PERSONAL;
-  if (color_mode == "original") {
-    pcm = PCM_ORIGINAL;
-  }
-  else if (color_mode == "personal") {
-    pcm = PCM_PERSONAL;
-  }
-  else if (color_mode == "rainbow_single") {
-    pcm = PCM_RAINBOW_SINGLE;
-  }
-  else if (color_mode == "rainbow") {
-    pcm = PCM_RAINBOW;
-  }
-  else if (color_mode == "gradation") {
-    pcm = PCM_GRADATION;
-  }
+  auto color_mode = COLOR_MODE.find(yaml.getString("my_protogen:color_mode", "personal"));
+  PROTOGEN_COLOR_MODE pcm = (color_mode != COLOR_MODE.end()) ? color_mode->second : PCM_PERSONAL;
   
   Effect::setColorMode(pcm);
   
@@ -1070,6 +1218,46 @@ void Toaster::loadGradation(uint8_t index, const YamlNode* node) {
       Effect::setGradationPoint(index, atof(left.c_str()), (color >> 0) & 0xff, (color >> 8) & 0xff, (color >> 16) & 0xff);
     }
   }
+}
+
+
+size_t Toaster::loadEmotionsFromFS(const char* path, bool from_sd) {
+  size_t e_total_count = 0;
+  fs::FS* fs = &FFat;
+#ifdef USE_SD
+  if (from_sd) {
+    fs = &SD;
+  }
+#endif
+
+  File dir = fs->open(EMOTIONS_DIR);
+  if (dir) {
+    String filename = dir.getNextFileName();
+  
+    while (!filename.isEmpty()) {
+      File sub_dir = fs->open(filename);
+      if (sub_dir) {
+        if (sub_dir.isDirectory()) {
+          const char* p = strrchr(filename.c_str(), '/');
+          if (p == nullptr || strcasecmp(p + 1, EMOTION_DEFAULT) != 0) {
+            auto e_yaml = YamlNodeArray::fromFile((filename + "/emotions.yaml").c_str(), *fs);
+            size_t e_count = loadEmotionEachYaml(e_yaml, filename.c_str(), from_sd);
+
+            e_total_count += e_count;
+            TF_LOGI(TAG, "%s%s - %d emotions loaded", from_sd ? "/sd" : "", filename.c_str(), e_count);
+          }
+        }
+
+        sub_dir.close();
+      }
+
+      filename = dir.getNextFileName();
+    }
+
+    dir.close();
+  }
+
+  return e_total_count;
 }
 
 
@@ -1120,58 +1308,38 @@ bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
     return false;
   }
 
-  _emotions.push_back({DEFAULT_BASE_PATH, "blank", "", "", "blank", "", "", "blank", true});
-  _emotions.push_back({DEFAULT_BASE_PATH, "white", "", "", "white", "", "", "white", true});
-  _emotions.push_back({DEFAULT_BASE_PATH, "festive", "", "", "festive", "", "", "side_rainbow", false});
-  _emotions.push_back({DEFAULT_BASE_PATH, "clock", "", "", "clock", "", "", "side_default", false});
-  _emotions.push_back({DEFAULT_BASE_PATH, "dino", "", "", "dino", "", "", "side_rainbow", false});
+  _emotions.push_back({"", "blank", "", "", "blank", "", "", "blank", true});
+  _emotions.push_back({"", "white", "", "", "white", "", "", "white", true});
+  _emotions.push_back({"", "festive", "", "", "festive", "", "", "side_rainbow", false});
+  _emotions.push_back({"", "clock", "", "", "clock", "", "", "side_default", false});
+  _emotions.push_back({"", "dino", "", "", "dino", "", "", "side_rainbow", false});
 
   hud_emotions.clear();
   hud_emotions.push_back(HUDEmotions(EMOTION_DEFAULT));
   
-  size_t e_count = loadEmotionEachYaml(yaml, DEFAULT_BASE_PATH);
+  size_t e_count = loadEmotionEachYaml(yaml, DEFAULT_BASE_PATH, false);
   size_t e_total_count = e_count;
   TF_LOGI(TAG, "%d emotions loaded", e_count);
 
-  File dir = FFat.open(EMOTIONS_DIR);
-  if (dir) {
-    String filename = dir.getNextFileName();
-  
-    while (!filename.isEmpty()) {
-      File sub_dir = FFat.open(filename);
-      if (sub_dir) {
-        if (sub_dir.isDirectory()) {
-          const char* p = strrchr(filename.c_str(), '/');
-          if (p == nullptr || strcasecmp(p + 1, EMOTION_DEFAULT) != 0) {
-            auto e_yaml = YamlNodeArray::fromFile((filename + "/emotions.yaml").c_str(), FFat);
-            e_count = loadEmotionEachYaml(e_yaml, filename.c_str());
-
-            e_total_count += e_count;
-            TF_LOGI(TAG, "%s - %d emotions loaded", filename.c_str(), e_count);
-          }
-        }
-
-        sub_dir.close();
-      }
-
-      filename = dir.getNextFileName();
-    }
-
-    dir.close();
+  e_total_count += loadEmotionsFromFS(EMOTIONS_DIR, false);
+  if (_sd_use) {
+    e_total_count += loadEmotionsFromFS(EMOTIONS_DIR, true);
   }
-  
+
   TF_LOGI(TAG, "total %d emotions loaded!", e_total_count);
 
-  addHUDEmotion(DEFAULT_BASE_PATH, "festive", "~(^w^)~");
-  addHUDEmotion(DEFAULT_BASE_PATH, "clock", "clock");
-  addHUDEmotion(DEFAULT_BASE_PATH, "dino", "dino");
-  addHUDEmotion(DEFAULT_BASE_PATH, "blank", "Shutdown");
+  addHUDEmotion("", "festive", "~(^w^)~");
+  addHUDEmotion("", "clock", "clock");
+  addHUDEmotion("", "dino", "dino");
+  addHUDEmotion("", "blank", "Shutdown");
+
+  clearEmptyHUDEmotions();
 
   return true;
 }
 
 
-size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_path) {
+size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_path, bool from_sd) {
   auto emotions = yaml.findKeys("emotions");
   if (emotions == nullptr || emotions->isObject() == false || emotions->asObjects().empty()) {
     return false;
@@ -1199,23 +1367,46 @@ size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_
     if (name->asString() == "default") {
       continue;
     }
-    
-    if (isEmotionExist(name->asString().c_str())) {
-      TF_LOGW(TAG, "emotion (%s) already exist. ignored.", name->asString().c_str());
-      continue;
+
+    std::string dir;
+
+    if (from_sd) {
+      dir = "/sd";
+    }
+    dir += base_path;
+
+    if (dir == DEFAULT_BASE_PATH) {
+      dir.clear();
     }
 
-    _emotions.push_back({base_path, 
-      name->asString(), 
-      (eyes == nullptr) ? _emotion_default.eyes : eyes->asString(), 
-      (nose == nullptr) ? _emotion_default.nose : nose->asString(), 
-      (mouth == nullptr) ? _emotion_default.mouth : mouth->asString(), 
-      (special == nullptr) ? _emotion_default.special : special->asString(), 
-      (special2 == nullptr) ? _emotion_default.special2 : special2->asString(), 
-      (side == nullptr) ? _emotion_default.side : side->asString(),
-      false});
+    EMOTION_DATA data;
+    data.base_path = dir;
+    data.name = name->asString();
+    data.eyes = (eyes == nullptr) ? _emotion_default.eyes : eyes->asString();
+    data.nose = (nose == nullptr) ? _emotion_default.nose : nose->asString();
+    data.mouth = (mouth == nullptr) ? _emotion_default.mouth : mouth->asString();
+    data.special = (special == nullptr) ? _emotion_default.special : special->asString();
+    data.special2 = (special2 == nullptr) ? _emotion_default.special2 : special2->asString();
+    data.side = (side == nullptr) ? _emotion_default.side : side->asString();
+    data.shuffle_exclude = false;
+
+    int find = findEmotion(name->asString().c_str());
+    if (find >= 0) {
+      if (from_sd) {
+        _emotions[find] = data;
+        removeHUDEmotion(data.base_path.c_str(), data.name.c_str());
+        TF_LOGI(TAG, "emotion (%s) already exist. replaced.", name->asString().c_str());
+      }
+      else {
+        TF_LOGW(TAG, "emotion (%s) already exist. ignored.", name->asString().c_str());
+        continue;
+      }
+    }
+    else {
+      _emotions.push_back(data);
+    }
     
-    addHUDEmotion(base_path, name->asString().c_str());
+    addHUDEmotion(dir.c_str(), name->asString().c_str());
 
     ++count;
   }

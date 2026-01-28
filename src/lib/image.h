@@ -10,7 +10,7 @@ namespace toaster {
 
 class Image {
 public:
-  Image(const char* path, bool rgb565);
+  Image(const char* path, bool from_sd, bool rgb565);
   Image(uint8_t type, const uint8_t* buffer, size_t size, bool rgb565);
   Image(size_t width, size_t height, uint8_t bpp, uint8_t has_alpha);
   virtual ~Image();
@@ -82,9 +82,9 @@ protected:
 protected:
   bool _load_png(void*, bool rgb565);
   bool load_png_from_bytes(const uint8_t* buffer, size_t size, bool rgb565);
-  bool load_png(const char* path, bool rgb565);
+  bool load_png(const char* path, bool from_sd, bool rgb565);
   bool load_jpeg_from_bytes(const uint8_t* buffer, size_t size);
-  bool load_jpeg(const char* path);
+  bool load_jpeg(const char* path, bool from_sd);
 
 };
 

@@ -156,7 +156,7 @@ void HUDMenu::addMenu(const char* text, std::function<void(HUDBase*, const char*
 
 
 void HUDMenu::addEmotion(const char* text, const char* emotion) {
-  _menuData.push_back({MENU_FUNC, text, [](HUDBase*, const char* param) { Protogen.setEmotion(param); }, emotion,});
+  _menuData.push_back({MENU_FUNC, text, [](HUDBase*, const char* param) { Protogen.setNextEmotion(param); }, emotion,});
 }
 
 
@@ -164,6 +164,17 @@ void HUDMenu::addHUD(const char* text, HUDBase* hud) {
   _menuData.push_back({MENU_HUD, text, nullptr, "", hud,});
 }
 
+
+bool HUDMenu::removeEmotion(const char* emotion) {
+  for (auto it = _menuData.begin(); it != _menuData.end(); ++it) {
+    if (it->type == MENU_FUNC && it->param == emotion) {
+      _menuData.erase(it);
+      return true;
+    }
+  }
+
+  return false;
+}
 
 void HUDMenu::drawMenu(Adafruit_SSD1306& oled) {
   const int LINE_H = 16;

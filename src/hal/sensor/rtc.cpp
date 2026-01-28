@@ -94,6 +94,20 @@ void RTC::setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, u
 }
 
 
+void RTC::setTime(uint8_t hour, uint8_t minute, uint8_t second) {
+  _hour = hour;
+  _minute = minute;
+  _second = second;
+  _blink = 0;
+
+  if (_type == RST_DS3231) {
+    if (_ds3231 != nullptr) {
+      _ds3231->setDateTime(_year, _month, _day, hour, minute, second);
+    }
+  }
+}
+
+
 bool RTC::sync() {
   if (_type == RST_DS3231 && _ds3231 != nullptr) {
     auto datetime = _ds3231->getDateTime();

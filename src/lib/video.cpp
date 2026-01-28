@@ -2,6 +2,12 @@
 #include "video.h"
 #include "logger.h"
 #include <AnimatedGIF.h>
+#include "ram.h"
+
+
+#ifdef USE_SD
+#include "SD.h"
+#endif
 
 
 namespace toaster {
@@ -9,17 +15,21 @@ namespace toaster {
 static const char* TAG = "Video";
 
 
-Video::Video(const char* path, uint32_t mjpeg_fps) {
+static const size_t MJPEG_BUFFER_SIZE = 64 * 1024;
+static const size_t MJPEG_LOAD_FRAMES = 30;
+
+
+Video::Video(const char* path, bool from_sd, bool loop, uint32_t mjpeg_fps) {
   const char* ext = strrchr(path, '.');
   if (ext != nullptr) {
     if (strcasecmp(ext + 1, "gif") == 0) {
       _type = VIDEO_GIF;
-      load_gif(path);
+      load_gif(path, from_sd, loop);
     }
 
     if (strcasecmp(ext + 1, "mjpeg") == 0) {
       _type = VIDEO_MJPEG;
-      load_mjpeg(path, mjpeg_fps);
+      load_mjpeg(path, from_sd, loop, mjpeg_fps);
     }
   }
 }
@@ -43,6 +53,32 @@ void Video::release() {
     gif->close();
     delete gif;
     _gif = nullptr;
+  }
+
+  if (_type == VIDEO_MJPEG) {
+    if (_buffering) {
+      _buffering = false;
+      while (!_mjpeg_read_end || !_mjpeg_decode_end) {
+        delay(1);
+      }
+    }
+
+    for (int i = 0; i < MJPEG_BUFFERS; i++) {
+      if (_buffer[i].ptr != nullptr) {
+        free_auto(_buffer[i].ptr);
+        _buffer[i].ptr = nullptr;
+      }
+    }
+  }
+
+  for (auto it : _decoded) {
+    delete it;
+  }
+  _decoded.clear();
+  
+  if (_interlock != nullptr) {
+    vSemaphoreDelete(_interlock);
+    _interlock = nullptr;
   }
 }
 
@@ -71,6 +107,7 @@ bool Video::nextFrame(bool loop, bool init) {
 
 
 // Source referenced: https://github.com/pixelmatix/GifDecoder
+static bool g_gif_from_sd = false;
 
 static void* gif_file_open(const char *fname, int32_t *pSize) {
   File* file_ptr = new File;
@@ -78,7 +115,15 @@ static void* gif_file_open(const char *fname, int32_t *pSize) {
     return nullptr;
   }
 
-  *file_ptr = FFat.open(fname);
+  if (g_gif_from_sd) {
+#ifdef USE_SD
+    *file_ptr = SD.open(fname);
+#endif
+  }
+  else {
+    *file_ptr = FFat.open(fname);
+  }
+
   if (!*file_ptr) {
     delete file_ptr;
     return nullptr;
@@ -106,7 +151,7 @@ static int32_t gif_file_read(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
   }
   
   File &file = *((File *)pFile->fHandle);
-  int32_t bytes_read = file.readBytes((char*)pBuf, iLen);
+  int32_t bytes_read = file.read(pBuf, iLen);
   pFile->iPos = (int32_t)file.position();
   return bytes_read;
 }
@@ -217,12 +262,21 @@ static void gif_draw(GIFDRAW *pDraw) {
 };
 
 
-bool Video::load_gif(const char* path) {
+bool Video::load_gif(const char* path, bool from_sd, bool loop) {
   release();
 
-  _file = FFat.open(path);
+  g_gif_from_sd = from_sd;
+  if (from_sd) {
+#ifdef USE_SD
+    _file = SD.open(path);
+#endif
+  }
+  else {
+    _file = FFat.open(path);
+  }
+
   if (!_file) {
-    TF_LOGE(TAG, "gif file open failed.");
+    TF_LOGE(TAG, "gif file open failed (sd: %d, %s).", from_sd, path);
     return false;
   }
 
@@ -314,27 +368,77 @@ bool Video::load_gif_frame() {
 }
 
 
-bool Video::load_mjpeg(const char* path, uint32_t fps) {
+bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) {
   release();
 
-  _file = FFat.open(path);
+  if (from_sd) {
+#ifdef USE_SD
+    _file = SD.open(path);
+#endif
+  }
+  else {
+    _file = FFat.open(path);
+  }
   if (!_file) {
-    TF_LOGE(TAG, "video load failed (%s).", path);
+    TF_LOGE(TAG, "video load failed (sd: %d, %s).", from_sd ? 1 : 0, path);
     return false;
   }
 
   _start = 0;
 
-  if (!next_mjpeg(true)) {
-    TF_LOGE(TAG, "video header not found (%s).", path);
-    release();
-    return false;
-  }
+  if (psramFound()) {
+    _interlock = xSemaphoreCreateBinary();
+    xSemaphoreGive(_interlock);
 
-  if (!load_mjpeg_frame()) {
-    TF_LOGE(TAG, "video mjpeg first frame load failed. (%s)", path);
-    release();
-    return false;
+    for (int i = 0; i < MJPEG_BUFFERS; i++) {
+      if (_buffer[i].ptr == nullptr) {
+        _buffer[i].size = MJPEG_BUFFER_SIZE;
+        _buffer[i].ptr = (uint8_t*)malloc_auto(_buffer[i].size);
+        _buffer[i].start = 0;
+        _buffer[i].read = 0;
+        _buffer[i].valid = false;
+        _buffer[i].last = false;
+      }
+    }
+
+    _buffering = true;
+    _buffering_loop = loop;
+    _mjpeg_read_end = false;
+    _mjpeg_decode_end = false;
+    _buffering_fail = false;
+
+    auto core_result1 = xTaskCreatePinnedToCore(mjpeg_read_entry_point, "mjpegr", 2048, this, 1, nullptr, PRO_CPU_NUM);
+    if (core_result1 != pdPASS) {
+      TF_LOGE(TAG, "xTaskCreatePinnedToCore failed (%d).", core_result1);
+    }
+
+    auto core_result2 = xTaskCreatePinnedToCore(mjpeg_decode_entry_point, "mjpegd", 8192, this, 1, nullptr, PRO_CPU_NUM);
+    if (core_result2 != pdPASS) {
+      TF_LOGE(TAG, "xTaskCreatePinnedToCore failed (%d).", core_result2);
+    }
+
+    if (!next_mjpeg(false, true)) {
+      TF_LOGE(TAG, "video header not found (%s).", path);
+      release();
+      return false;
+    }
+
+    while (_decoded.size() < MJPEG_LOAD_FRAMES) {
+      delay(1);
+    }
+  }
+  else {
+    if (!next_mjpeg(false, true)) {
+      TF_LOGE(TAG, "video header not found (%s).", path);
+      release();
+      return false;
+    }
+
+    if (!load_mjpeg_frame()) {
+      TF_LOGE(TAG, "video mjpeg first frame load failed. (%s)", path);
+      release();
+      return false;
+    }
   }
 
   _frame = 0;
@@ -348,35 +452,334 @@ bool Video::load_mjpeg(const char* path, uint32_t fps) {
 
 bool Video::next_mjpeg(bool loop, bool init) {
   if (init) {
-    _start = 0;
+    _start = _end = 0;
     _frame = 0;
+    
+    if (psramFound()) {
+      for (int i = 0; i < MJPEG_BUFFERS; i++) {
+        if (_buffer[i].valid && (_buffer[i].last || _buffer[i].start > MJPEG_BUFFER_SIZE)) {
+          _buffer[i].valid = false;
+        }
+      }
+    }
   }
   else {
     _start = _end;
     ++_frame;
   }
 
-  _file.seek(_start);
+  if (psramFound()) {
+    timer_ms_t tick = Timer::get_millis();
+    while (Timer::get_millis() - tick < 500) {
+      if (_buffering_fail) {
+        return false;
+      }
+
+      if (load_mjpeg_frame()) {
+        return true;
+      }
+
+      delay(1);
+    }
+    
+    return false;
+  }
+  else {
+    bool has_next = find_range_direct() && (_start < _end);
+
+    if (has_next) {
+      if (!load_mjpeg_frame()) {
+        return false;
+      }
+    }
+
+    if (!has_next && loop) {
+      return next_mjpeg(loop, true);
+    }
+
+    return has_next;
+  }
+}
+
+
+bool Video::load_mjpeg_frame() {
+  if (_image != nullptr) {
+    delete _image;
+    _image = nullptr;
+  }
+  
+  if (psramFound()) {
+    if (xSemaphoreTake(_interlock, portMAX_DELAY)) {
+      if (!_decoded.empty()) {
+        _image = _decoded.front();
+        _decoded.pop_front();
+      }
+      xSemaphoreGive(_interlock);
+    }
+
+    return (_image != nullptr);
+  }
+  else {
+    size_t size = _end - _start;
+    uint8_t* buffer = new uint8_t[size];
+    if (buffer == nullptr) {
+      return false;
+    }
+
+    _file.seek(_start);
+    _file.read(buffer, size);
+
+    _image = new Image(Image::IMAGE_JPEG, buffer, size, true);
+    delete[] buffer;
+    
+    if (_image == nullptr) {
+      return false;
+    }
+
+    if (!_image->isLoaded()) {
+      delete _image;
+      return false;
+    }
+    
+    return true;
+  }
+}
+
+
+void Video::mjpeg_read_entry_point(void* param) {
+  auto pthis = (Video*)param;
+  pthis->mjpeg_read();
+
+  vTaskDelete(nullptr);
+}
+
+
+void Video::mjpeg_decode_entry_point(void* param) {
+  auto pthis = (Video*)param;
+  pthis->mjpeg_decode();
+
+  vTaskDelete(nullptr);
+}
+
+
+void Video::mjpeg_read() {
+  while (_buffering && !_buffering_fail) {
+    if (_file.available()) {
+      int index = find_free_buffer();
+      if (index >= 0) {
+        _buffer[index].start = _file.position();
+        _buffer[index].read = _file.read(_buffer[index].ptr, _buffer[index].size);
+        _buffer[index].last = !_file.available();
+        _buffer[index].valid = true;
+      }
+    }
+    else if (_buffering_loop) {
+      int index = find_free_buffer();
+      if (index >= 0) {
+        _file.seek(0);
+      }
+    }
+
+    delay(1);
+  }
+
+  _mjpeg_read_end = true;
+}
+
+
+void Video::mjpeg_decode() {
+  while (_buffering && !_buffering_fail) {
+    mjpeg_decode2();
+
+    delay(1);
+  }
+
+  _mjpeg_decode_end = true;
+}
+
+
+void Video::mjpeg_decode2() {
+  if (_decoded.size() >= MJPEG_LOAD_FRAMES) {
+    return;
+  }
+
+  if (!find_range()) {
+    if (has_last()) {
+      _start = _end = 0;
+      flush_buffer(true);
+    }
+    return;
+  }
+
+  flush_buffer(false);
+  
+  if (_start >= _end) {
+    return;
+  }
+
+  int index1 = find_buffer(_start);
+  if (index1 < 0) {
+    return;
+  }
+
+  int index2 = find_buffer(_end);
+  if (index2 < 0) {
+    return;
+  }
+
+  size_t size = _end - _start;
+  
+  Image* image;
+  if (index1 == index2) {
+    // continuous data
+    image = new Image(Image::IMAGE_JPEG, _buffer[index1].ptr + _start - _buffer[index1].start, size, true);
+  }
+  else {
+    // fragmented data
+    uint8_t* buffer = (uint8_t*)malloc_auto(size);
+    size_t size1 = _buffer[index1].size - (_start - _buffer[index1].start);
+    size_t size2 = size - size1;
+    memcpy(buffer, _buffer[index1].ptr + _start - _buffer[index1].start, size1);
+    memcpy(buffer + size1, _buffer[index2].ptr, size2);
+    image = new Image(Image::IMAGE_JPEG, buffer, size, true);
+    free_auto(buffer);
+  }
+
+  if (image == nullptr) {
+    _buffering_fail = true;
+    return;
+  }
+
+  if (!image->isLoaded()) {
+    // _buffering_fail = true;
+    TF_LOGW(TAG, "fail %d %d", _start, _end);
+    delete image;
+  }
+  else {
+    if (xSemaphoreTake(_interlock, portMAX_DELAY)) {
+      _decoded.push_back(image);
+      xSemaphoreGive(_interlock);
+    }
+  }
+}
+
+
+int Video::find_buffer(size_t pos) {
+  for (int i = 0; i < MJPEG_BUFFERS; i++) {
+    if (_buffer[i].ptr == nullptr || !_buffer[i].valid) {
+      continue;
+    }
+
+    if (pos >= _buffer[i].start && pos < _buffer[i].start + _buffer[i].size) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+
+int Video::find_free_buffer() {
+  for (int i = 0; i < MJPEG_BUFFERS; i++) {
+    if (_buffer[i].ptr == nullptr || _buffer[i].valid) {
+      continue;
+    }
+    
+    return i;
+  }
+
+  return -1;
+}
+
+
+bool Video::find_range() {
+  int step = 0;
+  bool find_header = false;
+  int start = -1;
+  int end = -1;
+
+  size_t file_size = _file.size();
+
+  for (size_t i = _start; i < file_size; i++) {
+    int index = find_buffer(i);
+    if (index < 0) {
+      return false;
+    }
+
+    uint8_t read = _buffer[index].ptr[i - _buffer[index].start];
+
+    switch (step) {
+    case 0: // find ff
+      if (read == 0xff) {
+        start = i;
+        step = 1;
+      }
+      break;
+    case 1: // find d8
+      if (read == 0xd8) {
+        find_header = true;
+        step = 2;
+      }
+      else if (read == 0xff) {
+        start = i;
+      }
+      else {
+        step = 0;
+      }
+      break;
+    case 2: // find next ff
+      if (read == 0xff) {
+        end = i;
+        step = 3;
+      }
+      break;
+    case 3: // find next d8
+      if (read == 0xd8) {
+        _start = start;
+        _end = end;
+        return true;
+      }
+      else if (read == 0xff) {
+        end = i;
+      }
+      else {
+        step = 2;
+      }
+      break;
+    }
+  }
+
+  if (find_header) {
+    _start = start;
+    _end = end;
+    return true;
+  }
+
+  return false;
+}
+
+
+bool Video::find_range_direct() {
+  int step = 0;
+  bool find_header = false;
+  int start = -1;
+  int end = -1;
 
   const size_t BLOCK_SIZE = CONFIG_WL_SECTOR_SIZE;
   uint8_t* block = new uint8_t[BLOCK_SIZE];
 
-  int step = 0;
-  bool find_header = false;
-  bool find_next_header = false;
-
-  while (_file.available() && find_next_header == false) {
+  while (_file.available()) {
     size_t block_pos = _file.position();
-    size_t bytes_read = _file.readBytes((char*)block, BLOCK_SIZE);
+    size_t bytes_read = _file.read(block, BLOCK_SIZE);
     
-    for (size_t i = 0; i < bytes_read && find_next_header == false; i++) {
+    for (size_t i = 0; i < bytes_read; i++) {
       size_t pos = block_pos + i;
       uint8_t read = block[i];
 
       switch (step) {
       case 0: // find ff
         if (read == 0xff) {
-          _start = pos;
+          start = pos;
           step = 1;
         }
         break;
@@ -386,7 +789,7 @@ bool Video::next_mjpeg(bool loop, bool init) {
           step = 2;
         }
         else if (read == 0xff) {
-          _start = pos;
+          start = pos;
         }
         else {
           step = 0;
@@ -394,17 +797,19 @@ bool Video::next_mjpeg(bool loop, bool init) {
         break;
       case 2: // find next ff
         if (read == 0xff) {
-          _end = pos;
+          end = pos;
           step = 3;
         }
         break;
       case 3: // find next d8
         if (read == 0xd8) {
-          find_next_header = true;
-          break;
+          delete[] block;
+          _start = start;
+          _end = end;
+          return true;
         }
         else if (read == 0xff) {
-          _end = pos;
+          end = pos;
         }
         else {
           step = 2;
@@ -416,55 +821,62 @@ bool Video::next_mjpeg(bool loop, bool init) {
   
   delete[] block;
 
-  if (_image != nullptr) {
-    delete _image;
-    _image = nullptr;
+  if (find_header) {
+    _start = start;
+    _end = end;
+    return true;
   }
 
-  bool has_next = find_header && (_start < _end);
-
-  if (has_next) {
-    if (!load_mjpeg_frame()) {
-      return false;
-    }
-  }
-
-  if (!has_next && loop) {
-    return next_mjpeg(loop, true);
-  }
-
-  return has_next;
+  return false;
 }
 
 
-bool Video::load_mjpeg_frame() {
-  if (_image != nullptr) {
-    delete _image;
-    _image = nullptr;
+void Video::flush_buffer(bool init) {
+  if (init) {
+    for (int i = 0; i < MJPEG_BUFFERS; i++) {
+      if (!_buffer[i].valid) {
+        continue;
+      }
+
+      if (_buffer[i].last || _buffer[i].start > (MJPEG_BUFFER_SIZE * (MJPEG_BUFFERS - 2))) {
+        _buffer[i].valid = false;
+      }
+    }
+  }
+  else {
+    for (int i = 0; i < MJPEG_BUFFERS; i++) {
+      if (!_buffer[i].valid) {
+        continue;
+      }
+
+      if (has_last()) {
+        if (_buffer[i].start > (MJPEG_BUFFER_SIZE * (MJPEG_BUFFERS - 2))
+        && _start >= _buffer[i].start + _buffer[i].size) {
+          _buffer[i].valid = false;
+        }
+      }
+      else {
+        if (_start >= _buffer[i].start + _buffer[i].size) {
+          _buffer[i].valid = false;
+        }
+      }
+    }
+  }
+}
+
+
+bool Video::has_last() {
+  for (int i = 0; i < MJPEG_BUFFERS; i++) {
+    if (_buffer[i].ptr == nullptr || !_buffer[i].valid) {
+      continue;
+    }
+
+    if (_buffer[i].last) {
+      return true;
+    }
   }
 
-  size_t size = _end - _start;
-  uint8_t* buffer = new uint8_t[size];
-  if (buffer == nullptr) {
-    return false;
-  }
-
-  _file.seek(_start);
-  _file.readBytes((char *)buffer, size);
-
-  _image = new Image(Image::IMAGE_JPEG, buffer, size, true);
-  if (_image == nullptr) {
-    return false;
-  }
-
-  if (!_image->isLoaded()) {
-    delete _image;
-    return false;
-  }
-  
-  delete[] buffer;
-
-  return true;
+  return false;
 }
 
 

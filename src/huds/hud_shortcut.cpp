@@ -20,16 +20,16 @@ void HUDShortcut::init() {
 
 
 void HUDShortcut::process(Adafruit_SSD1306& oled) {
-  static const timer_ms_t TIMEOUT_INPUT_MS = 350;
+  static const timer_ms_t TIMEOUT_INPUT_MS = 750;
 
   oled.clearDisplay();
   setFont(oled);
 
   oled.setCursor(0, 0);
-  writeCenter(oled, "Emotion");
+  writeCenter(oled, "Shortcut:");
 
   oled.setCursor(0, 16);
-  writeCenter(oled, "shortcut");
+  writeCenter(oled, getShortcut());
 
   oled.drawFastVLine( 10, 44, 20, SSD1306_WHITE);
   oled.drawFastVLine( 27, 44, 20, SSD1306_WHITE);
@@ -63,21 +63,8 @@ void HUDShortcut::process(Adafruit_SSD1306& oled) {
   oled.display();
 
   if (_shortcut_key != 0 && (_shortcut_count >= SHORTCUT_CLICK_COUNT_MAX || timeout(TIMEOUT_INPUT_MS))) {
-    uint8_t click_count = std::min(_shortcut_count, (uint8_t)SHORTCUT_CLICK_COUNT_MAX);
-
     Protogen.syncLock();
-
-    switch (_shortcut_key) {
-    case 'f': Protogen.setEmotionShortcut(0, 0, click_count); break;
-    case 'd': Protogen.setEmotionShortcut(0, 1, click_count); break;
-    case 's': Protogen.setEmotionShortcut(0, 2, click_count); break;
-    case 'a': break;
-    case 'j': Protogen.setEmotionShortcut(1, 0, click_count); break;
-    case 'k': Protogen.setEmotionShortcut(1, 1, click_count); break;
-    case 'l': Protogen.setEmotionShortcut(1, 2, click_count); break;
-    case ';': break;
-    }
-    
+    Protogen.setNextEmotion(getShortcut());
     Protogen.syncUnlock();
 
     nextHUD(&hud_dashboard, true);
@@ -113,7 +100,6 @@ void HUDShortcut::pressKey(uint16_t key, uint8_t mode) {
       ++_shortcut_count %= SHORTCUT_CLICK_COUNT_MAX;
     }
 
-    _dirty = true;
     restartTimer();
     return;
   }
@@ -135,6 +121,24 @@ uint16_t HUDShortcut::upperToLower(uint16_t key) {
   }
 
   return 0;
+}
+
+
+const char* HUDShortcut::getShortcut() {
+  uint8_t click_count = std::min(_shortcut_count, (uint8_t)SHORTCUT_CLICK_COUNT_MAX);
+
+  switch (_shortcut_key) {
+  case 'f': return Protogen.getEmotionShortcut(0, 0, click_count);
+  case 'd': return Protogen.getEmotionShortcut(0, 1, click_count);
+  case 's': return Protogen.getEmotionShortcut(0, 2, click_count);
+  case 'a': break;
+  case 'j': return Protogen.getEmotionShortcut(1, 0, click_count);
+  case 'k': return Protogen.getEmotionShortcut(1, 1, click_count);
+  case 'l': return Protogen.getEmotionShortcut(1, 2, click_count);
+  case ';': break;
+  }
+  
+  return "";
 }
 
 

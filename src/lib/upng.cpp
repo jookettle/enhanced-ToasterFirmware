@@ -25,6 +25,7 @@ freely, subject to the following restrictions:
 */
 
 #include "upng.h"
+#include "ram.h"
 
 #define MAKE_BYTE(b) ((b) & 0xFF)
 #define MAKE_DWORD(a,b,c,d) ((MAKE_BYTE(a) << 24) | (MAKE_BYTE(b) << 16) | (MAKE_BYTE(c) << 8) | MAKE_BYTE(d))
@@ -904,7 +905,7 @@ static upng_format determine_format(upng_t* upng) {
 static void upng_free_source(upng_t* upng)
 {
 	if (upng->source.owning != 0) {
-		free((void*)upng->source.buffer);
+		toaster::free_auto((void*)upng->source.buffer);
 	}
 
 	upng->source.buffer = NULL;
@@ -1008,7 +1009,7 @@ upng_error upng_decode(upng_t* upng, unsigned char* external_buffer)
 
 	/* release old result, if any */
 	if (upng->buffer != 0) {
-		free(upng->buffer);
+		toaster::free_auto(upng->buffer);
 		upng->buffer = 0;
 		upng->size = 0;
 	}
@@ -1059,7 +1060,7 @@ upng_error upng_decode(upng_t* upng, unsigned char* external_buffer)
 	}
 
 	/* allocate enough space for the (compressed and filtered) image data */
-	compressed = (unsigned char*)malloc(compressed_size);
+	compressed = (unsigned char*)toaster::malloc_auto(compressed_size);
 	if (compressed == NULL) {
 		SET_ERROR(upng, UPNG_ENOMEM);
 		return upng->error;
@@ -1088,9 +1089,9 @@ upng_error upng_decode(upng_t* upng, unsigned char* external_buffer)
 
 	/* allocate space to store inflated (but still filtered) data */
 	inflated_size = ((upng->width * (upng->height * upng_get_bpp(upng) + 7)) / 8) + upng->height;
-	inflated = (unsigned char*)malloc(inflated_size);
+	inflated = (unsigned char*)toaster::malloc_auto(inflated_size);
 	if (inflated == NULL) {
-		free(compressed);
+		toaster::free_auto(compressed);
 		SET_ERROR(upng, UPNG_ENOMEM);
 		return upng->error;
 	}
@@ -1098,20 +1099,20 @@ upng_error upng_decode(upng_t* upng, unsigned char* external_buffer)
 	/* decompress image data */
 	error = uz_inflate(upng, inflated, inflated_size, compressed, compressed_size);
 	if (error != UPNG_EOK) {
-		free(compressed);
-		free(inflated);
+		toaster::free_auto(compressed);
+		toaster::free_auto(inflated);
 		return upng->error;
 	}
 
 	/* free the compressed compressed data */
-	free(compressed);
+	toaster::free_auto(compressed);
 
 	/* allocate final image buffer */
 	upng->size = (upng->height * upng->width * upng_get_bpp(upng) + 7) / 8;
 	if (external_buffer == nullptr) {
-		upng->buffer = (unsigned char*)malloc(upng->size);
+		upng->buffer = (unsigned char*)toaster::malloc_auto(upng->size);
 		if (upng->buffer == NULL) {
-			free(inflated);
+			toaster::free_auto(inflated);
 			upng->size = 0;
 			SET_ERROR(upng, UPNG_ENOMEM);
 			return upng->error;
@@ -1120,11 +1121,11 @@ upng_error upng_decode(upng_t* upng, unsigned char* external_buffer)
 
 	/* unfilter scanlines */
 	post_process_scanlines(upng, (external_buffer != nullptr) ? external_buffer : upng->buffer, inflated, upng);
-	free(inflated);
+	toaster::free_auto(inflated);
 
 	if (upng->error != UPNG_EOK) {
 		if (external_buffer == nullptr) {
-			free(upng->buffer);
+			toaster::free_auto(upng->buffer);
 			upng->buffer = NULL;
 		}
 		upng->size = 0;
@@ -1142,7 +1143,7 @@ static upng_t* upng_new(void)
 {
 	upng_t* upng;
 
-	upng = (upng_t*)malloc(sizeof(upng_t));
+	upng = (upng_t*)toaster::malloc_auto(sizeof(upng_t));
 	if (upng == NULL) {
 		return NULL;
 	}
@@ -1205,7 +1206,7 @@ upng_t* upng_new_from_file(const char *filename, fs::FS& filesystem)
 	size = file.size(); //file.position();
 
 	/* read contents of the file into the vector */
-	buffer = (char *)malloc((unsigned long)size);
+	buffer = (char *)toaster::malloc_auto((unsigned long)size);
 	if (buffer == NULL) {
 		file.close();
 		SET_ERROR(upng, UPNG_ENOMEM);
@@ -1227,14 +1228,14 @@ void upng_free(upng_t* upng)
 	// Serial.print("\nupng free");
 	/* deallocate image buffer */
 	if (upng->buffer != NULL) {
-		free(upng->buffer);
+		toaster::free_auto(upng->buffer);
 	}
 
 	/* deallocate source buffer, if necessary */
 	upng_free_source(upng);
 
 	/* deallocate struct itself */
-	free(upng);
+	toaster::free_auto(upng);
 }
 
 upng_error upng_get_error(const upng_t* upng)
@@ -1322,21 +1323,21 @@ void upng_GetPixel(void* pixel, const upng_t* upng, int x, int y){
  * Initializing color variables
  */
 upng_s_rgb16b* InitColorR5G6B5(){
-	upng_s_rgb16b*color=(upng_s_rgb16b*)malloc(sizeof(upng_s_rgb16b));
+	upng_s_rgb16b*color=(upng_s_rgb16b*)toaster::malloc_auto(sizeof(upng_s_rgb16b));
 	if (color!=0){
 		ResetColor(color);
 	}
 	return color;
 }
 upng_s_rgb18b* InitColorR6G6B6(){
-	upng_s_rgb18b*color=(upng_s_rgb18b*)malloc(sizeof(upng_s_rgb18b));
+	upng_s_rgb18b*color=(upng_s_rgb18b*)toaster::malloc_auto(sizeof(upng_s_rgb18b));
 	if (color!=0){
 		ResetColor(color);
 	}
 	return color;
 }
 upng_s_rgb24b* InitColorR8G8B8(){
-	upng_s_rgb24b*color=(upng_s_rgb24b*)malloc(sizeof(upng_s_rgb24b));
+	upng_s_rgb24b*color=(upng_s_rgb24b*)toaster::malloc_auto(sizeof(upng_s_rgb24b));
 	if (color!=0){
 		ResetColor(color);
 	}
@@ -1344,15 +1345,15 @@ upng_s_rgb24b* InitColorR8G8B8(){
 }
 
 void InitColor(upng_s_rgb16b **dst){
-	*dst=(upng_s_rgb16b*)malloc(sizeof(upng_s_rgb16b));
+	*dst=(upng_s_rgb16b*)toaster::malloc_auto(sizeof(upng_s_rgb16b));
 	ResetColor(*dst);
 }
 void InitColor(upng_s_rgb18b **dst){
-	*dst=(upng_s_rgb18b*)malloc(sizeof(upng_s_rgb18b));
+	*dst=(upng_s_rgb18b*)toaster::malloc_auto(sizeof(upng_s_rgb18b));
 	ResetColor(*dst);
 }
 void InitColor(upng_s_rgb24b **dst){
-	*dst=(upng_s_rgb24b*)malloc(sizeof(upng_s_rgb24b));
+	*dst=(upng_s_rgb24b*)toaster::malloc_auto(sizeof(upng_s_rgb24b));
 	ResetColor(*dst);
 }
 

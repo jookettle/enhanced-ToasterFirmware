@@ -90,13 +90,23 @@ bool EffectScript::loadScript(const char* name, const char* base_path) {
 
   char s[256] = {0, };
   sprintf(s, "script/%s.yaml", name);
+
+  _from_sd = false;
+  if (strncmp(_base_path.c_str(), "/sd/", 4) == 0) {
+    _base_path = base_path + 3;
+    _from_sd = true;
+  }
+
   std::string filename = makeFileName(s);
 
-  bool result = _parser.open(filename.c_str());
+  bool result = _parser.open(filename.c_str(), _from_sd);
   if (result == false) {
+    TF_LOGW(TAG, "script %s%s parse failed (%s)", _from_sd ? "/sd" : "", filename.c_str(), _parser.getLastError());
+    
     _base_path = Toaster::DEFAULT_BASE_PATH;
+    _from_sd = false;
     filename = makeFileName(s);
-    result = _parser.open(filename.c_str());
+    result = _parser.open(filename.c_str(), false);
     if (result == false) {
       TF_LOGE(TAG, "script %s parse failed (%s)", filename.c_str(), _parser.getLastError());
     }
@@ -157,8 +167,8 @@ bool EffectScript::initSequence(Display& display) {
   size_t image_loaded = 0;
   for (int i = 0; i < image_count; i++) {
     std::string filename = makeFileName(_parser.getImages()[i].c_str());
-    bool image_load = (image_usage[i] != 0 && (image_usage_count < DYNAMIC_LOAD_COUNT || image_loaded < DYNAMIC_LOAD_COUNT));
-    auto asset = image_load ? new Asset(filename.c_str(), Protogen.isRGB565()) : nullptr;
+    bool image_load = (image_usage[i] != 0 && (psramFound() || (image_usage_count < DYNAMIC_LOAD_COUNT || image_loaded < DYNAMIC_LOAD_COUNT)));
+    auto asset = image_load ? new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false) : nullptr;
     
     if (asset != nullptr) {
       ++image_loaded;
@@ -199,7 +209,7 @@ bool EffectScript::initVideo(Display& display) {
       sprintf(s, video.path.c_str(), _step);
       std::string filename = makeFileName(s);
 
-      _video_legacy_frame = new Asset(filename.c_str(), Protogen.isRGB565());
+      _video_legacy_frame = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
       if (_video_legacy_frame == nullptr || !_video_legacy_frame->isLoaded()) {
         TF_LOGE(TAG, "initVideo: video first frame load failed. (%s)", video.path.c_str());
         _error = true;
@@ -212,7 +222,7 @@ bool EffectScript::initVideo(Display& display) {
     }
     else { // gif, mjpeg
       std::string filename = makeFileName(video.path.c_str());
-      auto asset = new Asset(filename.c_str(), Protogen.isRGB565(), _parser.getVideoInfo().fps);
+      auto asset = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), _parser.getVideoInfo().loop, _parser.getVideoInfo().fps);
       if (asset != nullptr) {
         if (!asset->isLoaded()) {
           delete asset;
@@ -247,7 +257,7 @@ bool EffectScript::initVideo(Display& display) {
         sprintf(s, video.path.c_str(), video.start);
         std::string filename = makeFileName(s);
 
-        _assets.push_back(new Asset(filename.c_str(), Protogen.isRGB565()));
+        _assets.push_back(new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false));
 
         asset = _assets.front();
         if (asset == nullptr || asset->getType() != Asset::ASSET_IMAGE) {
@@ -383,7 +393,7 @@ void EffectScript::processVideo(Display& display) {
         sprintf(s, video_info.path.c_str(), _step);
         std::string filename = makeFileName(s);
 
-        _video_legacy_frame = new Asset(filename.c_str(), Protogen.isRGB565());
+        _video_legacy_frame = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
         if (_video_legacy_frame == nullptr || !_video_legacy_frame->isLoaded()) {
           TF_LOGE(TAG, "processVideo: video frame load failed. (%s)", video_info.path.c_str());
           if (_video_legacy_frame != nullptr) {
@@ -445,6 +455,12 @@ void EffectScript::processVideo(Display& display) {
       switch (_colorMode) {
       case PCM_PERSONAL:
         color_func = color_func_gray_personal;
+        break;
+      case PCM_PERSONAL2:
+        color_func = color_func_gray_personal2;
+        break;
+      case PCM_PERSONAL3:
+        color_func = color_func_gray_personal3;
         break;
       case PCM_RAINBOW_SINGLE:
         color_func = color_func_gray_rainbow_single;
@@ -537,7 +553,7 @@ size_t EffectScript::loadNextImages(Display& display, int current_sequence, cons
       int image_index = seq[i].image;
       if (_assets[image_index] == nullptr) {
         std::string filename = makeFileName(_parser.getImages()[image_index].c_str());
-        _assets[image_index] = new Asset(filename.c_str(), Protogen.isRGB565());
+        _assets[image_index] = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
         if (_assets[image_index] == nullptr) {
           TF_LOGW(TAG, "loadNextImages failed (%d, %s)", image_index, _parser.getImages()[image_index].c_str());
           return false;

@@ -9,6 +9,8 @@
 
 If the development board uses a USB chipset such as CH340 or CH9102, you must install the driver to connect.
 
+The ESP32-S3 uses USB CDC. While the default Windows driver should work to some extent, there are limitations to normal use. Therefore, it's recommended to install the driver using [Zadig](https://zadig.akeo.ie/). Simply install the USB Serial (CDC) driver on Interface 0.
+
 
 
 # Configuration
@@ -16,6 +18,8 @@ ToasterFirmware uses FFAT, a lightweight file system, to store data files in Fla
 When doing `Upload Filesystem Image`, all files in the `/data` folder will be uploaded, and the full path name can be up to 31 characters long(up to /123456789012345678901234567890), so please be careful.
 
 Among them, most settings are managed in the `config.yaml` file. Basically, it follows the syntax of yaml, but it does not include all functions, so please format it as best as possible.
+
+If you're using the ESP32-S3, please refer to the contents of the `config_s3.yaml` file. Uploading without changing the file name or contents will result in an error.
 
 
 
@@ -166,6 +170,15 @@ Connect the ESP32 board and do `Upload Filesystem Image` first in PlatformIO on 
 
 
 
+# SD Card
+The ESP32-S3 supports using an SD card. This allows you to store and play much larger videos.
+
+If there are duplicate emotions on the FFAT and SD card, the SD card will be used first.
+
+If the SD card isn't recognized, format it with the file system set to `FAT32` and the allocation unit size set to `4096 bytes` and try again.
+
+
+
 # Debug Mode
 > NOTE: This feature is subject to change at any time!
 
@@ -244,5 +257,6 @@ Press the `Enter` key or `!` key and enter the command.
 | `dithering`            | Enable HUD dithering. | |
 | `nodithering`          | Disable HUD dithering. | |
 | `datetime`             | Displays the date and time of the built-in clock. | |
-| `settime`              | Sets the time of the built-in clock. | 예제: `settime 12:34` 또는 `settime 12:34:56` |
-| `setdatetime`          | Sets the date and time of the built-in clock. | 예제: `setdatetime 2023-12-08 12:34:56` |
+| `settime`              | Sets the time of the built-in clock. | ex: `settime 12:34` 또는 `settime 12:34:56` |
+| `setdatetime`          | Sets the date and time of the built-in clock. | ex: `setdatetime 2023-12-08 12:34:56` |
+| `color`                | Change the color preset. | ex: `color personal2` |

@@ -24,6 +24,12 @@ void HUDOptions::init() {
     });
     p->nextHUD(&hud_selector);
   });
+
+  if (Protogen._rtc.isBegin()) {
+    addMenu("Time",      [](HUDBase* p, const char*) { 
+      p->nextHUD(&hud_timeset);
+    });
+  }
 }
 
 };
