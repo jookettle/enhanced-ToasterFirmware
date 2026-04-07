@@ -375,7 +375,7 @@ bool Toaster::workPerSecond() {
     }
   }
 
-  TF_LOGD(TAG, sz);
+  TF_LOGD(TAG, "%s", sz);
 
   return true;
 }
@@ -389,10 +389,9 @@ void Toaster::setNextEmotion(const char* emotion) {
 bool Toaster::setEmotion(const char* emotion) {
   TF_LOGD(TAG, "setEmotion: %s", emotion);
   
-  for (size_t i = 0; i < _emotions.size(); i++) {
-    if (strcasecmp(_emotions[i].name.c_str(), emotion) == 0) {
-      return setEmotion(i);
-    }
+  int index = findEmotion(emotion);
+  if (index >= 0) {
+    return setEmotion((size_t)index);
   }
 
   TF_LOGW(TAG, "setEmotion: %s not found", emotion);
@@ -713,7 +712,7 @@ bool Toaster::isEmotionExist(const char* name) const {
 
 
 int Toaster::findEmotion(const char* name) const {
-  auto it = _emotion_map.find(name);
+  auto it = _emotion_map.find(to_lower(name));
   if (it != _emotion_map.end()) {
     return (int)it->second;
   }
@@ -1341,15 +1340,15 @@ bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
   }
 
   _emotions.push_back({"", "blank", "", "", "blank", "", "", "blank", true});
-  _emotion_map["blank"] = _emotions.size() - 1;
+  _emotion_map[to_lower("blank")] = _emotions.size() - 1;
   _emotions.push_back({"", "white", "", "", "white", "", "", "white", true});
-  _emotion_map["white"] = _emotions.size() - 1;
+  _emotion_map[to_lower("white")] = _emotions.size() - 1;
   _emotions.push_back({"", "festive", "", "", "festive", "", "", "side_rainbow", false});
-  _emotion_map["festive"] = _emotions.size() - 1;
+  _emotion_map[to_lower("festive")] = _emotions.size() - 1;
   _emotions.push_back({"", "clock", "", "", "clock", "", "", "side_default", false});
-  _emotion_map["clock"] = _emotions.size() - 1;
+  _emotion_map[to_lower("clock")] = _emotions.size() - 1;
   _emotions.push_back({"", "dino", "", "", "dino", "", "", "side_rainbow", false});
-  _emotion_map["dino"] = _emotions.size() - 1;
+  _emotion_map[to_lower("dino")] = _emotions.size() - 1;
 
   hud_emotions.clear();
   hud_emotions.push_back(HUDEmotions(EMOTION_DEFAULT));
@@ -1441,7 +1440,7 @@ size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_
     }
     else {
       _emotions.push_back(data);
-      _emotion_map[data.name] = _emotions.size() - 1;
+      _emotion_map[to_lower(data.name)] = _emotions.size() - 1;
     }
     
     addHUDEmotion(dir.c_str(), name->asString().c_str());

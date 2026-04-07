@@ -20,6 +20,8 @@ static inline std::string& trim(std::string& s, const char* t = " \t\n\r\f\v") {
   return ltrim(rtrim(s, t), t);
 }
 
+std::string to_lower(const std::string& s);
+
 std::vector<std::string> my_split(const std::string& str, const std::string& delim);
 
 uint32_t parse_time_str(const char* str);
