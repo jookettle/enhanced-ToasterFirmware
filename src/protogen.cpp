@@ -206,6 +206,10 @@ bool Toaster::begin() {
   loadShortcut(SHORTCUT_DEFAULT);
   
   _interruptSemaphore = xSemaphoreCreateRecursiveMutex();
+  if (_interruptSemaphore == nullptr) {
+    TF_LOGE(TAG, "begin: failed to create interrupt mutex");
+    return false;
+  }
 
   _hub75_fps = config_yaml.getInt("hardware:hub75:fps", 60);
   Worker::begin(_hub75_fps);
