@@ -82,10 +82,10 @@ public:
   int getDinoY();
 
 protected:
-  void drawGames(Display& display);
-  void processGames();
-  void generateCactus();
-  void generateTile(bool init);
+    void drawGames(Display& display);
+  void processGames(Display& display);
+  void generateCactus(Display& display);
+  void generateTile(Display& display, bool init);
   void printScore(Display& display, int score);
 };
 

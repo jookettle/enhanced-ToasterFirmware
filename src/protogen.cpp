@@ -380,8 +380,11 @@ bool Toaster::setEmotion(const char* emotion) {
 
 
 bool Toaster::setEmotion(size_t index) {
+  syncLock();
+
   if (index >= _emotions.size()) {
     TF_LOGW(TAG, "setEmotion: out of index (%d / %d)", index, _emotions.size());
+    syncUnlock();
     return false;
   }
 
@@ -400,6 +403,8 @@ bool Toaster::setEmotion(size_t index) {
   }
 
   _emotion_index = index;
+
+  syncUnlock();
 
   return true;
 }
