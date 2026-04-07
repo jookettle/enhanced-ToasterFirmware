@@ -315,7 +315,6 @@ bool Toaster::workPerSecond() {
   char sz[256] = {0};
   int remaining = sizeof(sz);
   char* p = sz;
-  int n;
 
   auto safe_append = [&](int n_ret) -> bool {
     if (n_ret < 0) {
