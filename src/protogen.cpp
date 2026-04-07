@@ -440,6 +440,10 @@ void Toaster::shuffleEmotion() {
     size_t emotion_index = getEmotionIndex();
     size_t emotion_count = getEmotionCount();
     
+    if (emotion_count == 0) {
+      return;
+    }
+
     _shuffle_deck.reserve(emotion_count - 1);
 
     for (size_t i = 0; i < emotion_count; i++) {
