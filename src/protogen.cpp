@@ -646,6 +646,10 @@ void Toaster::syncUnlock() {
       return;
     }
 
+    if (_sync_count == 0) {
+      TF_LOGW(TAG, "syncUnlock: called more times than syncLock, ignoring");
+      return;
+    }
     _sync_count--;
     if (_sync_count == 0) {
       _sync_task = nullptr;
