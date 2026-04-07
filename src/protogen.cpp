@@ -205,8 +205,11 @@ bool Toaster::begin() {
   loadShortcutList();
   loadShortcut(SHORTCUT_DEFAULT);
   
-  _interruptSemaphore = xSemaphoreCreateBinary();
-  syncUnlock();
+  _interruptSemaphore = xSemaphoreCreateRecursiveMutex();
+  if (_interruptSemaphore == nullptr) {
+    TF_LOGE(TAG, "begin: failed to create interrupt mutex");
+    return false;
+  }
 
   _hub75_fps = config_yaml.getInt("hardware:hub75:fps", 60);
   Worker::begin(_hub75_fps);
@@ -380,8 +383,11 @@ bool Toaster::setEmotion(const char* emotion) {
 
 
 bool Toaster::setEmotion(size_t index) {
+  syncLock();
+
   if (index >= _emotions.size()) {
-    TF_LOGW(TAG, "setEmotion: out of index (%d / %d)", index, _emotions.size());
+    TF_LOGW(TAG, "setEmotion: out of index (%zu / %zu)", index, _emotions.size());
+    syncUnlock();
     return false;
   }
 
@@ -400,6 +406,8 @@ bool Toaster::setEmotion(size_t index) {
   }
 
   _emotion_index = index;
+
+  syncUnlock();
 
   return true;
 }
@@ -614,14 +622,16 @@ void Toaster::toast() {
 
 void Toaster::syncLock(TickType_t xBlockTime) {
   if (_interruptSemaphore != nullptr) {
-    xSemaphoreTake(_interruptSemaphore, xBlockTime);
+    if (xSemaphoreTakeRecursive(_interruptSemaphore, xBlockTime) != pdTRUE) {
+      TF_LOGW(TAG, "syncLock: failed to acquire recursive mutex (timeout: %u ticks)", (uint32_t)xBlockTime);
+    }
   }
 }
 
 
 void Toaster::syncUnlock() {
   if (_interruptSemaphore != nullptr) {
-    xSemaphoreGive(_interruptSemaphore);
+    xSemaphoreGiveRecursive(_interruptSemaphore);
   }
 }
 

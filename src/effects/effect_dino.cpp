@@ -194,14 +194,14 @@ void EffectDino::init(Display& display) {
   setStaticMode(true);
 
   _objects.clear();
-  generateTile(true);
+  generateTile(display, true);
   
   _image_dino = new Image(Image::IMAGE_PNG, IMAGE_DINO, sizeof(IMAGE_DINO) / sizeof(IMAGE_DINO[0]), true);
 }
 
 
 void EffectDino::process(Display& display) {
-  processGames();
+  processGames(display);
   drawGames(display);
 
   ++_frame;
@@ -214,6 +214,7 @@ void EffectDino::release(Display& display) {
     _image_dino = nullptr;
   }
 
+  _objects.clear();
   setStaticMode(_prev_static_mode);
 
   Effect::release(display);
@@ -257,13 +258,15 @@ void EffectDino::drawGames(Display& display) {
       dino_sy = _jumping ? DINO_JUMP_SY : DINO_RUN_SY[run_frame];
     }
     break;
-  case STATE_GAMEOVER:
+  case STATE_GAMEOVER: {
     dino_sx = DINO_DED_SX;
     dino_sy = DINO_DED_SY;
 
-    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, 18, 0, GAMEOVER_W, GAMEOVER_H, GAMEOVER_SX, GAMEOVER_SY);
-    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, 66, 0, GAMEOVER_W, GAMEOVER_H, GAMEOVER_SX, GAMEOVER_SY);
+    int center_x = display.getWidth() / 2;
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, center_x - 30, 0, GAMEOVER_W, GAMEOVER_H, GAMEOVER_SX, GAMEOVER_SY);
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, center_x + 6, 0, GAMEOVER_W, GAMEOVER_H, GAMEOVER_SX, GAMEOVER_SY);
     break;
+  }
   }
   
   display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_MIRROR, dino_x, dino_y, DINO_W, DINO_H, dino_sx, dino_sy);
@@ -272,7 +275,7 @@ void EffectDino::drawGames(Display& display) {
 }
 
 
-void EffectDino::processGames() {
+void EffectDino::processGames(Display& display) {
   if (_jumping == false && Protogen._boopsensor.isBoop()) {
     _jumping = true;
     _jump_frame = 0;
@@ -301,7 +304,7 @@ void EffectDino::processGames() {
 
     if (Timer::get_millis() >= _next_block_time) {
       _next_block_time = Timer::get_millis() + Random::random(MAX_BLOCK_TIME_MS - MIN_BLOCK_TIME_MS) + MIN_BLOCK_TIME_MS;
-      generateCactus();
+      generateCactus(display);
     }
 
     if ( _jumping) {
@@ -316,7 +319,7 @@ void EffectDino::processGames() {
       ++_tile_x;
       if (_tile_x >= TILE_W) {
         _tile_x = 0;
-        generateTile(false);
+        generateTile(display, false);
       }
 
       for (auto it = _objects.begin(); it != _objects.end(); ) {
@@ -357,18 +360,18 @@ void EffectDino::processGames() {
 }
 
 
-void EffectDino::generateCactus() {
+void EffectDino::generateCactus(Display& display) {
   int type = Random::random(CACTUS_TYPE_COUNT);
-  auto cactus = new DinoCactus(type, HUB75_PANEL_RES_X + CACTUS_DATA[type].w / 2, 16, CACTUS_DATA[type].w, CACTUS_DATA[type].h, true);
-  _objects.push_back(cactus);
+  const int panel_width = display.getWidth() / HUB75_PANEL_CHAIN;
+  _objects.push_back(std::unique_ptr<DinoObject>(new DinoCactus(type, panel_width + CACTUS_DATA[type].w / 2, 16, CACTUS_DATA[type].w, CACTUS_DATA[type].h, true)));
 }
 
 
-void EffectDino::generateTile(bool init) {
-  const int TILE_COUNT = HUB75_PANEL_RES_X / TILE_W + 1;
+void EffectDino::generateTile(Display& display, bool init) {
+  const int panel_width = display.getWidth() / HUB75_PANEL_CHAIN;
+  const int TILE_COUNT = panel_width / TILE_W + 1;
 
-  static std::random_device rd;
-  static std::mt19937 gen(_rd());
+  std::mt19937& gen = Random::getGenerator();
 
   static int tile_weights[TILE_TYPE_COUNT];
   if (tile_weights[0] == 0) {
@@ -388,7 +391,9 @@ void EffectDino::generateTile(bool init) {
     }
   }
   else {
-    memmove(&_tiles[0], &_tiles[1], sizeof(int) * (TILE_COUNT - 1));
+    if (TILE_COUNT > 1) {
+      memmove(&_tiles[0], &_tiles[1], sizeof(int) * (TILE_COUNT - 1));
+    }
     _tiles.back() = dist(gen);
   }
 }
@@ -402,10 +407,12 @@ void EffectDino::printScore(Display& display, int score) {
   }
 
   int digit = 0;
+  const int panel_width = display.getWidth() / HUB75_PANEL_CHAIN;
   do {
     int n = display_score % 10;
-    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, HUB75_PANEL_RES_X - 1 - (digit + 1) * (SCORE_W + 1), 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
-    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, HUB75_PANEL_RES_X - 1 + 48 - (digit + 1) * (SCORE_W + 1), 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
+    int x_offset = (digit + 1) * (SCORE_W + 1);
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, panel_width - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, display.getWidth() - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
     display_score /= 10;
     ++digit;
   } while (display_score > 0);
