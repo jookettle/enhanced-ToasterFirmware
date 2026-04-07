@@ -258,7 +258,7 @@ void EffectDino::drawGames(Display& display) {
       dino_sy = _jumping ? DINO_JUMP_SY : DINO_RUN_SY[run_frame];
     }
     break;
-  case STATE_GAMEOVER:
+  case STATE_GAMEOVER: {
     dino_sx = DINO_DED_SX;
     dino_sy = DINO_DED_SY;
 
@@ -266,6 +266,7 @@ void EffectDino::drawGames(Display& display) {
     display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, center_x - 30, 0, GAMEOVER_W, GAMEOVER_H, GAMEOVER_SX, GAMEOVER_SY);
     display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, center_x + 6, 0, GAMEOVER_W, GAMEOVER_H, GAMEOVER_SX, GAMEOVER_SY);
     break;
+  }
   }
   
   display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_MIRROR, dino_x, dino_y, DINO_W, DINO_H, dino_sx, dino_sy);

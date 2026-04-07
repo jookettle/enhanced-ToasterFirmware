@@ -11,7 +11,7 @@ To ensure code quality and consistency across the `enhanced-ToasterFirmware` cod
 ## 1. File Structure & Headers
 - **Header Guards**: Use `#pragma once` at the top of every header file.
 - **Includes**: Group includes by project-local first, then libraries, then standard libraries. Use relative paths within the project.
-- **Namespaces**: All project code must reside within the `toaster` namespace.
+- **Namespaces**: All project-owned code must reside within the `toaster` namespace. Third-party or vendored code (for example, code under `src/lib/`) is exempt and should keep its upstream namespace and structure.
 
 ## 2. Naming Conventions
 - **Classes**: `PascalCase` (e.g., `EffectDino`).
