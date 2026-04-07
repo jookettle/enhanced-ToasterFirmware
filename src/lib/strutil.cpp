@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <algorithm>
+#include <cctype>
 
 
 namespace toaster {
@@ -131,6 +133,13 @@ bool parse_mac(const char* str, uint8_t* mac) {
   mac[5] = (hex2dec(str[15]) << 4) | (hex2dec(str[16]) << 0);
 
   return true;
+}
+
+
+std::string to_lower(const std::string& s) {
+  std::string result = s;
+  std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::tolower(c); });
+  return result;
 }
 
 

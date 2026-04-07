@@ -1,5 +1,9 @@
 #pragma once
 #include "config/configure.h"
+#include <map>
+#include <string>
+#include <vector>
+
 
 
 #include "lib/worker.h"
@@ -243,6 +247,7 @@ protected:
   std::vector<EMOTION_DATA> _emotions;
   
   std::vector<int> _shuffle_deck;
+  std::map<std::string, size_t> _emotion_map;
 
 protected:
   bool isEmotionExist(const char* name) const;
