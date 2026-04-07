@@ -362,12 +362,14 @@ void EffectDino::processGames(Display& display) {
 
 void EffectDino::generateCactus(Display& display) {
   int type = Random::random(CACTUS_TYPE_COUNT);
-  _objects.push_back(std::unique_ptr<DinoObject>(new DinoCactus(type, display.getWidth() + CACTUS_DATA[type].w / 2, 16, CACTUS_DATA[type].w, CACTUS_DATA[type].h, true)));
+  const int panel_width = display.getWidth() / HUB75_PANEL_CHAIN;
+  _objects.push_back(std::unique_ptr<DinoObject>(new DinoCactus(type, panel_width + CACTUS_DATA[type].w / 2, 16, CACTUS_DATA[type].w, CACTUS_DATA[type].h, true)));
 }
 
 
 void EffectDino::generateTile(Display& display, bool init) {
-  const int TILE_COUNT = display.getWidth() / TILE_W + 1;
+  const int panel_width = display.getWidth() / HUB75_PANEL_CHAIN;
+  const int TILE_COUNT = panel_width / TILE_W + 1;
 
   std::mt19937& gen = Random::getGenerator();
 
@@ -403,10 +405,12 @@ void EffectDino::printScore(Display& display, int score) {
   }
 
   int digit = 0;
-  int width = display.getWidth();
+  const int panel_width = display.getWidth() / HUB75_PANEL_CHAIN;
   do {
     int n = display_score % 10;
-    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, width - 1 - (digit + 1) * (SCORE_W + 1), 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
+    int x_offset = (digit + 1) * (SCORE_W + 1);
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, panel_width - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, panel_width * 2 - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
     display_score /= 10;
     ++digit;
   } while (display_score > 0);

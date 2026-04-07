@@ -205,8 +205,7 @@ bool Toaster::begin() {
   loadShortcutList();
   loadShortcut(SHORTCUT_DEFAULT);
   
-  _interruptSemaphore = xSemaphoreCreateBinary();
-  syncUnlock();
+  _interruptSemaphore = xSemaphoreCreateRecursiveMutex();
 
   _hub75_fps = config_yaml.getInt("hardware:hub75:fps", 60);
   Worker::begin(_hub75_fps);
@@ -619,16 +618,8 @@ void Toaster::toast() {
 
 void Toaster::syncLock(TickType_t xBlockTime) {
   if (_interruptSemaphore != nullptr) {
-    TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
-
-    if (_sync_task == currentTask) {
-      _sync_count++;
-      return;
-    }
-
-    if (xSemaphoreTake(_interruptSemaphore, xBlockTime) == pdTRUE) {
-      _sync_task = currentTask;
-      _sync_count = 1;
+    if (xSemaphoreTakeRecursive(_interruptSemaphore, xBlockTime) != pdTRUE) {
+      TF_LOGW(TAG, "syncLock: failed to acquire semaphore");
     }
   }
 }
@@ -636,25 +627,7 @@ void Toaster::syncLock(TickType_t xBlockTime) {
 
 void Toaster::syncUnlock() {
   if (_interruptSemaphore != nullptr) {
-    TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
-
-    if (_sync_task != currentTask) {
-      // Allow forced unlock for initialization if no one holds it
-      if (_sync_task == nullptr) {
-        xSemaphoreGive(_interruptSemaphore);
-      }
-      return;
-    }
-
-    if (_sync_count == 0) {
-      TF_LOGW(TAG, "syncUnlock: called more times than syncLock, ignoring");
-      return;
-    }
-    _sync_count--;
-    if (_sync_count == 0) {
-      _sync_task = nullptr;
-      xSemaphoreGive(_interruptSemaphore);
-    }
+    xSemaphoreGiveRecursive(_interruptSemaphore);
   }
 }
 

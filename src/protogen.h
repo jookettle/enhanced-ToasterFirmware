@@ -175,8 +175,6 @@ protected:
   static const char* _tf_version;
   bool _init{false};
   SemaphoreHandle_t _interruptSemaphore{nullptr};
-  uint32_t _sync_count{0};
-  TaskHandle_t _sync_task{nullptr};
 
 public:
   static const char* DEFAULT_BASE_PATH;
