@@ -6,6 +6,8 @@
 #include "lib/logger.h"
 #include "lib/strutil.h"
 #include <map>
+#include <algorithm>
+#include <random>
 
 
 namespace toaster {
@@ -310,30 +312,46 @@ bool Toaster::workPerSecond() {
     return false;
   }
 
-  char sz[256] = {0, };
+  char sz[256];
+  int remaining = sizeof(sz);
   char* p = sz;
+  int n;
 
-  p += sprintf(p, "FPS: %d", getRecentFPS());
+  n = snprintf(p, remaining, "FPS: %d", getRecentFPS());
+  p += std::min(n, remaining - 1);
+  remaining -= std::min(n, remaining - 1);
 
   if (_hud_use) {
-    p += sprintf(p, ", HUD: %d", _hud.getRecentFPS());
+    n = snprintf(p, remaining, ", HUD: %d", _hud.getRecentFPS());
+    p += std::min(n, remaining - 1);
+    remaining -= std::min(n, remaining - 1);
   }
 
   if (_boopsensor_use) {
-    p += sprintf(p, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal());
+    n = snprintf(p, remaining, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal());
+    p += std::min(n, remaining - 1);
+    remaining -= std::min(n, remaining - 1);
   }
 
   if (_lightsensor_use) {
-    p += sprintf(p, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(), _lightsensor.getValue(), _display.getBrightness() / 255.0f);
+    n = snprintf(p, remaining, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(), _lightsensor.getValue(), _display.getBrightness() / 255.0f);
+    p += std::min(n, remaining - 1);
+    remaining -= std::min(n, remaining - 1);
   }
   else {
-    p += sprintf(p, ", B: %.2f", _display.getBrightness() / 255.0f);
+    n = snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f);
+    p += std::min(n, remaining - 1);
+    remaining -= std::min(n, remaining - 1);
   }
 
-  p += sprintf(p, ", heap: %d", ESP.getFreeHeap());
+  n = snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap());
+  p += std::min(n, remaining - 1);
+  remaining -= std::min(n, remaining - 1);
   
   if (psramFound()) {
-  	p += sprintf(p, " (%d)", ESP.getFreePsram());
+    n = snprintf(p, remaining, " (%u)", ESP.getFreePsram());
+    p += std::min(n, remaining - 1);
+    remaining -= std::min(n, remaining - 1);
   }
 
   TF_LOGD(TAG, sz);
@@ -401,31 +419,21 @@ void Toaster::shuffleEmotion() {
     size_t emotion_index = getEmotionIndex();
     size_t emotion_count = getEmotionCount();
     
-    std::vector<int> deck;
-    deck.reserve(emotion_count);
-    _shuffle_deck.reserve(emotion_count);
+    _shuffle_deck.reserve(emotion_count - 1);
 
-    for (size_t i = 0; i < emotion_index; i++) {
-      if (!_emotions[i].shuffle_exclude) {
-        deck.push_back(i);
+    for (size_t i = 0; i < emotion_count; i++) {
+      if (i != emotion_index && !_emotions[i].shuffle_exclude) {
+        _shuffle_deck.push_back(i);
       }
     }
     
-    for (size_t i = emotion_index + 1; i < emotion_count; i++) {
-      if (!_emotions[i].shuffle_exclude) {
-        deck.push_back(i);
-      }
-    }
-    
-    while (!deck.empty()) {
-      int rnd = Random::random(deck.size());
-      _shuffle_deck.push_back(deck[rnd]);
-      deck.erase(deck.begin() + rnd);
-    }
+    std::shuffle(_shuffle_deck.begin(), _shuffle_deck.end(), std::default_random_engine(Timer::get_micros()));
   }
   
-  setEmotion(_shuffle_deck.front());
-  _shuffle_deck.erase(_shuffle_deck.begin());
+  if (!_shuffle_deck.empty()) {
+    setEmotion(_shuffle_deck.front());
+    _shuffle_deck.erase(_shuffle_deck.begin());
+  }
 }
 
 
@@ -657,16 +665,16 @@ const char* Toaster::getTimeStr() const {
 
   switch (_rtc_format) {
   case RTC_FORMAT_HM:
-    sprintf(time_str, "%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getMinute());
+    snprintf(time_str, sizeof(time_str), "%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getMinute());
     break;
   case RTC_FORMAT_HMS: 
-    sprintf(time_str, "%02d%c%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getMinute(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getSecond());
+    snprintf(time_str, sizeof(time_str), "%02d%c%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getMinute(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getSecond());
     break;
   case RTC_FORMAT_HM_NO_BLINKING:
-    sprintf(time_str, "%02d:%02d", _rtc.getHour(), _rtc.getMinute());
+    snprintf(time_str, sizeof(time_str), "%02d:%02d", _rtc.getHour(), _rtc.getMinute());
     break;
   case RTC_FORMAT_HMS_NO_BLINKING: 
-    sprintf(time_str, "%02d:%02d:%02d", _rtc.getHour(), _rtc.getMinute(), _rtc.getSecond());
+    snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d", _rtc.getHour(), _rtc.getMinute(), _rtc.getSecond());
     break;
   }
   
@@ -680,10 +688,9 @@ bool Toaster::isEmotionExist(const char* name) const {
 
 
 int Toaster::findEmotion(const char* name) const {
-  for (int i = 0; i < _emotions.size(); i++) {
-    if (_emotions[i].name == name) {
-      return i;
-    }
+  auto it = _emotion_map.find(name);
+  if (it != _emotion_map.end()) {
+    return (int)it->second;
   }
 
   return -1;
@@ -1309,10 +1316,15 @@ bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
   }
 
   _emotions.push_back({"", "blank", "", "", "blank", "", "", "blank", true});
+  _emotion_map["blank"] = _emotions.size() - 1;
   _emotions.push_back({"", "white", "", "", "white", "", "", "white", true});
+  _emotion_map["white"] = _emotions.size() - 1;
   _emotions.push_back({"", "festive", "", "", "festive", "", "", "side_rainbow", false});
+  _emotion_map["festive"] = _emotions.size() - 1;
   _emotions.push_back({"", "clock", "", "", "clock", "", "", "side_default", false});
+  _emotion_map["clock"] = _emotions.size() - 1;
   _emotions.push_back({"", "dino", "", "", "dino", "", "", "side_rainbow", false});
+  _emotion_map["dino"] = _emotions.size() - 1;
 
   hud_emotions.clear();
   hud_emotions.push_back(HUDEmotions(EMOTION_DEFAULT));
@@ -1404,6 +1416,7 @@ size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_
     }
     else {
       _emotions.push_back(data);
+      _emotion_map[data.name] = _emotions.size() - 1;
     }
     
     addHUDEmotion(dir.c_str(), name->asString().c_str());
@@ -1496,7 +1509,7 @@ bool Toaster::loadShortcutList() {
   
   TF_LOGI(TAG, "total %d shortcuts loaded!", _shortcut_list.size());
 
-  return false;
+  return true;
 }
 
 

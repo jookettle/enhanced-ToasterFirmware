@@ -88,8 +88,8 @@ bool EffectScript::loadScript(const char* name, const char* base_path) {
   _script_name = name;
   _base_path = base_path;
 
-  char s[256] = {0, };
-  sprintf(s, "script/%s.yaml", name);
+  char s[256];
+  snprintf(s, sizeof(s), "script/%s.yaml", name);
 
   _from_sd = false;
   if (strncmp(_base_path.c_str(), "/sd/", 4) == 0) {
@@ -205,8 +205,8 @@ bool EffectScript::initVideo(Display& display) {
         delete _video_legacy_frame;
       }
 
-      char s[256] = {0, };
-      sprintf(s, video.path.c_str(), _step);
+      char s[256];
+      snprintf(s, sizeof(s), video.path.c_str(), _step);
       std::string filename = makeFileName(s);
 
       _video_legacy_frame = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
@@ -253,8 +253,8 @@ bool EffectScript::initVideo(Display& display) {
       Asset* asset;
       
       if (_video_legacy) {
-        char s[256] = {0, };
-        sprintf(s, video.path.c_str(), video.start);
+        char s[256];
+        snprintf(s, sizeof(s), video.path.c_str(), video.start);
         std::string filename = makeFileName(s);
 
         _assets.push_back(new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false));
@@ -389,8 +389,8 @@ void EffectScript::processVideo(Display& display) {
           return;
         }
         
-        char s[256] = {0, };
-        sprintf(s, video_info.path.c_str(), _step);
+        char s[256];
+        snprintf(s, sizeof(s), video_info.path.c_str(), _step);
         std::string filename = makeFileName(s);
 
         _video_legacy_frame = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
