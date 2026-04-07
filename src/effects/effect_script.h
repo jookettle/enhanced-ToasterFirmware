@@ -66,6 +66,7 @@ protected:
 
 protected:
   std::string makeFileName(const char* filename);
+  std::string safeFormatVideoPath(const std::string& path, int step);
   bool initSequence(Display& display);
   bool initVideo(Display& display);
   void processSequence(Display& display, const std::vector<DRAW_SEQUENCE>& sequence, const std::vector<DRAW_SEQUENCE>& other_sequence);

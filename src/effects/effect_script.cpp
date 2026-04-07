@@ -89,7 +89,11 @@ bool EffectScript::loadScript(const char* name, const char* base_path) {
   _base_path = base_path;
 
   char s[256];
-  snprintf(s, sizeof(s), "script/%s.yaml", name);
+  int n = snprintf(s, sizeof(s), "script/%s.yaml", name);
+  if (n < 0 || n >= (int)sizeof(s)) {
+    TF_LOGE(TAG, "loadScript: script name too long or error (%d)", n);
+    return false;
+  }
 
   _from_sd = false;
   if (strncmp(_base_path.c_str(), "/sd/", 4) == 0) {
@@ -134,6 +138,35 @@ std::string EffectScript::makeFileName(const char* filename) {
   }
 
   return out_filename;
+}
+
+
+std::string EffectScript::safeFormatVideoPath(const std::string& path, int step) {
+  if (path.empty()) return "";
+
+  std::string result = path;
+
+  // Support for {frame} placeholder (Recommended)
+  size_t frame_pos = result.find("{frame}");
+  if (frame_pos != std::string::npos) {
+    result.replace(frame_pos, 7, std::to_string(step));
+    return result;
+  }
+
+  // Support for legacy %d with safety (direct replacement to avoid format string vulnerability)
+  size_t pct_d_pos = result.find("%d");
+  if (pct_d_pos != std::string::npos) {
+    // Only replace if it's the only '%' to avoid complex/dangerous formats
+    if (result.find('%') == pct_d_pos && result.find_last_of('%') == pct_d_pos) {
+      result.replace(pct_d_pos, 2, std::to_string(step));
+      return result;
+    }
+  }
+
+  // If we reach here, either there are no placeholders or there are unexpected '%' sequences.
+  // To be safe, we treat it as a literal (or we could escape '%' if we were using printf, 
+  // but since we return a string to be used as a filename literal, returning as-is is safe).
+  return result;
 }
 
 
@@ -205,9 +238,8 @@ bool EffectScript::initVideo(Display& display) {
         delete _video_legacy_frame;
       }
 
-      char s[256];
-      snprintf(s, sizeof(s), video.path.c_str(), _step);
-      std::string filename = makeFileName(s);
+      std::string formatted_path = safeFormatVideoPath(video.path, _step);
+      std::string filename = makeFileName(formatted_path.c_str());
 
       _video_legacy_frame = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
       if (_video_legacy_frame == nullptr || !_video_legacy_frame->isLoaded()) {
@@ -253,9 +285,8 @@ bool EffectScript::initVideo(Display& display) {
       Asset* asset;
       
       if (_video_legacy) {
-        char s[256];
-        snprintf(s, sizeof(s), video.path.c_str(), video.start);
-        std::string filename = makeFileName(s);
+        std::string formatted_path = safeFormatVideoPath(video.path, (int)video.start);
+        std::string filename = makeFileName(formatted_path.c_str());
 
         _assets.push_back(new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false));
 
@@ -389,9 +420,8 @@ void EffectScript::processVideo(Display& display) {
           return;
         }
         
-        char s[256];
-        snprintf(s, sizeof(s), video_info.path.c_str(), _step);
-        std::string filename = makeFileName(s);
+        std::string formatted_path = safeFormatVideoPath(video_info.path, _step);
+        std::string filename = makeFileName(formatted_path.c_str());
 
         _video_legacy_frame = new Asset(filename.c_str(), _from_sd, Protogen.isRGB565(), false);
         if (_video_legacy_frame == nullptr || !_video_legacy_frame->isLoaded()) {

@@ -312,67 +312,47 @@ bool Toaster::workPerSecond() {
     return false;
   }
 
-  char sz[256];
+  char sz[256] = {0};
   int remaining = sizeof(sz);
   char* p = sz;
   int n;
 
-  n = snprintf(p, remaining, "FPS: %d", getRecentFPS());
-  if (n > 0) {
-    int len = std::min(n, remaining - 1);
-    p += len;
-    remaining -= len;
-  }
+  auto safe_append = [&](int n_ret) -> bool {
+    if (n_ret < 0) {
+      TF_LOGE(TAG, "workPerSecond: snprintf error (%d)", n_ret);
+      return false;
+    }
+    if (n_ret >= remaining) {
+      TF_LOGW(TAG, "workPerSecond: log buffer truncated (%d >= %d)", n_ret, remaining);
+      remaining = 0; // stop appends but keep what we have
+      return false;
+    }
+    p += n_ret;
+    remaining -= n_ret;
+    return true;
+  };
+
+  if (!safe_append(snprintf(p, remaining, "FPS: %d", getRecentFPS()))) return true;
 
   if (_hud_use) {
-    n = snprintf(p, remaining, ", HUD: %d", _hud.getRecentFPS());
-    if (n > 0) {
-      int len = std::min(n, remaining - 1);
-      p += len;
-      remaining -= len;
-    }
+    if (!safe_append(snprintf(p, remaining, ", HUD: %d", _hud.getRecentFPS()))) return true;
   }
 
   if (_boopsensor_use) {
-    n = snprintf(p, remaining, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal());
-    if (n > 0) {
-      int len = std::min(n, remaining - 1);
-      p += len;
-      remaining -= len;
-    }
+    if (!safe_append(snprintf(p, remaining, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal()))) return true;
   }
 
   if (_lightsensor_use) {
-    n = snprintf(p, remaining, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(), _lightsensor.getValue(), _display.getBrightness() / 255.0f);
-    if (n > 0) {
-      int len = std::min(n, remaining - 1);
-      p += len;
-      remaining -= len;
-    }
+    if (!safe_append(snprintf(p, remaining, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(), _lightsensor.getValue(), _display.getBrightness() / 255.0f))) return true;
   }
   else {
-    n = snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f);
-    if (n > 0) {
-      int len = std::min(n, remaining - 1);
-      p += len;
-      remaining -= len;
-    }
+    if (!safe_append(snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f))) return true;
   }
 
-  n = snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap());
-  if (n > 0) {
-    int len = std::min(n, remaining - 1);
-    p += len;
-    remaining -= len;
-  }
+  if (!safe_append(snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap()))) return true;
   
   if (psramFound()) {
-    n = snprintf(p, remaining, " (%u)", ESP.getFreePsram());
-    if (n > 0) {
-      int len = std::min(n, remaining - 1);
-      p += len;
-      remaining -= len;
-    }
+    if (!safe_append(snprintf(p, remaining, " (%u)", ESP.getFreePsram()))) return true;
   }
 
   TF_LOGD(TAG, "%s", sz);
