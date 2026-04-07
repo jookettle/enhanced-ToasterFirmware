@@ -623,7 +623,7 @@ void Toaster::toast() {
 void Toaster::syncLock(TickType_t xBlockTime) {
   if (_interruptSemaphore != nullptr) {
     if (xSemaphoreTakeRecursive(_interruptSemaphore, xBlockTime) != pdTRUE) {
-      TF_LOGW(TAG, "syncLock: failed to acquire semaphore");
+      TF_LOGW(TAG, "syncLock: failed to acquire recursive mutex (timeout: %u ticks)", (uint32_t)xBlockTime);
     }
   }
 }

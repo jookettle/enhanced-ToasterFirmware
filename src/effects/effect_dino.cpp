@@ -391,7 +391,9 @@ void EffectDino::generateTile(Display& display, bool init) {
     }
   }
   else {
-    memmove(&_tiles[0], &_tiles[1], sizeof(int) * (TILE_COUNT - 1));
+    if (TILE_COUNT > 1) {
+      memmove(&_tiles[0], &_tiles[1], sizeof(int) * (TILE_COUNT - 1));
+    }
     _tiles.back() = dist(gen);
   }
 }
@@ -410,7 +412,7 @@ void EffectDino::printScore(Display& display, int score) {
     int n = display_score % 10;
     int x_offset = (digit + 1) * (SCORE_W + 1);
     display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, panel_width - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
-    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, panel_width * 2 - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
+    display.draw_image_newcolor_ex(_image_dino, _colorFunc, 0, DRAW_SINGLE, display.getWidth() - 1 - x_offset, 0, SCORE_W, SCORE_H, SCORE_SX + (n * SCORE_W), SCORE_SY);
     display_score /= 10;
     ++digit;
   } while (display_score > 0);
