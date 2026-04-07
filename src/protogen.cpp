@@ -318,40 +318,61 @@ bool Toaster::workPerSecond() {
   int n;
 
   n = snprintf(p, remaining, "FPS: %d", getRecentFPS());
-  p += std::min(n, remaining - 1);
-  remaining -= std::min(n, remaining - 1);
+  if (n > 0) {
+    int len = std::min(n, remaining - 1);
+    p += len;
+    remaining -= len;
+  }
 
   if (_hud_use) {
     n = snprintf(p, remaining, ", HUD: %d", _hud.getRecentFPS());
-    p += std::min(n, remaining - 1);
-    remaining -= std::min(n, remaining - 1);
+    if (n > 0) {
+      int len = std::min(n, remaining - 1);
+      p += len;
+      remaining -= len;
+    }
   }
 
   if (_boopsensor_use) {
     n = snprintf(p, remaining, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal());
-    p += std::min(n, remaining - 1);
-    remaining -= std::min(n, remaining - 1);
+    if (n > 0) {
+      int len = std::min(n, remaining - 1);
+      p += len;
+      remaining -= len;
+    }
   }
 
   if (_lightsensor_use) {
     n = snprintf(p, remaining, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(), _lightsensor.getValue(), _display.getBrightness() / 255.0f);
-    p += std::min(n, remaining - 1);
-    remaining -= std::min(n, remaining - 1);
+    if (n > 0) {
+      int len = std::min(n, remaining - 1);
+      p += len;
+      remaining -= len;
+    }
   }
   else {
     n = snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f);
-    p += std::min(n, remaining - 1);
-    remaining -= std::min(n, remaining - 1);
+    if (n > 0) {
+      int len = std::min(n, remaining - 1);
+      p += len;
+      remaining -= len;
+    }
   }
 
   n = snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap());
-  p += std::min(n, remaining - 1);
-  remaining -= std::min(n, remaining - 1);
+  if (n > 0) {
+    int len = std::min(n, remaining - 1);
+    p += len;
+    remaining -= len;
+  }
   
   if (psramFound()) {
     n = snprintf(p, remaining, " (%u)", ESP.getFreePsram());
-    p += std::min(n, remaining - 1);
-    remaining -= std::min(n, remaining - 1);
+    if (n > 0) {
+      int len = std::min(n, remaining - 1);
+      p += len;
+      remaining -= len;
+    }
   }
 
   TF_LOGD(TAG, sz);
