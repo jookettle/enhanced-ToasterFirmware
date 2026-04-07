@@ -1,5 +1,9 @@
 #pragma once
 #include "config/configure.h"
+#include <map>
+#include <string>
+#include <vector>
+
 
 
 #include "lib/worker.h"
