@@ -383,7 +383,7 @@ bool Toaster::setEmotion(size_t index) {
   syncLock();
 
   if (index >= _emotions.size()) {
-    TF_LOGW(TAG, "setEmotion: out of index (%d / %d)", index, _emotions.size());
+    TF_LOGW(TAG, "setEmotion: out of index (%zu / %zu)", index, _emotions.size());
     syncUnlock();
     return false;
   }
@@ -619,14 +619,38 @@ void Toaster::toast() {
 
 void Toaster::syncLock(TickType_t xBlockTime) {
   if (_interruptSemaphore != nullptr) {
-    xSemaphoreTake(_interruptSemaphore, xBlockTime);
+    TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
+
+    if (_sync_task == currentTask) {
+      _sync_count++;
+      return;
+    }
+
+    if (xSemaphoreTake(_interruptSemaphore, xBlockTime) == pdTRUE) {
+      _sync_task = currentTask;
+      _sync_count = 1;
+    }
   }
 }
 
 
 void Toaster::syncUnlock() {
   if (_interruptSemaphore != nullptr) {
-    xSemaphoreGive(_interruptSemaphore);
+    TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
+
+    if (_sync_task != currentTask) {
+      // Allow forced unlock for initialization if no one holds it
+      if (_sync_task == nullptr) {
+        xSemaphoreGive(_interruptSemaphore);
+      }
+      return;
+    }
+
+    _sync_count--;
+    if (_sync_count == 0) {
+      _sync_task = nullptr;
+      xSemaphoreGive(_interruptSemaphore);
+    }
   }
 }
 

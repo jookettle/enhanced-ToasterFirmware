@@ -33,6 +33,8 @@ public:
     return (int)(r1 * n);
   }
 
+  static std::mt19937& getGenerator() { return _gen; }
+
 protected:
   static std::random_device _rd;
   static std::mt19937 _gen;

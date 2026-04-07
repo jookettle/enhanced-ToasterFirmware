@@ -214,6 +214,7 @@ void EffectDino::release(Display& display) {
     _image_dino = nullptr;
   }
 
+  _objects.clear();
   setStaticMode(_prev_static_mode);
 
   Effect::release(display);
@@ -360,16 +361,14 @@ void EffectDino::processGames(Display& display) {
 
 void EffectDino::generateCactus(Display& display) {
   int type = Random::random(CACTUS_TYPE_COUNT);
-  auto cactus = new DinoCactus(type, display.getWidth() + CACTUS_DATA[type].w / 2, 16, CACTUS_DATA[type].w, CACTUS_DATA[type].h, true);
-  _objects.push_back(cactus);
+  _objects.push_back(std::unique_ptr<DinoObject>(new DinoCactus(type, display.getWidth() + CACTUS_DATA[type].w / 2, 16, CACTUS_DATA[type].w, CACTUS_DATA[type].h, true)));
 }
 
 
 void EffectDino::generateTile(Display& display, bool init) {
   const int TILE_COUNT = display.getWidth() / TILE_W + 1;
 
-  static std::random_device rd;
-  static std::mt19937 gen(_rd());
+  std::mt19937& gen = Random::getGenerator();
 
   static int tile_weights[TILE_TYPE_COUNT];
   if (tile_weights[0] == 0) {

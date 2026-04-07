@@ -23,12 +23,10 @@ To ensure code quality and consistency across the `enhanced-ToasterFirmware` cod
 
 ## 3. Formatting & Style
 - **Indentation**: Use **2 spaces** for indentation. No tabs.
-- **Braces**: Use **Allman style** (braces on new lines) for functions, classes, and control structures (if, for, while, switch).
+- **Braces**: Use **K&R style** (braces on the same line) for functions, classes, and control structures (if, for, while, switch).
   ```cpp
-  void myFunction()
-  {
-    if (condition)
-    {
+  void myFunction() {
+    if (condition) {
       // ...
     }
   }
@@ -45,8 +43,7 @@ To ensure code quality and consistency across the `enhanced-ToasterFirmware` cod
 - **Static Allocation**: Favor stack allocation or pre-allocated static buffers for fixed-size data.
 - **Cleanup**: Always pair `new` with `delete` in the `release()` or destructor methods. Check for `nullptr` before deleting and set to `nullptr` after.
   ```cpp
-  if (_ptr != nullptr)
-  {
+  if (_ptr != nullptr) {
     delete _ptr;
     _ptr = nullptr;
   }
