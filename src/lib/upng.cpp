@@ -28,7 +28,7 @@ freely, subject to the following restrictions:
 
 #include "ram.h"
 
-#define MAKE_BYTE(b) ((b) & 0xFF)
+#define MAKE_BYTE(b) ((b) &0xFF)
 #define MAKE_DWORD(a, b, c, d) ((MAKE_BYTE(a) << 24) | (MAKE_BYTE(b) << 16) | (MAKE_BYTE(c) << 8) | MAKE_BYTE(d))
 #define MAKE_DWORD_PTR(p) MAKE_DWORD((p)[0], (p)[1], (p)[2], (p)[3])
 
@@ -785,13 +785,13 @@ static void remove_padding_bits(unsigned char* out, const unsigned char* in, uns
   for (y = 0; y < h; y++) {
     unsigned long x;
     for (x = 0; x < olinebits; x++) {
-      unsigned char bit = (unsigned char) ((in[(ibp) >> 3] >> (7 - ((ibp) & 0x7))) & 1);
+      unsigned char bit = (unsigned char) ((in[(ibp) >> 3] >> (7 - ((ibp) &0x7))) & 1);
       ibp++;
 
       if (bit == 0)
-        out[(obp) >> 3] &= (unsigned char) (~(1 << (7 - ((obp) & 0x7))));
+        out[(obp) >> 3] &= (unsigned char) (~(1 << (7 - ((obp) &0x7))));
       else
-        out[(obp) >> 3] |= (1 << (7 - ((obp) & 0x7)));
+        out[(obp) >> 3] |= (1 << (7 - ((obp) &0x7)));
       ++obp;
     }
     ibp += diff;
@@ -1332,13 +1332,13 @@ void InitColor(upng_s_rgb24b** dst) {
 }
 
 void ResetColor(upng_s_rgb16b* dst) {
-  *dst = (upng_s_rgb16b) {0, 0, 0, 0};
+  *dst = (upng_s_rgb16b){0, 0, 0, 0};
 }
 void ResetColor(upng_s_rgb18b* dst) {
-  *dst = (upng_s_rgb18b) {0, 0, 0, 0};
+  *dst = (upng_s_rgb18b){0, 0, 0, 0};
 }
 void ResetColor(upng_s_rgb24b* dst) {
-  *dst = (upng_s_rgb24b) {0, 0, 0, 0};
+  *dst = (upng_s_rgb24b){0, 0, 0, 0};
 }
 
 /*

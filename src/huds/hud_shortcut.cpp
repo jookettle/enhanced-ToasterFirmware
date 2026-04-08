@@ -166,7 +166,8 @@ void HUDShortcutSelect::init() {
 
   clearMenu();
   for (const auto& it : Protogen.getShortcutList()) {
-    addMenu(it.c_str(), [](HUDBase*, const char* param) { Protogen.loadShortcut(param); }, it);
+    addMenu(
+        it.c_str(), [](HUDBase*, const char* param) { Protogen.loadShortcut(param); }, it);
   }
 
   refreshHighlight();
