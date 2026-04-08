@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <cstring>
 #include <FFat.h>
 #include "timer.h"
 

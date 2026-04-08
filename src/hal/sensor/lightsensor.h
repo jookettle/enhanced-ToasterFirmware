@@ -1,6 +1,8 @@
 #pragma once
 #include "lib/worker.h"
+#ifndef NATIVE_SIMULATOR
 #include "BH1750.h"
+#endif
 
 
 namespace toaster {
@@ -38,7 +40,9 @@ protected:
 
   union {
     void* _ptr{nullptr};
+#ifndef NATIVE_SIMULATOR
     BH1750* _bh1750;
+#endif
   };
 
 protected:

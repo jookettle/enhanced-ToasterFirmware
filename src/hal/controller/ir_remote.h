@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
 
+#ifndef NATIVE_SIMULATOR
 #include <IRrecv.h>
+#endif
 
 
 namespace toaster {
@@ -35,8 +37,12 @@ protected:
 protected:
   bool _init{false};
   bool _debug{false};
+#ifndef NATIVE_SIMULATOR
   IRrecv* _irrecv{nullptr};
   decode_results _recent_result;
+#else
+  void* _irrecv{nullptr};
+#endif
 
 protected:
   typedef struct _IR_EVENT_EMOTION {

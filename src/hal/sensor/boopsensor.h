@@ -1,5 +1,7 @@
 #pragma once
+#ifndef NATIVE_SIMULATOR
 #include "VL53L1X_ULD.h"
+#endif
 #include "lib/worker.h"
 
 
@@ -58,7 +60,11 @@ protected:
 
 protected:
   bool _init{false};
+#ifndef NATIVE_SIMULATOR
   VL53L1X_ULD _tof;
+#else
+  struct { int dummy; } _tof;
+#endif
   uint8_t _i2c{0x29};
   uint16_t _threshold{20};
   int _sampling{3};

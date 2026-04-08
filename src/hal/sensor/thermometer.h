@@ -1,6 +1,8 @@
 #pragma once
 #include "lib/worker.h"
+#ifndef NATIVE_SIMULATOR
 #include "Adafruit_SHT31.h"
+#endif
 
 
 namespace toaster {
@@ -44,7 +46,9 @@ protected:
 
   union {
     void* _ptr{nullptr};
+#ifndef NATIVE_SIMULATOR
     Adafruit_SHT31* _sht31;
+#endif
   };
 
 };

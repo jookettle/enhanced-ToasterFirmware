@@ -2,15 +2,16 @@
 
 #include "config/configure.h"
 #include "display.h"
+#ifndef NATIVE_SIMULATOR
 #include <NeoPixelBus.h>
 
-
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-// #define NEOPIXEL_TYPE                            NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod>
 #define NEOPIXEL_TYPE                            NeoPixelBus<NeoGrbFeature, NeoEsp32BitBangWs2812xMethod>
 #else
-// 주의: I2S 버스 사용시 HUB75와 충돌합니다.
 #define NEOPIXEL_TYPE                            NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0Ws2812xMethod>
+#endif
+#else
+#define NEOPIXEL_TYPE                            void
 #endif
 
 

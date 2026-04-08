@@ -1,5 +1,8 @@
 #pragma once
 #include "lib/yaml.h"
+#include <cstdint>
+#include <vector>
+#include <string>
 
 
 namespace toaster {

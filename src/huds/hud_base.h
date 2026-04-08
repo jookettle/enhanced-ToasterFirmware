@@ -81,7 +81,7 @@ protected:
     uint16_t w, h;
     oled.getTextBounds(str, 0, 0, &x, &y, &w, &h);
     oled.setCursor((oled.width() - w) / 2, oled.getCursorY());
-    oled.write(str);
+    oled.print(str);
   }
 
   void setFont(Adafruit_SSD1306& oled) {

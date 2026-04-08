@@ -1,6 +1,13 @@
 #include "config/configure.h"
 #include "display.h"
 #include "lib/logger.h"
+#include <cstring>
+#include <algorithm>
+
+#ifdef NATIVE_SIMULATOR
+#undef min
+#undef max
+#endif
 
 
 namespace toaster {
@@ -20,6 +27,9 @@ bool Display::begin(int width, int height) {
     delete[] _buffer;
   }
   _buffer = new uint8_t[_width * _height * 3];
+  if (_buffer != nullptr) {
+    memset(_buffer, 0, _width * _height * 3 * sizeof(uint8_t));
+  }
 
   return (_buffer != nullptr);
 }
@@ -64,7 +74,7 @@ void Display::fillWhite() {
 void Display::fillHalf(uint8_t lr, uint8_t r, uint8_t g, uint8_t b) {
   for (int i = 0; i < _height; i++) {
     for (int j = 0; j < (_width / 2); j++) {
-      int index = (i * _width) + ((j + (lr * _width / 2)) * 3);
+      int index = ((i * _width) + (j + (lr * _width / 2))) * 3;
       _buffer[index + 0] = r;
       _buffer[index + 1] = g;
       _buffer[index + 2] = b;

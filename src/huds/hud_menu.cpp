@@ -198,16 +198,16 @@ void HUDMenu::drawMenu(Adafruit_SSD1306& oled) {
     writeSpecial(oled, (sel_line == cur_line) ? BITMAP_CURSOR : nullptr);
 
     if (cur_line < _menuData.size()) {
-      oled.write(_menuData[cur_line].text.c_str());
+      oled.print(_menuData[cur_line].text.c_str());
       oled.write('\n');
     }
     else if (_use_backbutton && cur_line == getBackbuttonIndex()) {
       writeSpecial(oled, BITMAP_BACK);
-      oled.write("\n");
+      oled.print("\n");
     }
     else if (_use_shuffle && cur_line == getShuffleIndex()) {
       writeSpecial(oled, BITMAP_SHUFFLE);
-      oled.write("\n");
+      oled.print("\n");
     }
   }
 

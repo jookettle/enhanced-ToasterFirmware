@@ -3,10 +3,7 @@
 #include "display.h"
 
 #include <FFat.h>
-
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-
-
 
 namespace toaster {
 
@@ -34,7 +31,11 @@ public:
   }
 
 protected:
+#ifndef NATIVE_SIMULATOR
   MatrixPanel_I2S_DMA *_dma_display{nullptr};
+#else
+  void* _dma_display{nullptr};
+#endif
   uint8_t _chain{0};
   size_t _panel_width{0};
   int _applied_refresh_rate{0};

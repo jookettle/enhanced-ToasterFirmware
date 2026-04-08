@@ -5,6 +5,8 @@
 #ifdef USE_ARDUINO
 #include <Arduino.h>
 #include <FS.h>
+#elif defined(NATIVE_SIMULATOR)
+#include <SD.h>
 #endif
 
 
@@ -58,7 +60,7 @@ public:
 
 public:
   static YamlNodeArray fromBytes(const char* data, size_t data_size);
-#ifdef USE_ARDUINO
+#if defined(USE_ARDUINO) || defined(NATIVE_SIMULATOR)
   static YamlNodeArray fromFile(const char* filename, fs::FS& filesystem);
 #else
   static YamlNodeArray fromFile(const char* filename);

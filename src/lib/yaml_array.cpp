@@ -276,7 +276,7 @@ int YamlNodeArray::getInt(const char* keys, int def_value) const {
 
 float YamlNodeArray::getFloat(const char* keys, float def_value) const {
   std::string str = getString(keys, "");
-  return (str.empty()) ? def_value : atoff(str.c_str());
+  return (str.empty()) ? def_value : atof(str.c_str());
 }
 
 
@@ -367,7 +367,7 @@ YamlNodeArray YamlNodeArray::fromBytes(const char* data, size_t data_size) {
 }
 
 
-#ifdef USE_ARDUINO
+#if defined(USE_ARDUINO) || defined(NATIVE_SIMULATOR)
 YamlNodeArray YamlNodeArray::fromFile(const char* filename, fs::FS& filesystem) {
   if (!filesystem.exists(filename)) {
     return YamlNodeArray("file does not exist.");

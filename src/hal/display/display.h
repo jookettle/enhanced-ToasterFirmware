@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <functional>
+#include <cstdint>
 #include <FFat.h>
 #include "lib/timer.h"
 #include "lib/asset.h"
@@ -42,6 +44,9 @@ public:
 
 public:
   inline void setPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
+    if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) {
+      return;
+    }
     int index = (y * _width + x) * 3;
     _buffer[index + 0] = r;
     _buffer[index + 1] = g;
@@ -49,6 +54,9 @@ public:
   }
 
   inline void setPixelAlpha(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) {
+      return;
+    }
     int index = (y * _width + x) * 3;
 
     _buffer[index + 0] = (uint8_t)(((uint16_t)r * a / 255) + ((uint16_t)_buffer[index + 0] * (255 - a) / 255));
@@ -77,16 +85,25 @@ public:
   // }
 
   inline bool getPixelOn(int x, int y) const {
+    if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) {
+      return false;
+    }
     int index = (y * _width + x) * 3;
     return _buffer[index + 0] || _buffer[index + 1] || _buffer[index + 2];
   }
   
   inline bool getPixelOnThreshold(int x, int y) const {
+    if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) {
+      return false;
+    }
     int index = (y * _width + x) * 3;
     return (_buffer[index + 0] >= 128) || (_buffer[index + 1] >= 128) || (_buffer[index + 2] >= 128);
   }
   
   inline uint8_t getPixelGray(int x, int y) const {
+    if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) {
+      return 0;
+    }
     int index = (y * _width + x) * 3;
 
     // Rec. 601

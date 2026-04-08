@@ -36,7 +36,7 @@ void HUDSelector::process(Adafruit_SSD1306& oled) {
       setFont(oled);
 
       if (!_strings.empty()) {
-        oled.write(_strings[_select_index].c_str());
+        oled.print(_strings[_select_index].c_str());
       }
 
       oled.display();

@@ -1,5 +1,9 @@
 #pragma once
 #include <cmath>
+#ifdef NATIVE_SIMULATOR
+#undef min
+#undef max
+#endif
 #include <random>
 
 

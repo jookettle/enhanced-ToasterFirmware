@@ -1,6 +1,11 @@
 #pragma once
 #include "image.h"
 #include <list>
+#include <cstdint>
+#include <string>
+#ifdef NATIVE_SIMULATOR
+#include <Arduino.h>
+#endif
 
 
 // At least 3 buffers are required
