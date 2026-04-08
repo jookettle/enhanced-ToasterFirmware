@@ -1,11 +1,11 @@
-#include <Arduino.h>
 #include "thermometer.h"
+
+#include <Arduino.h>
+
 #include "lib/logger.h"
 #include "protogen.h"
 
-
 namespace toaster {
-
 
 Thermometer::~Thermometer() {
   if (_type == TST_SHT31) {
@@ -15,7 +15,6 @@ Thermometer::~Thermometer() {
     }
   }
 }
-
 
 bool Thermometer::beginSHT31(uint32_t period, uint8_t i2c) {
   _type = TST_SHT31;
@@ -35,13 +34,11 @@ bool Thermometer::beginSHT31(uint32_t period, uint8_t i2c) {
   return true;
 }
 
-
-
 bool Thermometer::work() {
   if (!isBegin()) {
     return false;
   }
-  
+
   if (_type == TST_SHT31) {
     float temperature;
     float humidity;
@@ -52,7 +49,7 @@ bool Thermometer::work() {
     if (!isnan(temperature)) {
       _temperature = temperature;
     }
-    
+
     if (!isnan(humidity)) {
       _humidity = humidity;
     }
@@ -65,9 +62,8 @@ bool Thermometer::work() {
 
     return true;
   }
-  
+
   return false;
 }
 
-
-};
+};  // namespace toaster

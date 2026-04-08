@@ -1,7 +1,6 @@
 #pragma once
 #include "hud_base.h"
 
-
 namespace toaster {
 
 class HUDBrightness : public HUDBase {
@@ -17,4 +16,4 @@ protected:
 
 extern HUDBrightness hud_brightness;
 
-};
+};  // namespace toaster

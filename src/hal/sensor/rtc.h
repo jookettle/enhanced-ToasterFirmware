@@ -1,17 +1,19 @@
 #pragma once
-#include "lib/worker.h"
 #include "DS3231.h"
-
+#include "lib/worker.h"
 
 namespace toaster {
 
 class RTC : public Worker {
 public:
-  RTC() {}
+  RTC() {
+  }
   virtual ~RTC();
 
 private:
-  bool begin() { return false; }
+  bool begin() {
+    return false;
+  }
 
 public:
   bool beginDS3231(bool nofail);
@@ -53,10 +55,10 @@ public:
     return _blink;
   }
 
-	void setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
-	void setTime(uint8_t hour, uint8_t minute, uint8_t second);
+  void setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+  void setTime(uint8_t hour, uint8_t minute, uint8_t second);
   bool sync();
-  
+
   static bool isLeapYear(uint16_t year);
   static uint8_t getDaysInMonth(uint16_t year, uint8_t month);
 
@@ -81,7 +83,6 @@ protected:
     void* _ptr{nullptr};
     DS3231* _ds3231;
   };
-
 };
 
-};
+};  // namespace toaster

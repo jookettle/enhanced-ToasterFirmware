@@ -1,37 +1,30 @@
 #pragma once
-#include "config/configure.h"
 #include <map>
 #include <string>
 #include <vector>
 
-
-
-#include "lib/worker.h"
-#include "lib/linear_calibrate.h"
-#include "lib/yaml.h"
-#include "protogen_color_mode.h"
+#include "config/configure.h"
 #include "effects/effect_base.h"
-#include "huds/hud.h"
-
-
-#include "hal/display/hub75_display.h"
-#include "hal/display/neopixel_display.h"
-#include "hal/controller/serial_debug.h"
-#include "hal/sensor/lightsensor.h"
-#include "hal/sensor/boopsensor.h"
-#include "hal/sensor/thermometer.h"
-#include "hal/sensor/rtc.h"
 #include "hal/controller/esp_now.h"
 #include "hal/controller/ir_remote.h"
-
+#include "hal/controller/serial_debug.h"
+#include "hal/display/hub75_display.h"
+#include "hal/display/neopixel_display.h"
+#include "hal/sensor/boopsensor.h"
+#include "hal/sensor/lightsensor.h"
+#include "hal/sensor/rtc.h"
+#include "hal/sensor/thermometer.h"
+#include "huds/hud.h"
+#include "lib/linear_calibrate.h"
+#include "lib/worker.h"
+#include "lib/yaml.h"
+#include "protogen_color_mode.h"
 
 #ifdef USE_SD
 #include "SD.h"
 #endif
 
-
 namespace toaster {
-
 
 enum {
   EFFECT_MAX = 5,
@@ -48,12 +41,10 @@ enum {
   RTC_FORMAT_HMS_NO_BLINKING,
 };
 
-
 enum {
   SIDE_PANEL_STRIP = 0,
   SIDE_PANEL_CIRCLE,
 };
-
 
 enum {
   ESP_NOW_NONE = 0,
@@ -61,9 +52,7 @@ enum {
   ESP_NOW_LOCAL,
 };
 
-
 extern const std::vector<std::pair<float, float>> SIDE_PANEL_CIRCLE_DATA;
-
 
 class Toaster : public Worker {
 public:
@@ -137,7 +126,7 @@ public:
   }
 
   bool setColorMode(const char* mode);
-  
+
   void refreshAutoBrightness();
   void refreshAutoBrightness(float brightness);
 
@@ -218,7 +207,9 @@ protected:
   float _ls_hys{0};
 
 protected:
-  Effect* _effect[EFFECT_MAX]{nullptr,};
+  Effect* _effect[EFFECT_MAX]{
+      nullptr,
+  };
   Effect* _side_effect{nullptr};
   size_t _emotion_index{0};
   std::string _next_emotion;
@@ -243,7 +234,7 @@ protected:
   } EMOTION_DATA;
   EMOTION_DATA _emotion_default;
   std::vector<EMOTION_DATA> _emotions;
-  
+
   std::vector<int> _shuffle_deck;
   std::map<std::string, size_t> _emotion_map;
 
@@ -272,10 +263,8 @@ protected:
   bool loadDefaultEmotion(const YamlNodeArray& yaml);
   bool loadNEC(const YamlNodeArray& yaml);
   bool loadShortcutList();
-
 };
-
 
 extern Toaster Protogen;
 
-};
+};  // namespace toaster

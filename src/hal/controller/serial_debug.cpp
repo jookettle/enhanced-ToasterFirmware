@@ -1,24 +1,23 @@
-#include <Arduino.h>
 #include "serial_debug.h"
 
-#include "protogen.h"
+#include <Arduino.h>
+
 #include "effects/effects.h"
 #include "huds/hud.h"
 #include "lib/logger.h"
-
+#include "protogen.h"
 
 namespace toaster {
 
 static const char* TAG = "SerialDebug";
 static const int SERIAL_BUFFER_MAX = 1024;
 
-
 SerialDebug::SerialDebug() {
 }
 
 bool SerialDebug::begin() {
   Serial.begin(115200);
-  
+
   return true;
 }
 
@@ -28,47 +27,45 @@ void SerialDebug::loop() {
 
     if (_serial_text_mode == false) {
       switch (ch) {
-      // https://en.wikipedia.org/wiki/ANSI_escape_code
-      case '\e':
-        if (!Serial.available()) { // escape
-          pressKey(ch);
-        }
-        else {
-          char ch2 = Serial.read();
-          if (ch2 == '[' && Serial.available()) {
-            char ch3 = Serial.read();
-            switch (ch3) {
-            case 'A':
-              pressKey(VK_UP, KM_KEYCODE);
-              break;
-            case 'B':
-              pressKey(VK_DOWN, KM_KEYCODE);
-              break;
-            case 'C':
-              pressKey(VK_RIGHT, KM_KEYCODE);
-              break;
-            case 'D':
-              pressKey(VK_LEFT, KM_KEYCODE);
-              break;
+        // https://en.wikipedia.org/wiki/ANSI_escape_code
+        case '\e':
+          if (!Serial.available()) {  // escape
+            pressKey(ch);
+          } else {
+            char ch2 = Serial.read();
+            if (ch2 == '[' && Serial.available()) {
+              char ch3 = Serial.read();
+              switch (ch3) {
+                case 'A':
+                  pressKey(VK_UP, KM_KEYCODE);
+                  break;
+                case 'B':
+                  pressKey(VK_DOWN, KM_KEYCODE);
+                  break;
+                case 'C':
+                  pressKey(VK_RIGHT, KM_KEYCODE);
+                  break;
+                case 'D':
+                  pressKey(VK_LEFT, KM_KEYCODE);
+                  break;
+              }
             }
           }
-        }
-        break;
+          break;
 
-      case '!':
-      case '\n':
-        _serial_text_mode = true;
-        _serial_buffer.clear();
-        _cursor = 0;
-        Serial.print("> ");
-        break;
+        case '!':
+        case '\n':
+          _serial_text_mode = true;
+          _serial_buffer.clear();
+          _cursor = 0;
+          Serial.print("> ");
+          break;
 
-      default:
-        pressKey(ch);
-        break;
+        default:
+          pressKey(ch);
+          break;
       }
-    }
-    else {
+    } else {
       if (ch == '\n') {
         Serial.println();
 
@@ -76,23 +73,20 @@ void SerialDebug::loop() {
 
         _serial_buffer.clear();
         _serial_text_mode = false;
-      }
-      else if (ch == '\b') { // backspace
+      } else if (ch == '\b') {  // backspace
         if (!_serial_buffer.empty() && _cursor > 0) {
           _serial_buffer.erase(_serial_buffer.begin() + _cursor - 1);
           --_cursor;
           Serial.print((_cursor == _serial_buffer.size()) ? "\b \b" : "\b");
           printAfterCursor(true);
         }
-      }
-      else if (ch == '\e') {
-        if (!Serial.available()) { // escape
+      } else if (ch == '\e') {
+        if (!Serial.available()) {  // escape
           _serial_buffer.clear();
           _serial_text_mode = false;
 
           Serial.println();
-        }
-        else {
+        } else {
           char ch2 = Serial.read();
           if (ch2 == '[' && Serial.available()) {
             char ch3 = Serial.read();
@@ -103,9 +97,8 @@ void SerialDebug::loop() {
                 if (isdigit(ch4)) {
                   vt *= 10;
                   vt += ch4 - '0';
-                }
-                else if (ch4 == '~') {
-                  if (vt == 3) { // delete
+                } else if (ch4 == '~') {
+                  if (vt == 3) {  // delete
                     if (_cursor < _serial_buffer.size()) {
                       _serial_buffer.erase(_serial_buffer.begin() + _cursor);
                       if (_cursor == _serial_buffer.size()) {
@@ -115,34 +108,29 @@ void SerialDebug::loop() {
                     }
                   }
                   break;
-                }
-                else {
+                } else {
                   break;
                 }
               }
-            }
-            else if (ch3 == 'C') { // right
+            } else if (ch3 == 'C') {  // right
               if (_cursor < _serial_buffer.size()) {
                 ++_cursor;
                 Serial.print("\e[C");
               }
               break;
-            }
-            else if (ch3 == 'D') { // left
+            } else if (ch3 == 'D') {  // left
               if (_cursor > 0) {
                 --_cursor;
                 Serial.print("\e[D");
               }
               break;
-            }
-            else if (ch3 == 'H') { // home
+            } else if (ch3 == 'H') {  // home
               int prev_cursor = _cursor;
               _cursor = 0;
               if (prev_cursor - _cursor > 0) {
                 Serial.printf("\e[%dD", prev_cursor - _cursor);
               }
-            }
-            else if (ch3 == 'F') { // end
+            } else if (ch3 == 'F') {  // end
               int prev_cursor = _cursor;
               _cursor = _serial_buffer.size();
               if (_cursor - prev_cursor > 0) {
@@ -151,11 +139,9 @@ void SerialDebug::loop() {
             }
           }
         }
-      }
-      else if (ch == '\r' || (ch & 0x80) != 0) {
+      } else if (ch == '\r' || (ch & 0x80) != 0) {
         // throw
-      }
-      else {
+      } else {
         if (_serial_buffer.size() < SERIAL_BUFFER_MAX) {
           _serial_buffer.insert(_serial_buffer.begin() + _cursor, ch);
           ++_cursor;
@@ -166,181 +152,195 @@ void SerialDebug::loop() {
       }
     }
   }
-
 }
-
 
 bool SerialDebug::pressKey(uint16_t key, uint8_t mode) {
   if (mode == KM_ASCII) {
     switch (key) {
-    case '\e':
-      Serial.println("esc");
-      return true;
-      break;
+      case '\e':
+        Serial.println("esc");
+        return true;
+        break;
 
-    case '0':
-      TF_LOGI(TAG, "Set Shutdown");
-      Protogen.setEmotion("blank");
-      return true;
-      break;
-    case '1':
-      TF_LOGI(TAG, "Set Normal");
-      Protogen.setEmotion("normal");
-      return true;
-      break;
-    case '2':
-      TF_LOGI(TAG, "Set Badass");
-      Protogen.setEmotion("badass");
-      return true;
-      break;
-    case '3':
-      TF_LOGI(TAG, "Set Grin");
-      Protogen.setEmotion("grin");
-      return true;
-      break;
-    case '4':
-      TF_LOGI(TAG, "Set Worry");
-      Protogen.setEmotion("worry");
-      return true;
-      break;
-    case '5':
-      TF_LOGI(TAG, "Set Love");
-      Protogen.setEmotion("love");
-      return true;
-      break;
-    case '6':
-      TF_LOGI(TAG, "Set Confusion");
-      Protogen.setEmotion("confusion");
-      return true;
-      break;
-    case '7':
-      TF_LOGI(TAG, "Set Question");
-      Protogen.setEmotion("qmark");
-      return true;
-      break;
-    case '8':
-      TF_LOGI(TAG, "Set Unyuu");
-      Protogen.setEmotion("unyuu");
-      return true;
-      break;
-    case '9':
-      TF_LOGI(TAG, "Set Bean");
-      Protogen.setEmotion("bean");
-      return true;
-      break;
-    case 'Q': case 'q':
-      Protogen._boopsensor.setEmulation(!Protogen._boopsensor.getEmulation());
-      TF_LOGI(TAG, "Boop emulation: %s", Protogen._boopsensor.getEmulation() ? "on" : "off");
-      return true;
-      break;
-    case 'W': case 'w':
-      TF_LOGI(TAG, "Set White");
-      Protogen.setEmotion("white");
-      return true;
-      break;
-    case 'E': case 'e':
-      Protogen.setStaticMode(!Protogen.getStaticMode());
-      TF_LOGI(TAG, "%s", Protogen.getStaticMode() ? "pause" : "play");
-      return true;
-      break;
-    case 'O': case 'o':
-      TF_LOGI(TAG, "Set Festive");
-      Protogen.setEmotion("festive");
-      return true;
-      break;
-    case 'P': case 'p':
-      TF_LOGI(TAG, "Set BSOD");
-      Protogen.setEmotion("bsod");
-      return true;
-      break;
+      case '0':
+        TF_LOGI(TAG, "Set Shutdown");
+        Protogen.setEmotion("blank");
+        return true;
+        break;
+      case '1':
+        TF_LOGI(TAG, "Set Normal");
+        Protogen.setEmotion("normal");
+        return true;
+        break;
+      case '2':
+        TF_LOGI(TAG, "Set Badass");
+        Protogen.setEmotion("badass");
+        return true;
+        break;
+      case '3':
+        TF_LOGI(TAG, "Set Grin");
+        Protogen.setEmotion("grin");
+        return true;
+        break;
+      case '4':
+        TF_LOGI(TAG, "Set Worry");
+        Protogen.setEmotion("worry");
+        return true;
+        break;
+      case '5':
+        TF_LOGI(TAG, "Set Love");
+        Protogen.setEmotion("love");
+        return true;
+        break;
+      case '6':
+        TF_LOGI(TAG, "Set Confusion");
+        Protogen.setEmotion("confusion");
+        return true;
+        break;
+      case '7':
+        TF_LOGI(TAG, "Set Question");
+        Protogen.setEmotion("qmark");
+        return true;
+        break;
+      case '8':
+        TF_LOGI(TAG, "Set Unyuu");
+        Protogen.setEmotion("unyuu");
+        return true;
+        break;
+      case '9':
+        TF_LOGI(TAG, "Set Bean");
+        Protogen.setEmotion("bean");
+        return true;
+        break;
+      case 'Q':
+      case 'q':
+        Protogen._boopsensor.setEmulation(!Protogen._boopsensor.getEmulation());
+        TF_LOGI(TAG, "Boop emulation: %s", Protogen._boopsensor.getEmulation() ? "on" : "off");
+        return true;
+        break;
+      case 'W':
+      case 'w':
+        TF_LOGI(TAG, "Set White");
+        Protogen.setEmotion("white");
+        return true;
+        break;
+      case 'E':
+      case 'e':
+        Protogen.setStaticMode(!Protogen.getStaticMode());
+        TF_LOGI(TAG, "%s", Protogen.getStaticMode() ? "pause" : "play");
+        return true;
+        break;
+      case 'O':
+      case 'o':
+        TF_LOGI(TAG, "Set Festive");
+        Protogen.setEmotion("festive");
+        return true;
+        break;
+      case 'P':
+      case 'p':
+        TF_LOGI(TAG, "Set BSOD");
+        Protogen.setEmotion("bsod");
+        return true;
+        break;
 
-    case 'A': case 'a':
-    case 'S': case 's':
-    case 'D': case 'd':
-    case 'F': case 'f':
-    case 'J': case 'j':
-    case 'K': case 'k':
-    case 'L': case 'l':
-    case ';': case ':':
-      Protogen._hud.pressKey(key);
-      return true;
-    case '\'':
-      TF_LOGI(TAG, "Set Loading");
-      Protogen.setEmotion("loading");
-      return true;
-      break;
+      case 'A':
+      case 'a':
+      case 'S':
+      case 's':
+      case 'D':
+      case 'd':
+      case 'F':
+      case 'f':
+      case 'J':
+      case 'j':
+      case 'K':
+      case 'k':
+      case 'L':
+      case 'l':
+      case ';':
+      case ':':
+        Protogen._hud.pressKey(key);
+        return true;
+      case '\'':
+        TF_LOGI(TAG, "Set Loading");
+        Protogen.setEmotion("loading");
+        return true;
+        break;
 
-    case 'Z': case 'z':
-      TF_LOGI(TAG, "Set Color Original");
-      Protogen.setColorMode(PCM_ORIGINAL);
-      return true;
-      break;
-    case 'X': case 'x':
-      TF_LOGI(TAG, "Set Color Personal");
-      Protogen.setColorMode(PCM_PERSONAL);
-      return true;
-      break;
-    case 'C': case 'c':
-      TF_LOGI(TAG, "Set Color Rainbow single");
-      Protogen.setColorMode(PCM_RAINBOW_SINGLE);
-      return true;
-      break;
-    case 'V': case 'v':
-      TF_LOGI(TAG, "Set Color Rainbow");
-      Protogen.setColorMode(PCM_RAINBOW);
-      return true;
-      break;
-    case 'B': case 'b':
-      TF_LOGI(TAG, "Set Color Gradation");
-      Protogen.setColorMode(PCM_GRADATION);
-      return true;
-      break;
+      case 'Z':
+      case 'z':
+        TF_LOGI(TAG, "Set Color Original");
+        Protogen.setColorMode(PCM_ORIGINAL);
+        return true;
+        break;
+      case 'X':
+      case 'x':
+        TF_LOGI(TAG, "Set Color Personal");
+        Protogen.setColorMode(PCM_PERSONAL);
+        return true;
+        break;
+      case 'C':
+      case 'c':
+        TF_LOGI(TAG, "Set Color Rainbow single");
+        Protogen.setColorMode(PCM_RAINBOW_SINGLE);
+        return true;
+        break;
+      case 'V':
+      case 'v':
+        TF_LOGI(TAG, "Set Color Rainbow");
+        Protogen.setColorMode(PCM_RAINBOW);
+        return true;
+        break;
+      case 'B':
+      case 'b':
+        TF_LOGI(TAG, "Set Color Gradation");
+        Protogen.setColorMode(PCM_GRADATION);
+        return true;
+        break;
 
-    case 'M': case 'm':
-      if (Protogen._boopsensor.isError()) {
-        TF_LOGW(TAG, "Cannot start debug mode because Boop sensor is disabled.");
-      }
-      else {
-        Protogen._boopsensor.setDebug(!Protogen._boopsensor.getDebug());
-      }
-      return true;
-      break;
+      case 'M':
+      case 'm':
+        if (Protogen._boopsensor.isError()) {
+          TF_LOGW(TAG, "Cannot start debug mode because Boop sensor is disabled.");
+        } else {
+          Protogen._boopsensor.setDebug(!Protogen._boopsensor.getDebug());
+        }
+        return true;
+        break;
 
-    case '\t':
-      Protogen.setEmotionNext();
-      TF_LOGI(TAG, "Set Next Emotion: %s", Protogen.getEmotion());
-      return true;
-      break;
+      case '\t':
+        Protogen.setEmotionNext();
+        TF_LOGI(TAG, "Set Next Emotion: %s", Protogen.getEmotion());
+        return true;
+        break;
 
-    case '\\':
-      Protogen._hud.setDithering(!Protogen._hud.getDithering());
-      TF_LOGI(TAG, "Set HUD dithering: %s", Protogen._hud.getDithering() ? "true" : "false");
-      return true;
-      break;
-    
-    case '!':
-    case '\n':
-      _serial_text_mode = true;
-      Serial.print("> ");
-      return true;
-      break;
+      case '\\':
+        Protogen._hud.setDithering(!Protogen._hud.getDithering());
+        TF_LOGI(TAG, "Set HUD dithering: %s", Protogen._hud.getDithering() ? "true" : "false");
+        return true;
+        break;
+
+      case '!':
+      case '\n':
+        _serial_text_mode = true;
+        Serial.print("> ");
+        return true;
+        break;
     }
-  }
-  else { //if (mode == KM_KEYCODE) {
+  } else {  // if (mode == KM_KEYCODE) {
     switch (key) {
-    case VK_LEFT:
-    case VK_UP:
-    case VK_RIGHT:
-    case VK_DOWN:
-      Protogen._hud.pressKey(key, mode);
-      return true;
-      break;
+      case VK_LEFT:
+      case VK_UP:
+      case VK_RIGHT:
+      case VK_DOWN:
+        Protogen._hud.pressKey(key, mode);
+        return true;
+        break;
     }
   }
 
   return false;
 }
-
 
 typedef struct _COMMAND {
   const char* cmd;
@@ -348,16 +348,13 @@ typedef struct _COMMAND {
   std::function<void(const char*)> func;
 } COMMAND;
 
-
 static uint8_t parse2d(const char* s) {
   return (s[0] - '0') * 10 + (s[1] - '0');
 }
 
-
 static uint16_t parse4d(const char* s) {
   return (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
 }
-
 
 static const auto settime_func = [](const char* param) {
   int year = Protogen._rtc.getYear();
@@ -365,24 +362,18 @@ static const auto settime_func = [](const char* param) {
   int day = Protogen._rtc.getDay();
   int h, m, s, len = strlen(param);
 
-  if (len == 5
-   && isdigit(param[0]) && isdigit(param[1]) && param[2] == ':'
-   && isdigit(param[3]) && isdigit(param[4])) {
+  if (len == 5 && isdigit(param[0]) && isdigit(param[1]) && param[2] == ':' && isdigit(param[3]) && isdigit(param[4])) {
     // hh:mm
     h = parse2d(param + 0);
     m = parse2d(param + 3);
     s = 0;
-  }
-  else if (len == 8
-   && isdigit(param[0]) && isdigit(param[1]) && param[2] == ':'
-   && isdigit(param[3]) && isdigit(param[4]) && param[5] == ':'
-   && isdigit(param[6]) && isdigit(param[7])) {
+  } else if (len == 8 && isdigit(param[0]) && isdigit(param[1]) && param[2] == ':' && isdigit(param[3]) &&
+             isdigit(param[4]) && param[5] == ':' && isdigit(param[6]) && isdigit(param[7])) {
     // hh:mm:ss
     h = parse2d(param + 0);
     m = parse2d(param + 3);
     s = parse2d(param + 6);
-  }
-  else {
+  } else {
     TF_LOGW(TAG, "settime: format error");
     return;
   }
@@ -391,19 +382,16 @@ static const auto settime_func = [](const char* param) {
   TF_LOGI(TAG, "settime: %d-%02d-%02d %02d:%02d:%02d", year, month, day, h, m, s);
 };
 
-
 // ISO 8601 except timezone (YYYY-mm-dd HH:MM:SS)
 static const auto setdatetime_func = [](const char* param) {
   int year, month, day, h, m, s;
   int len = strlen(param);
 
   if (len >= 19) {
-    if (isdigit(param[0]) && isdigit(param[1]) && isdigit(param[2]) && isdigit(param[3]) && param[4] == '-'
-     && isdigit(param[5]) && isdigit(param[6]) && param[7] == '-'
-     && isdigit(param[8]) && isdigit(param[9])
-     && isdigit(param[11]) && isdigit(param[12]) && param[13] == ':'
-     && isdigit(param[14]) && isdigit(param[15]) && param[16] == ':'
-     && isdigit(param[17]) && isdigit(param[18])) {
+    if (isdigit(param[0]) && isdigit(param[1]) && isdigit(param[2]) && isdigit(param[3]) && param[4] == '-' &&
+        isdigit(param[5]) && isdigit(param[6]) && param[7] == '-' && isdigit(param[8]) && isdigit(param[9]) &&
+        isdigit(param[11]) && isdigit(param[12]) && param[13] == ':' && isdigit(param[14]) && isdigit(param[15]) &&
+        param[16] == ':' && isdigit(param[17]) && isdigit(param[18])) {
       year = parse4d(param + 0);
       month = parse2d(param + 5);
       day = parse2d(param + 8);
@@ -411,8 +399,7 @@ static const auto setdatetime_func = [](const char* param) {
       m = parse2d(param + 14);
       s = parse2d(param + 17);
     }
-  }
-  else {
+  } else {
     TF_LOGW(TAG, "setdatetime: format error");
     return;
   }
@@ -424,42 +411,78 @@ static const auto setdatetime_func = [](const char* param) {
 static const auto color_func = [](const char* param) {
   if (Protogen.setColorMode(param)) {
     TF_LOGI(TAG, "Color mode [%s].", param);
-  }
-  else {
+  } else {
     TF_LOGW(TAG, "Invalid color mode [%s].", param);
   }
 };
 
-
 static const size_t getCommandCount();
 
 static const COMMAND COMMAND_LIST[] = {
-  { "help", "Display information about builtin commands.", [](const char*) {
-    size_t command_count = getCommandCount();
-    for (size_t i = 0; i < command_count; i++) {
-      Serial.printf("%-16s: %s\n", COMMAND_LIST[i].cmd, COMMAND_LIST[i].desc);
-    }
-    Serial.println();
-  } },
-  { "reset|restart|reboot", "Soft reset.",                            [](const char*) { TF_LOGI(TAG, "soft reset"); ESP.restart(); } },
-  { "b",                    "Set display brightness.",                [](const char* param) { float brightness = atoi(param) / 100.0f; Protogen.refreshAutoBrightness(brightness); TF_LOGI(TAG, "Set brightness: %.3f", brightness); } },
-  { "ls|emotions",          "Show list of loaded emotions.",          [](const char*) { Protogen.displayEmotionList(); } },
-  { "set",                  "Change to the entered emotion.",         [](const char* param) { TF_LOGI(TAG, "Set %s", param); Protogen.setEmotion(param); } },
-  { "mac",                  "Display mac address.",                   [](const char*) { uint8_t mac[6]; esp_read_mac(mac, ESP_MAC_WIFI_STA); TF_LOGI(TAG, "MAC: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); } },
-  { "boop",                 "Enable boop sensor.",                    [](const char*) { Protogen._boopsensor.setEnabled(true); TF_LOGI(TAG, "Boop sensor enabled"); } },
-  { "noboop",               "Disable boop sensor.",                   [](const char*) { Protogen._boopsensor.setEnabled(false);  TF_LOGI(TAG, "Boop sensor disabled"); } },
-  { "dithering",            "Enable HUD dithering.",                  [](const char*) { Protogen._hud.setDithering(true); TF_LOGI(TAG, "HUD dithering enabled"); } },
-  { "nodithering",          "Disable HUD dithering.",                 [](const char*) { Protogen._hud.setDithering(false); TF_LOGI(TAG, "HUD dithering disabled"); } },
-  { "datetime",             "Display RTC time.",                      [](const char*) { TF_LOGI(TAG, "%d-%02d-%02d %02d:%02d:%02d", Protogen._rtc.getYear(), Protogen._rtc.getMonth(), Protogen._rtc.getDay(), Protogen._rtc.getHour(), Protogen._rtc.getMinute(), Protogen._rtc.getSecond()); } },
-  { "settime",              "Set RTC time (HH:MM or HH:MM:SS).",      settime_func },
-  { "setdatetime",          "Set RTC date and time (YYYY-mm-dd HH:MM:SS).", setdatetime_func },
-  { "color",                "Change the color preset.",               color_func },
+    {"help", "Display information about builtin commands.",
+     [](const char*) {
+       size_t command_count = getCommandCount();
+       for (size_t i = 0; i < command_count; i++) {
+         Serial.printf("%-16s: %s\n", COMMAND_LIST[i].cmd, COMMAND_LIST[i].desc);
+       }
+       Serial.println();
+     }},
+    {"reset|restart|reboot", "Soft reset.",
+     [](const char*) {
+       TF_LOGI(TAG, "soft reset");
+       ESP.restart();
+     }},
+    {"b", "Set display brightness.",
+     [](const char* param) {
+       float brightness = atoi(param) / 100.0f;
+       Protogen.refreshAutoBrightness(brightness);
+       TF_LOGI(TAG, "Set brightness: %.3f", brightness);
+     }},
+    {"ls|emotions", "Show list of loaded emotions.", [](const char*) { Protogen.displayEmotionList(); }},
+    {"set", "Change to the entered emotion.",
+     [](const char* param) {
+       TF_LOGI(TAG, "Set %s", param);
+       Protogen.setEmotion(param);
+     }},
+    {"mac", "Display mac address.",
+     [](const char*) {
+       uint8_t mac[6];
+       esp_read_mac(mac, ESP_MAC_WIFI_STA);
+       TF_LOGI(TAG, "MAC: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+     }},
+    {"boop", "Enable boop sensor.",
+     [](const char*) {
+       Protogen._boopsensor.setEnabled(true);
+       TF_LOGI(TAG, "Boop sensor enabled");
+     }},
+    {"noboop", "Disable boop sensor.",
+     [](const char*) {
+       Protogen._boopsensor.setEnabled(false);
+       TF_LOGI(TAG, "Boop sensor disabled");
+     }},
+    {"dithering", "Enable HUD dithering.",
+     [](const char*) {
+       Protogen._hud.setDithering(true);
+       TF_LOGI(TAG, "HUD dithering enabled");
+     }},
+    {"nodithering", "Disable HUD dithering.",
+     [](const char*) {
+       Protogen._hud.setDithering(false);
+       TF_LOGI(TAG, "HUD dithering disabled");
+     }},
+    {"datetime", "Display RTC time.",
+     [](const char*) {
+       TF_LOGI(TAG, "%d-%02d-%02d %02d:%02d:%02d", Protogen._rtc.getYear(), Protogen._rtc.getMonth(),
+               Protogen._rtc.getDay(), Protogen._rtc.getHour(), Protogen._rtc.getMinute(), Protogen._rtc.getSecond());
+     }},
+    {"settime", "Set RTC time (HH:MM or HH:MM:SS).", settime_func},
+    {"setdatetime", "Set RTC date and time (YYYY-mm-dd HH:MM:SS).", setdatetime_func},
+    {"color", "Change the color preset.", color_func},
 };
 
 static const size_t getCommandCount() {
   return sizeof(COMMAND_LIST) / sizeof(COMMAND_LIST[0]);
 }
-
 
 bool SerialDebug::processCommand(const char* cmd) {
   const char* param = strchr(cmd, ' ');
@@ -492,14 +515,12 @@ bool SerialDebug::processCommand(const char* cmd) {
 
       find_start = find_end + 1;
     }
-    
   }
 
   TF_LOGW(TAG, "command (%s) not found.", cmd_name.c_str());
 
   return false;
 }
-
 
 const char* SerialDebug::serial_buffer_read() {
   static char str[SERIAL_BUFFER_MAX + 1];
@@ -512,7 +533,6 @@ const char* SerialDebug::serial_buffer_read() {
 
   return str;
 }
-
 
 void SerialDebug::printAfterCursor(bool erase) {
   int del = _serial_buffer.size() - _cursor + (del ? 1 : 0);
@@ -532,5 +552,4 @@ void SerialDebug::printAfterCursor(bool erase) {
   Serial.printf("\e[%dD", del);
 }
 
-
-};
+};  // namespace toaster

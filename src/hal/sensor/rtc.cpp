@@ -1,10 +1,10 @@
-#include <Arduino.h>
 #include "rtc.h"
+
+#include <Arduino.h>
+
 #include "lib/logger.h"
 
-
 namespace toaster {
-
 
 RTC::~RTC() {
   if (_type == RST_DS3231) {
@@ -14,7 +14,6 @@ RTC::~RTC() {
     }
   }
 }
-
 
 bool RTC::beginDS3231(bool nofail) {
   if (isBegin()) {
@@ -29,10 +28,9 @@ bool RTC::beginDS3231(bool nofail) {
 
   if (datetime.hour < 24) {
     sync();
-  }
-  else {
+  } else {
     TF_LOGW("RTC", "failed to connect.");
-    
+
     if (!nofail) {
       delete _ds3231;
       _ds3231 = nullptr;
@@ -44,7 +42,6 @@ bool RTC::beginDS3231(bool nofail) {
 
   return true;
 }
-
 
 bool RTC::work() {
   ++_blink;
@@ -76,7 +73,6 @@ bool RTC::work() {
   return false;
 }
 
-
 void RTC::setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
   _year = year;
   _month = month;
@@ -93,7 +89,6 @@ void RTC::setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, u
   }
 }
 
-
 void RTC::setTime(uint8_t hour, uint8_t minute, uint8_t second) {
   _hour = hour;
   _minute = minute;
@@ -106,7 +101,6 @@ void RTC::setTime(uint8_t hour, uint8_t minute, uint8_t second) {
     }
   }
 }
-
 
 bool RTC::sync() {
   if (_type == RST_DS3231 && _ds3231 != nullptr) {
@@ -131,17 +125,14 @@ bool RTC::sync() {
   return false;
 }
 
-
 bool RTC::isLeapYear(uint16_t year) {
   return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
-
 uint8_t RTC::getDaysInMonth(uint16_t year, uint8_t month) {
-  static const uint8_t DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  static const uint8_t DAYS[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
   return DAYS[month - 1] + ((month == 2 && isLeapYear(year)) ? 1 : 0);
 }
 
-
-};
+};  // namespace toaster

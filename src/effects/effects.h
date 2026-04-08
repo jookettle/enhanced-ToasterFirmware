@@ -1,15 +1,13 @@
 #pragma once
 
 #include "./effect_blank.h"
-#include "./effect_white.h"
+#include "./effect_clock.h"
+#include "./effect_dino.h"
+#include "./effect_festive.h"
 #include "./effect_rainbow.h"
 #include "./effect_side_panel.h"
 #include "./effect_side_rainbow.h"
-#include "./effect_festive.h"
-#include "./effect_dino.h"
-#include "./effect_clock.h"
-
-
+#include "./effect_white.h"
 
 namespace toaster {
 
@@ -23,4 +21,4 @@ extern EffectClock effect_clock;
 extern EffectSidePanel side_default;
 extern EffectSideRainbow side_rainbow;
 
-};
+};  // namespace toaster

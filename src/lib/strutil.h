@@ -1,8 +1,8 @@
 #pragma once
 #include <stdint.h>
-#include <vector>
-#include <string>
 
+#include <string>
+#include <vector>
 
 namespace toaster {
 
@@ -30,4 +30,4 @@ bool parse_bool(const char* str);
 bool parse_separate(const char* str, const char* token, std::string& left, std::string& right);
 bool parse_mac(const char* str, uint8_t* mac);
 
-};
+};  // namespace toaster

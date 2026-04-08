@@ -1,17 +1,19 @@
 #pragma once
-#include "lib/worker.h"
 #include "BH1750.h"
-
+#include "lib/worker.h"
 
 namespace toaster {
 
 class LightSensor : public Worker {
 public:
-  LightSensor() {}
+  LightSensor() {
+  }
   virtual ~LightSensor();
 
 private:
-  virtual bool begin() { return false; }
+  virtual bool begin() {
+    return false;
+  }
 
 public:
   virtual bool beginLDR(int pin, float alpha = 0.95f, float alpha_init = NAN);
@@ -44,7 +46,6 @@ protected:
 protected:
   bool _begin();
   float read();
-
 };
 
-};
+};  // namespace toaster

@@ -1,7 +1,6 @@
 #pragma once
-#include "hud_base.h"
 #include "hal/display/display.h"
-
+#include "hud_base.h"
 
 namespace toaster {
 
@@ -21,4 +20,4 @@ protected:
 
 extern HUDSplash hud_splash;
 
-};
+};  // namespace toaster

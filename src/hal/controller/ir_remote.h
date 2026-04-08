@@ -1,8 +1,7 @@
 #pragma once
-#include <vector>
-
 #include <IRrecv.h>
 
+#include <vector>
 
 namespace toaster {
 
@@ -51,7 +50,6 @@ protected:
     uint8_t mode;
   } IR_EVENT_KEYPRESS;
   std::vector<IR_EVENT_KEYPRESS> _event_keypresses;
-
 };
 
-};
+};  // namespace toaster

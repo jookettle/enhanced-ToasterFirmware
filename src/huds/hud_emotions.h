@@ -1,12 +1,12 @@
 #pragma once
 #include "hud_menu.h"
 
-
 namespace toaster {
 
 class HUDEmotions : public HUDMenu {
 public:
-  HUDEmotions() {}
+  HUDEmotions() {
+  }
   HUDEmotions(const char* group) : _group(group) {
   }
 
@@ -25,7 +25,6 @@ protected:
   friend class HUDEmotionDir;
 };
 
-
 class HUDEmotionDir : public HUDMenu {
 public:
   virtual void init();
@@ -33,11 +32,9 @@ public:
 protected:
   virtual void refreshHighlight();
   virtual void shuffle();
-
 };
-
 
 extern std::vector<HUDEmotions> hud_emotions;
 extern HUDEmotionDir hud_emotiondir;
- 
-};
+
+};  // namespace toaster

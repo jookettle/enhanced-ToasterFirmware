@@ -1,23 +1,21 @@
-#include "config/configure.h"
 #include "video.h"
-#include "logger.h"
-#include <AnimatedGIF.h>
-#include "ram.h"
 
+#include <AnimatedGIF.h>
+
+#include "config/configure.h"
+#include "logger.h"
+#include "ram.h"
 
 #ifdef USE_SD
 #include "SD.h"
 #endif
 
-
 namespace toaster {
 
 static const char* TAG = "Video";
 
-
 static const size_t MJPEG_BUFFER_SIZE = 64 * 1024;
 static const size_t MJPEG_LOAD_FRAMES = 30;
-
 
 Video::Video(const char* path, bool from_sd, bool loop, uint32_t mjpeg_fps) {
   const char* ext = strrchr(path, '.');
@@ -34,11 +32,9 @@ Video::Video(const char* path, bool from_sd, bool loop, uint32_t mjpeg_fps) {
   }
 }
 
-
 Video::~Video() {
   release();
 }
-
 
 void Video::release() {
   _file.close();
@@ -49,7 +45,7 @@ void Video::release() {
   }
 
   if (_gif != nullptr) {
-    auto gif = (AnimatedGIF *)_gif;
+    auto gif = (AnimatedGIF*) _gif;
     gif->close();
     delete gif;
     _gif = nullptr;
@@ -75,29 +71,26 @@ void Video::release() {
     delete it;
   }
   _decoded.clear();
-  
+
   if (_interlock != nullptr) {
     vSemaphoreDelete(_interlock);
     _interlock = nullptr;
   }
 }
 
-
 bool Video::isLoaded() {
   return (_image != nullptr);
 }
-
 
 const Image* Video::getImage() const {
   return _image;
 }
 
-
 bool Video::nextFrame(bool loop, bool init) {
   if (_type == VIDEO_GIF) {
     return next_gif(loop, init);
   }
-  
+
   if (_type == VIDEO_MJPEG) {
     return next_mjpeg(loop, init);
   }
@@ -105,11 +98,10 @@ bool Video::nextFrame(bool loop, bool init) {
   return false;
 }
 
-
 // Source referenced: https://github.com/pixelmatix/GifDecoder
 static bool g_gif_from_sd = false;
 
-static void* gif_file_open(const char *fname, int32_t *pSize) {
+static void* gif_file_open(const char* fname, int32_t* pSize) {
   File* file_ptr = new File;
   if (file_ptr == nullptr) {
     return nullptr;
@@ -119,8 +111,7 @@ static void* gif_file_open(const char *fname, int32_t *pSize) {
 #ifdef USE_SD
     *file_ptr = SD.open(fname);
 #endif
-  }
-  else {
+  } else {
     *file_ptr = FFat.open(fname);
   }
 
@@ -130,86 +121,81 @@ static void* gif_file_open(const char *fname, int32_t *pSize) {
   }
 
   *pSize = file_ptr->size();
-  return (void *)file_ptr;
+  return (void*) file_ptr;
 }
-
 
 static void gif_file_close(void* param) {
   if (param == nullptr) {
     return;
   }
 
-  File* file_ptr = (File *)param;
+  File* file_ptr = (File*) param;
   file_ptr->close();
   delete file_ptr;
 }
 
-
-static int32_t gif_file_read(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
+static int32_t gif_file_read(GIFFILE* pFile, uint8_t* pBuf, int32_t iLen) {
   if (pFile == nullptr) {
     return 0;
   }
-  
-  File &file = *((File *)pFile->fHandle);
+
+  File& file = *((File*) pFile->fHandle);
   int32_t bytes_read = file.read(pBuf, iLen);
-  pFile->iPos = (int32_t)file.position();
+  pFile->iPos = (int32_t) file.position();
   return bytes_read;
 }
 
-
-static int32_t gif_file_seek(GIFFILE *pFile, int32_t iPosition) {
+static int32_t gif_file_seek(GIFFILE* pFile, int32_t iPosition) {
   if (pFile == nullptr) {
     return 0;
   }
-  
-  File &file = *((File *)pFile->fHandle);
+
+  File& file = *((File*) pFile->fHandle);
   file.seek(iPosition);
-  pFile->iPos = (int32_t)file.position();
+  pFile->iPos = (int32_t) file.position();
   return pFile->iPos;
 }
 
-
-static void gif_draw(GIFDRAW *pDraw) {
-  auto image = (Image *)pDraw->pUser;
+static void gif_draw(GIFDRAW* pDraw) {
+  auto image = (Image*) pDraw->pUser;
   if (image == nullptr) {
     return;
   }
-  
+
   typedef struct _rgb888_t {
     uint8_t r;
     uint8_t g;
     uint8_t b;
   } rgb888_t;
-  
-  auto palette = (const rgb888_t*)pDraw->pPalette;
+
+  auto palette = (const rgb888_t*) pDraw->pPalette;
   auto buffer = image->getBuffer();
   auto width = image->getWidth();
   const uint8_t ucTransparent = pDraw->ucTransparent;
 
   // Apply the new pixels to the main image
-  if (pDraw->ucHasTransparency && pDraw->ucDisposalMethod != 2) { // if transparency used
+  if (pDraw->ucHasTransparency && pDraw->ucDisposalMethod != 2) {  // if transparency used
     auto palette_temp = new rgb888_t[pDraw->iWidth];
-    const uint8_t *ptr_color = pDraw->pPixels;
-    const uint8_t *ptr_end = ptr_color + pDraw->iWidth;
+    const uint8_t* ptr_color = pDraw->pPixels;
+    const uint8_t* ptr_end = ptr_color + pDraw->iWidth;
     int x = 0;
 
     while (x < pDraw->iWidth) {
       uint8_t color = ucTransparent - 1;
-      rgb888_t *ptr_palette = palette_temp;
-      int opaque_count = 0; // count non-transparent pixels
+      rgb888_t* ptr_palette = palette_temp;
+      int opaque_count = 0;  // count non-transparent pixels
 
       while (color != ucTransparent && ptr_color < ptr_end) {
         color = *ptr_color++;
-        if (color == ucTransparent) { // done, stop
-          ptr_color--; // back up to treat it like transparent
-        }
-        else { // opaque
+        if (color == ucTransparent) {  // done, stop
+          ptr_color--;                 // back up to treat it like transparent
+        } else {                       // opaque
           *ptr_palette++ = palette[color];
           opaque_count++;
         }
-      } // while looking for opaque pixels
+      }  // while looking for opaque pixels
 
-      if (opaque_count) { // any opaque pixels?
+      if (opaque_count) {  // any opaque pixels?
         auto ptr_buffer = buffer + (((pDraw->iY + pDraw->y) * width + (pDraw->iX + x)) * 3);
         for (int i = 0; i < opaque_count; i++) {
           *ptr_buffer++ = palette_temp[i].r;
@@ -227,21 +213,19 @@ static void gif_draw(GIFDRAW *pDraw) {
         color = *ptr_color++;
         if (color == ucTransparent) {
           opaque_count++;
-        }
-        else {
+        } else {
           ptr_color--;
         }
       }
 
       if (opaque_count) {
-        x += opaque_count; // skip these
+        x += opaque_count;  // skip these
         opaque_count = 0;
       }
     }
 
     delete[] palette_temp;
-  }
-  else {
+  } else {
     // Translate the 8-bit pixels through the RGB565 palette (already byte reversed)
     auto ptr_buffer = buffer + (((pDraw->iY + pDraw->y) * width + (pDraw->iX)) * 3);
     for (int x = 0; x < pDraw->iWidth; x++) {
@@ -250,8 +234,7 @@ static void gif_draw(GIFDRAW *pDraw) {
         *ptr_buffer++ = 0;
         *ptr_buffer++ = 0;
         *ptr_buffer++ = 0;
-      }
-      else {
+      } else {
         const auto& pal = palette[color];
         *ptr_buffer++ = pal.r;
         *ptr_buffer++ = pal.g;
@@ -261,7 +244,6 @@ static void gif_draw(GIFDRAW *pDraw) {
   }
 };
 
-
 bool Video::load_gif(const char* path, bool from_sd, bool loop) {
   release();
 
@@ -270,8 +252,7 @@ bool Video::load_gif(const char* path, bool from_sd, bool loop) {
 #ifdef USE_SD
     _file = SD.open(path);
 #endif
-  }
-  else {
+  } else {
     _file = FFat.open(path);
   }
 
@@ -290,7 +271,7 @@ bool Video::load_gif(const char* path, bool from_sd, bool loop) {
   gif->begin(GIF_PALETTE_RGB888);
 
   _path = path;
-  
+
   if (!gif->open(_path.c_str(), gif_file_open, gif_file_close, gif_file_read, gif_file_seek, gif_draw)) {
     TF_LOGE(TAG, "gif decoding failed (%d).", gif->getLastError());
     delete gif;
@@ -324,25 +305,23 @@ bool Video::load_gif(const char* path, bool from_sd, bool loop) {
   return true;
 }
 
-
 bool Video::next_gif(bool loop, bool init) {
   if (_type != VIDEO_GIF) {
     return false;
   }
 
-  auto gif = (AnimatedGIF *)_gif;
+  auto gif = (AnimatedGIF*) _gif;
   if (!gif->nextFrame(init)) {
     if (loop) {
       _image->clear();
       return next_gif(loop, true);
     }
-    
+
     return false;
   }
 
   return load_gif_frame();
 }
-
 
 bool Video::load_gif_frame() {
   if (_image == nullptr || _gif == nullptr) {
@@ -350,8 +329,8 @@ bool Video::load_gif_frame() {
     release();
     return false;
   }
-  
-  auto gif = (AnimatedGIF *)_gif;
+
+  auto gif = (AnimatedGIF*) _gif;
 
   int frame_delay = 0;
   int gif_result = gif->playFrame(false, &frame_delay, _image);
@@ -367,7 +346,6 @@ bool Video::load_gif_frame() {
   return true;
 }
 
-
 bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) {
   release();
 
@@ -375,8 +353,7 @@ bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) 
 #ifdef USE_SD
     _file = SD.open(path);
 #endif
-  }
-  else {
+  } else {
     _file = FFat.open(path);
   }
   if (!_file) {
@@ -393,7 +370,7 @@ bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) 
     for (int i = 0; i < MJPEG_BUFFERS; i++) {
       if (_buffer[i].ptr == nullptr) {
         _buffer[i].size = MJPEG_BUFFER_SIZE;
-        _buffer[i].ptr = (uint8_t*)malloc_auto(_buffer[i].size);
+        _buffer[i].ptr = (uint8_t*) malloc_auto(_buffer[i].size);
         _buffer[i].start = 0;
         _buffer[i].read = 0;
         _buffer[i].valid = false;
@@ -412,7 +389,8 @@ bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) 
       TF_LOGE(TAG, "xTaskCreatePinnedToCore failed (%d).", core_result1);
     }
 
-    auto core_result2 = xTaskCreatePinnedToCore(mjpeg_decode_entry_point, "mjpegd", 8192, this, 1, nullptr, PRO_CPU_NUM);
+    auto core_result2 =
+        xTaskCreatePinnedToCore(mjpeg_decode_entry_point, "mjpegd", 8192, this, 1, nullptr, PRO_CPU_NUM);
     if (core_result2 != pdPASS) {
       TF_LOGE(TAG, "xTaskCreatePinnedToCore failed (%d).", core_result2);
     }
@@ -426,8 +404,7 @@ bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) 
     while (_decoded.size() < MJPEG_LOAD_FRAMES) {
       delay(1);
     }
-  }
-  else {
+  } else {
     if (!next_mjpeg(false, true)) {
       TF_LOGE(TAG, "video header not found (%s).", path);
       release();
@@ -449,12 +426,11 @@ bool Video::load_mjpeg(const char* path, bool from_sd, bool loop, uint32_t fps) 
   return true;
 }
 
-
 bool Video::next_mjpeg(bool loop, bool init) {
   if (init) {
     _start = _end = 0;
     _frame = 0;
-    
+
     if (psramFound()) {
       for (int i = 0; i < MJPEG_BUFFERS; i++) {
         if (_buffer[i].valid && (_buffer[i].last || _buffer[i].start > MJPEG_BUFFER_SIZE)) {
@@ -462,8 +438,7 @@ bool Video::next_mjpeg(bool loop, bool init) {
         }
       }
     }
-  }
-  else {
+  } else {
     _start = _end;
     ++_frame;
   }
@@ -481,10 +456,9 @@ bool Video::next_mjpeg(bool loop, bool init) {
 
       delay(1);
     }
-    
+
     return false;
-  }
-  else {
+  } else {
     bool has_next = find_range_direct() && (_start < _end);
 
     if (has_next) {
@@ -501,13 +475,12 @@ bool Video::next_mjpeg(bool loop, bool init) {
   }
 }
 
-
 bool Video::load_mjpeg_frame() {
   if (_image != nullptr) {
     delete _image;
     _image = nullptr;
   }
-  
+
   if (psramFound()) {
     if (xSemaphoreTake(_interlock, portMAX_DELAY)) {
       if (!_decoded.empty()) {
@@ -518,8 +491,7 @@ bool Video::load_mjpeg_frame() {
     }
 
     return (_image != nullptr);
-  }
-  else {
+  } else {
     size_t size = _end - _start;
     uint8_t* buffer = new uint8_t[size];
     if (buffer == nullptr) {
@@ -531,7 +503,7 @@ bool Video::load_mjpeg_frame() {
 
     _image = new Image(Image::IMAGE_JPEG, buffer, size, true);
     delete[] buffer;
-    
+
     if (_image == nullptr) {
       return false;
     }
@@ -540,27 +512,24 @@ bool Video::load_mjpeg_frame() {
       delete _image;
       return false;
     }
-    
+
     return true;
   }
 }
 
-
 void Video::mjpeg_read_entry_point(void* param) {
-  auto pthis = (Video*)param;
+  auto pthis = (Video*) param;
   pthis->mjpeg_read();
 
   vTaskDelete(nullptr);
 }
 
-
 void Video::mjpeg_decode_entry_point(void* param) {
-  auto pthis = (Video*)param;
+  auto pthis = (Video*) param;
   pthis->mjpeg_decode();
 
   vTaskDelete(nullptr);
 }
-
 
 void Video::mjpeg_read() {
   while (_buffering && !_buffering_fail) {
@@ -572,8 +541,7 @@ void Video::mjpeg_read() {
         _buffer[index].last = !_file.available();
         _buffer[index].valid = true;
       }
-    }
-    else if (_buffering_loop) {
+    } else if (_buffering_loop) {
       int index = find_free_buffer();
       if (index >= 0) {
         _file.seek(0);
@@ -586,7 +554,6 @@ void Video::mjpeg_read() {
   _mjpeg_read_end = true;
 }
 
-
 void Video::mjpeg_decode() {
   while (_buffering && !_buffering_fail) {
     mjpeg_decode2();
@@ -596,7 +563,6 @@ void Video::mjpeg_decode() {
 
   _mjpeg_decode_end = true;
 }
-
 
 void Video::mjpeg_decode2() {
   if (_decoded.size() >= MJPEG_LOAD_FRAMES) {
@@ -612,7 +578,7 @@ void Video::mjpeg_decode2() {
   }
 
   flush_buffer(false);
-  
+
   if (_start >= _end) {
     return;
   }
@@ -628,15 +594,14 @@ void Video::mjpeg_decode2() {
   }
 
   size_t size = _end - _start;
-  
+
   Image* image;
   if (index1 == index2) {
     // continuous data
     image = new Image(Image::IMAGE_JPEG, _buffer[index1].ptr + _start - _buffer[index1].start, size, true);
-  }
-  else {
+  } else {
     // fragmented data
-    uint8_t* buffer = (uint8_t*)malloc_auto(size);
+    uint8_t* buffer = (uint8_t*) malloc_auto(size);
     size_t size1 = _buffer[index1].size - (_start - _buffer[index1].start);
     size_t size2 = size - size1;
     memcpy(buffer, _buffer[index1].ptr + _start - _buffer[index1].start, size1);
@@ -654,15 +619,13 @@ void Video::mjpeg_decode2() {
     // _buffering_fail = true;
     TF_LOGW(TAG, "fail %d %d", _start, _end);
     delete image;
-  }
-  else {
+  } else {
     if (xSemaphoreTake(_interlock, portMAX_DELAY)) {
       _decoded.push_back(image);
       xSemaphoreGive(_interlock);
     }
   }
 }
-
 
 int Video::find_buffer(size_t pos) {
   for (int i = 0; i < MJPEG_BUFFERS; i++) {
@@ -678,19 +641,17 @@ int Video::find_buffer(size_t pos) {
   return -1;
 }
 
-
 int Video::find_free_buffer() {
   for (int i = 0; i < MJPEG_BUFFERS; i++) {
     if (_buffer[i].ptr == nullptr || _buffer[i].valid) {
       continue;
     }
-    
+
     return i;
   }
 
   return -1;
 }
-
 
 bool Video::find_range() {
   int step = 0;
@@ -709,43 +670,39 @@ bool Video::find_range() {
     uint8_t read = _buffer[index].ptr[i - _buffer[index].start];
 
     switch (step) {
-    case 0: // find ff
-      if (read == 0xff) {
-        start = i;
-        step = 1;
-      }
-      break;
-    case 1: // find d8
-      if (read == 0xd8) {
-        find_header = true;
-        step = 2;
-      }
-      else if (read == 0xff) {
-        start = i;
-      }
-      else {
-        step = 0;
-      }
-      break;
-    case 2: // find next ff
-      if (read == 0xff) {
-        end = i;
-        step = 3;
-      }
-      break;
-    case 3: // find next d8
-      if (read == 0xd8) {
-        _start = start;
-        _end = end;
-        return true;
-      }
-      else if (read == 0xff) {
-        end = i;
-      }
-      else {
-        step = 2;
-      }
-      break;
+      case 0:  // find ff
+        if (read == 0xff) {
+          start = i;
+          step = 1;
+        }
+        break;
+      case 1:  // find d8
+        if (read == 0xd8) {
+          find_header = true;
+          step = 2;
+        } else if (read == 0xff) {
+          start = i;
+        } else {
+          step = 0;
+        }
+        break;
+      case 2:  // find next ff
+        if (read == 0xff) {
+          end = i;
+          step = 3;
+        }
+        break;
+      case 3:  // find next d8
+        if (read == 0xd8) {
+          _start = start;
+          _end = end;
+          return true;
+        } else if (read == 0xff) {
+          end = i;
+        } else {
+          step = 2;
+        }
+        break;
     }
   }
 
@@ -757,7 +714,6 @@ bool Video::find_range() {
 
   return false;
 }
-
 
 bool Video::find_range_direct() {
   int step = 0;
@@ -771,54 +727,50 @@ bool Video::find_range_direct() {
   while (_file.available()) {
     size_t block_pos = _file.position();
     size_t bytes_read = _file.read(block, BLOCK_SIZE);
-    
+
     for (size_t i = 0; i < bytes_read; i++) {
       size_t pos = block_pos + i;
       uint8_t read = block[i];
 
       switch (step) {
-      case 0: // find ff
-        if (read == 0xff) {
-          start = pos;
-          step = 1;
-        }
-        break;
-      case 1: // find d8
-        if (read == 0xd8) {
-          find_header = true;
-          step = 2;
-        }
-        else if (read == 0xff) {
-          start = pos;
-        }
-        else {
-          step = 0;
-        }
-        break;
-      case 2: // find next ff
-        if (read == 0xff) {
-          end = pos;
-          step = 3;
-        }
-        break;
-      case 3: // find next d8
-        if (read == 0xd8) {
-          delete[] block;
-          _start = start;
-          _end = end;
-          return true;
-        }
-        else if (read == 0xff) {
-          end = pos;
-        }
-        else {
-          step = 2;
-        }
-        break;
+        case 0:  // find ff
+          if (read == 0xff) {
+            start = pos;
+            step = 1;
+          }
+          break;
+        case 1:  // find d8
+          if (read == 0xd8) {
+            find_header = true;
+            step = 2;
+          } else if (read == 0xff) {
+            start = pos;
+          } else {
+            step = 0;
+          }
+          break;
+        case 2:  // find next ff
+          if (read == 0xff) {
+            end = pos;
+            step = 3;
+          }
+          break;
+        case 3:  // find next d8
+          if (read == 0xd8) {
+            delete[] block;
+            _start = start;
+            _end = end;
+            return true;
+          } else if (read == 0xff) {
+            end = pos;
+          } else {
+            step = 2;
+          }
+          break;
       }
     }
   }
-  
+
   delete[] block;
 
   if (find_header) {
@@ -829,7 +781,6 @@ bool Video::find_range_direct() {
 
   return false;
 }
-
 
 void Video::flush_buffer(bool init) {
   if (init) {
@@ -842,20 +793,18 @@ void Video::flush_buffer(bool init) {
         _buffer[i].valid = false;
       }
     }
-  }
-  else {
+  } else {
     for (int i = 0; i < MJPEG_BUFFERS; i++) {
       if (!_buffer[i].valid) {
         continue;
       }
 
       if (has_last()) {
-        if (_buffer[i].start > (MJPEG_BUFFER_SIZE * (MJPEG_BUFFERS - 2))
-        && _start >= _buffer[i].start + _buffer[i].size) {
+        if (_buffer[i].start > (MJPEG_BUFFER_SIZE * (MJPEG_BUFFERS - 2)) &&
+            _start >= _buffer[i].start + _buffer[i].size) {
           _buffer[i].valid = false;
         }
-      }
-      else {
+      } else {
         if (_start >= _buffer[i].start + _buffer[i].size) {
           _buffer[i].valid = false;
         }
@@ -863,7 +812,6 @@ void Video::flush_buffer(bool init) {
     }
   }
 }
-
 
 bool Video::has_last() {
   for (int i = 0; i < MJPEG_BUFFERS; i++) {
@@ -879,5 +827,4 @@ bool Video::has_last() {
   return false;
 }
 
-
-};
+};  // namespace toaster

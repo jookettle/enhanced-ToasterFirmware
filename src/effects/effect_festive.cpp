@@ -3,9 +3,7 @@
 #include "lib/logger.h"
 #include "protogen.h"
 
-
 namespace toaster {
-
 
 typedef struct _FRAME_DATA {
   uint8_t image;
@@ -13,20 +11,49 @@ typedef struct _FRAME_DATA {
 } FRAME_DATA;
 
 static const FRAME_DATA FRAME_DATAS[] = {
-  {0, 3000, },
-  {1, 16, },
-  {2, 16, },
-  {3, 16, },
-  {4, 16, },
-  {5, 100, },
-  {4, 16, },
-  {3, 16, },
-  {2, 16, },
-  {1, 16, },
+    {
+        0,
+        3000,
+    },
+    {
+        1,
+        16,
+    },
+    {
+        2,
+        16,
+    },
+    {
+        3,
+        16,
+    },
+    {
+        4,
+        16,
+    },
+    {
+        5,
+        100,
+    },
+    {
+        4,
+        16,
+    },
+    {
+        3,
+        16,
+    },
+    {
+        2,
+        16,
+    },
+    {
+        1,
+        16,
+    },
 };
 
 static const size_t FRAME_DATA_COUNT = sizeof(FRAME_DATAS) / sizeof(FRAME_DATAS[0]);
-
 
 void EffectFestive::init(Display& display) {
   Effect::init(display);
@@ -37,7 +64,7 @@ void EffectFestive::init(Display& display) {
     return;
   }
   memset(_vdatas, 0, sizeof(_vdatas));
-  
+
   if (Protogen.isFestiveFace()) {
     bool use_rgb565 = Protogen.isRGB565();
     std::string base_path = Toaster::DEFAULT_BASE_PATH;
@@ -54,12 +81,11 @@ void EffectFestive::init(Display& display) {
   _eye_frame = 0;
 }
 
-
 void EffectFestive::process(Display& display) {
   if (_vdatas == nullptr) {
     return;
   }
-  
+
   const int EASE_MAX = 6;
 
   if (_staticMode == false) {
@@ -80,18 +106,17 @@ void EffectFestive::process(Display& display) {
   for (int x = 0; x < display.getWidth() / 2; x++) {
     if (_vdatas[x].ease < EASE_MAX) {
       _vdatas[x].ease += 1;
-      _vdatas[x].heightRecent = (_vdatas[x].heightPrev * (EASE_MAX - _vdatas[x].ease) + _vdatas[x].heightNext * _vdatas[x].ease) / EASE_MAX;
-    }
-    else {
+      _vdatas[x].heightRecent =
+          (_vdatas[x].heightPrev * (EASE_MAX - _vdatas[x].ease) + _vdatas[x].heightNext * _vdatas[x].ease) / EASE_MAX;
+    } else {
       if (_vdatas[x].delay > 0) {
         _vdatas[x].delay -= 1;
-      }
-      else if (_vdatas[x].heightRecent > 0) {
+      } else if (_vdatas[x].heightRecent > 0) {
         _vdatas[x].heightRecent -= 1;
       }
     }
   }
-  
+
   for (int x = 0; x < display.getWidth() / 2; x++) {
     for (int y = display.getHeight() - _vdatas[x].heightRecent; y < display.getHeight(); y++) {
       uint8_t r, g, b;
@@ -108,27 +133,26 @@ void EffectFestive::process(Display& display) {
     if (timeout(FRAME_DATAS[_step].display_time)) {
       setStep((_step >= FRAME_DATA_COUNT - 1) ? 0 : _step + 1);
     }
-    
+
     display.draw_image_newcolor(_eyes[_eye_frame], color_func_rainbow_single, 0, DRAW_MIRROR, 0, 0);
     display.draw_image_newcolor(_nose, color_func_rainbow_single, 1, DRAW_MIRROR, 48, 0);
     display.draw_image_newcolor(_mouth, color_func_rainbow_single, 2, DRAW_MIRROR, 0, 16);
   }
 }
 
-
 void EffectFestive::release(Display& display) {
   if (_vdatas != nullptr) {
     delete[] _vdatas;
     _vdatas = nullptr;
   }
-  
+
   for (int i = 0; i < 6; i++) {
     if (_eyes[i] != nullptr) {
       delete _eyes[i];
       _eyes[i] = nullptr;
     }
   }
-  
+
   if (_nose != nullptr) {
     delete _nose;
     _nose = nullptr;
@@ -142,5 +166,4 @@ void EffectFestive::release(Display& display) {
   Effect::release(display);
 }
 
-
-};
+};  // namespace toaster

@@ -1,7 +1,7 @@
 #pragma once
-#include <vector>
-
 #include <Adafruit_SSD1306.h>
+
+#include <vector>
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
@@ -9,7 +9,6 @@
 
 #include "huds/hud_base.h"
 #include "lib/worker.h"
-
 
 namespace toaster {
 
@@ -46,7 +45,6 @@ protected:
 
 protected:
   void setHUD(HUDBase* hud);
-
 };
 
-};
+};  // namespace toaster
