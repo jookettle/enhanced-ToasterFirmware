@@ -2,13 +2,12 @@
 #include "effect_base.h"
 #include "effect_parser.h"
 
-
 namespace toaster {
 
 class EffectScript : public FixedEffect {
 public:
   EffectScript(const char* name);
-  
+
   virtual void init(Display& display);
   virtual void process(Display& display);
   virtual void release(Display& display);
@@ -27,7 +26,9 @@ public:
 
   virtual timer_pf_t getVideoPF() const {
     if (_video_index >= _assets.size() || _assets[_video_index] == nullptr) {
-      return {PF_NONE, };
+      return {
+          PF_NONE,
+      };
     }
 
     return _assets[_video_index]->getVideo()->getPF();
@@ -35,12 +36,12 @@ public:
 
   virtual void restart() {
     switch (_parser.getType()) {
-    case ST_SEQUENCE:
-      restartTimer();
-      break;
-    case ST_VIDEO:
-      setStep(_parser.getVideoInfo().start);
-      break;
+      case ST_SEQUENCE:
+        restartTimer();
+        break;
+      case ST_VIDEO:
+        setStep(_parser.getVideoInfo().start);
+        break;
     }
   }
 
@@ -48,7 +49,7 @@ public:
 
 protected:
   bool _error{false};
-  std::vector<Asset *> _assets;
+  std::vector<Asset*> _assets;
   EffectParser _parser;
   std::string _script_name;
   std::string _base_path;
@@ -69,11 +70,13 @@ protected:
   std::string safeFormatVideoPath(const std::string& path, int step);
   bool initSequence(Display& display);
   bool initVideo(Display& display);
-  void processSequence(Display& display, const std::vector<DRAW_SEQUENCE>& sequence, const std::vector<DRAW_SEQUENCE>& other_sequence);
+  void processSequence(Display& display, const std::vector<DRAW_SEQUENCE>& sequence,
+                       const std::vector<DRAW_SEQUENCE>& other_sequence);
   void processVideo(Display& display);
-  size_t releaseSomeImages(Display& display, int current_sequence, const std::vector<DRAW_SEQUENCE>& sequence, const std::vector<DRAW_SEQUENCE>& other_sequence, size_t to_release = 1);
-  size_t loadNextImages(Display& display, int current_sequence, const std::vector<DRAW_SEQUENCE>& sequence, const std::vector<DRAW_SEQUENCE>& other_sequence, size_t to_load = 1);
-
+  size_t releaseSomeImages(Display& display, int current_sequence, const std::vector<DRAW_SEQUENCE>& sequence,
+                           const std::vector<DRAW_SEQUENCE>& other_sequence, size_t to_release = 1);
+  size_t loadNextImages(Display& display, int current_sequence, const std::vector<DRAW_SEQUENCE>& sequence,
+                        const std::vector<DRAW_SEQUENCE>& other_sequence, size_t to_load = 1);
 };
 
-};
+};  // namespace toaster

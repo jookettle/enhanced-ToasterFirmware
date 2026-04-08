@@ -1,8 +1,7 @@
 #include "effect_base.h"
+
 #include "effect_script.h"
-
 #include "effects.h"
-
 
 namespace toaster {
 
@@ -16,36 +15,132 @@ PROTOGEN_COLOR_MODE Effect::_colorMode = PCM_DEFAULT;
 uint8_t Effect::_personalIndex = 0;
 COLOR_FUNC Effect::_colorFunc = color_func_personal;
 uint8_t Effect::_personalColor[3][8][3] = {
-  {
-    {0, 255, 0, },
-    {0, 255, 0, },
-    {0, 255, 0, },
-    {0, 255, 0, },
-    {0, 255, 0, },
-    {0, 255, 0, },
-    {0, 255, 0, },
-    {0, 255, 0, },
-  },
-  {
-    {0, 0, 255, },
-    {0, 0, 255, },
-    {0, 0, 255, },
-    {0, 0, 255, },
-    {0, 0, 255, },
-    {0, 0, 255, },
-    {0, 0, 255, },
-    {0, 0, 255, },
-  },
-  {
-    {255, 0, 0, },
-    {255, 0, 0, },
-    {255, 0, 0, },
-    {255, 0, 0, },
-    {255, 0, 0, },
-    {255, 0, 0, },
-    {255, 0, 0, },
-    {255, 0, 0, },
-  },
+    {
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+        {
+            0,
+            255,
+            0,
+        },
+    },
+    {
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+        {
+            0,
+            0,
+            255,
+        },
+    },
+    {
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+        {
+            255,
+            0,
+            0,
+        },
+    },
 };
 uint32_t Effect::_rainbowSingleSpeed_ms = 20;
 uint32_t Effect::_rainbowSpeed_ms = 10;
@@ -58,14 +153,25 @@ uint8_t Effect::_rainbow_single_red = 0;
 uint8_t Effect::_rainbow_single_green = 0;
 uint8_t Effect::_rainbow_single_blue = 0;
 bool Effect::_rainbow_dirty = false;
-uint8_t Effect::_rainbow_red[HUB75_PANEL_RES_X] = {0, };
-uint8_t Effect::_rainbow_green[HUB75_PANEL_RES_X] = {0, };
-uint8_t Effect::_rainbow_blue[HUB75_PANEL_RES_X] = {0, };
+uint8_t Effect::_rainbow_red[HUB75_PANEL_RES_X] = {
+    0,
+};
+uint8_t Effect::_rainbow_green[HUB75_PANEL_RES_X] = {
+    0,
+};
+uint8_t Effect::_rainbow_blue[HUB75_PANEL_RES_X] = {
+    0,
+};
 bool Effect::_gradation_dirty = false;
-uint8_t Effect::_gradation_reds[2][HUB75_PANEL_RES_X] = {0, };
-uint8_t Effect::_gradation_greens[2][HUB75_PANEL_RES_X] = {0, };
-uint8_t Effect::_gradation_blues[2][HUB75_PANEL_RES_X] = {0, };
-
+uint8_t Effect::_gradation_reds[2][HUB75_PANEL_RES_X] = {
+    0,
+};
+uint8_t Effect::_gradation_greens[2][HUB75_PANEL_RES_X] = {
+    0,
+};
+uint8_t Effect::_gradation_blues[2][HUB75_PANEL_RES_X] = {
+    0,
+};
 
 EffectScript effect_script[6]{"script0", "script1", "script2", "script3", "script4", "script5"};
 
@@ -79,32 +185,26 @@ EffectClock effect_clock("clock");
 EffectSidePanel side_default("side_default");
 EffectSideRainbow side_rainbow("side_rainbow");
 
-
-
-
 Effect::Effect(const char* name) {
   _name = name;
   _effects.push_back(this);
 }
 
-
 Effect::~Effect() {
-  for (auto it = _effects.begin(); it != _effects.end(); ) {
+  for (auto it = _effects.begin(); it != _effects.end();) {
     if ((*it) == this) {
       it = _effects.erase(it);
-    }
-    else {
+    } else {
       ++it;
     }
   }
 }
 
-
 Effect* Effect::find(const char* name, uint8_t script_index, const char* base_path) {
   if (*name == 0) {
     return nullptr;
-  } 
-  
+  }
+
   auto result = findFromHardcoded(name);
   if (result != nullptr) {
     return result;
@@ -112,7 +212,6 @@ Effect* Effect::find(const char* name, uint8_t script_index, const char* base_pa
 
   return findFromScript(name, script_index, base_path);
 }
-
 
 Effect* Effect::findFromHardcoded(const char* name) {
   for (auto it = _effects.begin(); it != _effects.end(); ++it) {
@@ -124,7 +223,6 @@ Effect* Effect::findFromHardcoded(const char* name) {
   return nullptr;
 }
 
-
 Effect* Effect::findFromScript(const char* name, uint8_t script_index, const char* base_path) {
   auto& script = effect_script[script_index];
 
@@ -135,36 +233,46 @@ Effect* Effect::findFromScript(const char* name, uint8_t script_index, const cha
   return nullptr;
 }
 
-
 void Effect::h2rgb(uint16_t h, uint8_t& out_r, uint8_t& out_g, uint8_t& out_b) {
   uint16_t region = h / 60;
   uint16_t remainder = (h - (region * 60)) * 6;
-  
+
   uint8_t q = (255 * (255 - ((255 * remainder) / 360))) >> 8;
   uint8_t t = (255 * (255 - ((255 * (359 - remainder)) / 360))) >> 8;
-  
+
   switch (region) {
-  case 0:
-    out_r = 255; out_g = t; out_b = 0;
-    break;
-  case 1:
-    out_r = q; out_g = 255; out_b = 0;
-    break;
-  case 2:
-    out_r = 0; out_g = 255; out_b = t;
-    break;
-  case 3:
-    out_r = 0; out_g = q; out_b = 255;
-    break;
-  case 4:
-    out_r = t; out_g = 0; out_b = 255;
-    break;
-  default:
-    out_r = 255; out_g = 0; out_b = q;
-    break;
+    case 0:
+      out_r = 255;
+      out_g = t;
+      out_b = 0;
+      break;
+    case 1:
+      out_r = q;
+      out_g = 255;
+      out_b = 0;
+      break;
+    case 2:
+      out_r = 0;
+      out_g = 255;
+      out_b = t;
+      break;
+    case 3:
+      out_r = 0;
+      out_g = q;
+      out_b = 255;
+      break;
+    case 4:
+      out_r = t;
+      out_g = 0;
+      out_b = 255;
+      break;
+    default:
+      out_r = 255;
+      out_g = 0;
+      out_b = q;
+      break;
   }
 }
-
 
 timer_ms_t Effect::color_millis() {
   if (_staticMode) {
@@ -173,7 +281,6 @@ timer_ms_t Effect::color_millis() {
 
   return (Timer::get_micros() - _color_tick_us) / 1000;
 }
-
 
 void Effect::color_func_original(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
 }
@@ -276,16 +383,16 @@ void Effect::color_func_gradation(int x, int y, uint8_t& r, uint8_t& g, uint8_t&
         uint32_t color_r;
         uint32_t color_g;
         uint32_t color_b;
-        _gradation_r[i].getValue((float)j / HUB75_PANEL_RES_X, color_r);
-        _gradation_g[i].getValue((float)j / HUB75_PANEL_RES_X, color_g);
-        _gradation_b[i].getValue((float)j / HUB75_PANEL_RES_X, color_b);
-        _gradation_reds[i][j] = (uint8_t)color_r;
-        _gradation_greens[i][j] = (uint8_t)color_g;
-        _gradation_blues[i][j] = (uint8_t)color_b;
+        _gradation_r[i].getValue((float) j / HUB75_PANEL_RES_X, color_r);
+        _gradation_g[i].getValue((float) j / HUB75_PANEL_RES_X, color_g);
+        _gradation_b[i].getValue((float) j / HUB75_PANEL_RES_X, color_b);
+        _gradation_reds[i][j] = (uint8_t) color_r;
+        _gradation_greens[i][j] = (uint8_t) color_g;
+        _gradation_blues[i][j] = (uint8_t) color_b;
       }
     }
   }
-  
+
   int x1 = (x < HUB75_PANEL_RES_X) ? x : (HUB75_PANEL_RES_X * HUB75_PANEL_CHAIN - x - 1);
 
   r = _gradation_reds[g_index][x1];
@@ -299,10 +406,10 @@ void Effect::color_func_gray_personal(int x, int y, uint8_t& r, uint8_t& g, uint
   }
 
   // Rec. 601
-  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_personalColor[0][param][0] * gray / 255);
-  g = (uint8_t)((uint16_t)_personalColor[0][param][1] * gray / 255);
-  b = (uint8_t)((uint16_t)_personalColor[0][param][2] * gray / 255);
+  uint8_t gray = (uint8_t) (((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t) ((uint16_t) _personalColor[0][param][0] * gray / 255);
+  g = (uint8_t) ((uint16_t) _personalColor[0][param][1] * gray / 255);
+  b = (uint8_t) ((uint16_t) _personalColor[0][param][2] * gray / 255);
 }
 
 void Effect::color_func_gray_personal2(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
@@ -311,10 +418,10 @@ void Effect::color_func_gray_personal2(int x, int y, uint8_t& r, uint8_t& g, uin
   }
 
   // Rec. 601
-  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_personalColor[1][param][0] * gray / 255);
-  g = (uint8_t)((uint16_t)_personalColor[1][param][1] * gray / 255);
-  b = (uint8_t)((uint16_t)_personalColor[1][param][2] * gray / 255);
+  uint8_t gray = (uint8_t) (((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t) ((uint16_t) _personalColor[1][param][0] * gray / 255);
+  g = (uint8_t) ((uint16_t) _personalColor[1][param][1] * gray / 255);
+  b = (uint8_t) ((uint16_t) _personalColor[1][param][2] * gray / 255);
 }
 
 void Effect::color_func_gray_personal3(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
@@ -323,13 +430,14 @@ void Effect::color_func_gray_personal3(int x, int y, uint8_t& r, uint8_t& g, uin
   }
 
   // Rec. 601
-  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_personalColor[2][param][0] * gray / 255);
-  g = (uint8_t)((uint16_t)_personalColor[2][param][1] * gray / 255);
-  b = (uint8_t)((uint16_t)_personalColor[2][param][2] * gray / 255);
+  uint8_t gray = (uint8_t) (((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t) ((uint16_t) _personalColor[2][param][0] * gray / 255);
+  g = (uint8_t) ((uint16_t) _personalColor[2][param][1] * gray / 255);
+  b = (uint8_t) ((uint16_t) _personalColor[2][param][2] * gray / 255);
 }
 
-void Effect::color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
+void Effect::color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a,
+                                            uint8_t param) {
   if (a == 0) {
     r = g = b = 0;
     return;
@@ -348,10 +456,10 @@ void Effect::color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g
   }
 
   // Rec. 601
-  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_rainbow_single_red * gray / 255);
-  g = (uint8_t)((uint16_t)_rainbow_single_green * gray / 255);
-  b = (uint8_t)((uint16_t)_rainbow_single_blue * gray / 255);
+  uint8_t gray = (uint8_t) (((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t) ((uint16_t) _rainbow_single_red * gray / 255);
+  g = (uint8_t) ((uint16_t) _rainbow_single_green * gray / 255);
+  b = (uint8_t) ((uint16_t) _rainbow_single_blue * gray / 255);
 }
 
 void Effect::color_func_gray_rainbow(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
@@ -377,10 +485,10 @@ void Effect::color_func_gray_rainbow(int x, int y, uint8_t& r, uint8_t& g, uint8
   int x1 = (x < HUB75_PANEL_RES_X) ? x : (HUB75_PANEL_RES_X * HUB75_PANEL_CHAIN - x - 1);
 
   // Rec. 601
-  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_rainbow_red[x1] * gray / 255);
-  g = (uint8_t)((uint16_t)_rainbow_green[x1] * gray / 255);
-  b = (uint8_t)((uint16_t)_rainbow_blue[x1] * gray / 255);
+  uint8_t gray = (uint8_t) (((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t) ((uint16_t) _rainbow_red[x1] * gray / 255);
+  g = (uint8_t) ((uint16_t) _rainbow_green[x1] * gray / 255);
+  b = (uint8_t) ((uint16_t) _rainbow_blue[x1] * gray / 255);
 }
 
 void Effect::color_func_gray_gradation(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param) {
@@ -398,23 +506,23 @@ void Effect::color_func_gray_gradation(int x, int y, uint8_t& r, uint8_t& g, uin
         uint32_t color_r;
         uint32_t color_g;
         uint32_t color_b;
-        _gradation_r[i].getValue((float)j / HUB75_PANEL_RES_X, color_r);
-        _gradation_g[i].getValue((float)j / HUB75_PANEL_RES_X, color_g);
-        _gradation_b[i].getValue((float)j / HUB75_PANEL_RES_X, color_b);
-        _gradation_reds[i][j] = (uint8_t)color_r;
-        _gradation_greens[i][j] = (uint8_t)color_g;
-        _gradation_blues[i][j] = (uint8_t)color_b;
+        _gradation_r[i].getValue((float) j / HUB75_PANEL_RES_X, color_r);
+        _gradation_g[i].getValue((float) j / HUB75_PANEL_RES_X, color_g);
+        _gradation_b[i].getValue((float) j / HUB75_PANEL_RES_X, color_b);
+        _gradation_reds[i][j] = (uint8_t) color_r;
+        _gradation_greens[i][j] = (uint8_t) color_g;
+        _gradation_blues[i][j] = (uint8_t) color_b;
       }
     }
   }
-  
+
   int x1 = (x < HUB75_PANEL_RES_X) ? x : (HUB75_PANEL_RES_X * HUB75_PANEL_CHAIN - x - 1);
 
   // Rec. 601
-  uint8_t gray = (uint8_t)(((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
-  r = (uint8_t)((uint16_t)_gradation_reds[g_index][x1] * gray / 255);
-  g = (uint8_t)((uint16_t)_gradation_greens[g_index][x1] * gray / 255);
-  b = (uint8_t)((uint16_t)_gradation_blues[g_index][x1] * gray / 255);
+  uint8_t gray = (uint8_t) (((2990 * r) + (5870 * g) + (1140 * b)) / 10000);
+  r = (uint8_t) ((uint16_t) _gradation_reds[g_index][x1] * gray / 255);
+  g = (uint8_t) ((uint16_t) _gradation_greens[g_index][x1] * gray / 255);
+  b = (uint8_t) ((uint16_t) _gradation_blues[g_index][x1] * gray / 255);
 }
 
-};
+};  // namespace toaster

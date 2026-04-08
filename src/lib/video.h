@@ -1,14 +1,12 @@
 #pragma once
-#include "image.h"
 #include <list>
 
+#include "image.h"
 
 // At least 3 buffers are required
-#define MJPEG_BUFFERS     3
-
+#define MJPEG_BUFFERS 3
 
 namespace toaster {
-
 
 class Video {
 public:
@@ -24,7 +22,7 @@ public:
   bool firstFrame() {
     return nextFrame(false, true);
   }
-  
+
   size_t getWidth() const {
     return (_image != nullptr) ? _image->getWidth() : 0;
   }
@@ -53,13 +51,15 @@ public:
 protected:
   File _file;
   Image* _image{nullptr};
-  
+
   uint32_t _frame{0};
-  uint8_t _type{VIDEO_NONE}; // VIDEO_TYPE
+  uint8_t _type{VIDEO_NONE};  // VIDEO_TYPE
   uint8_t _spare0{0};
   uint8_t _spare1{0};
   uint8_t _spare2{0};
-  timer_pf_t _pf{PF_NONE, };
+  timer_pf_t _pf{
+      PF_NONE,
+  };
 
   // gif only
   void* _gif{nullptr};
@@ -87,7 +87,6 @@ protected:
   SemaphoreHandle_t _interlock{nullptr};
   std::list<Image*> _decoded;
 
-  
 protected:
   bool load_gif(const char* path, bool from_sd, bool loop);
   bool next_gif(bool loop, bool init = false);
@@ -108,5 +107,4 @@ protected:
   bool has_last();
 };
 
-
-};
+};  // namespace toaster

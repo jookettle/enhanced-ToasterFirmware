@@ -2,9 +2,7 @@
 #include "image.h"
 #include "video.h"
 
-
 namespace toaster {
-
 
 class Asset {
 public:
@@ -38,13 +36,11 @@ public:
   }
 
   size_t getWidth() const {
-    return (_type == ASSET_IMAGE) ? _image->getWidth() : 
-           (_type == ASSET_VIDEO) ? _video->getWidth() : 0;
+    return (_type == ASSET_IMAGE) ? _image->getWidth() : (_type == ASSET_VIDEO) ? _video->getWidth() : 0;
   }
 
   size_t getHeight() const {
-    return (_type == ASSET_IMAGE) ? _image->getHeight() : 
-           (_type == ASSET_VIDEO) ? _video->getHeight() : 0;
+    return (_type == ASSET_IMAGE) ? _image->getHeight() : (_type == ASSET_VIDEO) ? _video->getHeight() : 0;
   }
 
 public:
@@ -62,8 +58,6 @@ protected:
     Image* _image;
     Video* _video;
   };
-
 };
 
-
-};
+};  // namespace toaster

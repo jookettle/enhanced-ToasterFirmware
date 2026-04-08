@@ -1,15 +1,12 @@
 #include "hud_shortcut.h"
 
-
 #include "huds.h"
 #include "protogen.h"
-
 
 namespace toaster {
 
 HUDShortcut hud_shortcut;
 HUDShortcutSelect hud_shortcut_select;
-
 
 void HUDShortcut::init() {
   HUDBase::init();
@@ -17,7 +14,6 @@ void HUDShortcut::init() {
   _shortcut_key = 0;
   _shortcut_count = 0;
 }
-
 
 void HUDShortcut::process(Adafruit_SSD1306& oled) {
   static const timer_ms_t TIMEOUT_INPUT_MS = 750;
@@ -31,12 +27,12 @@ void HUDShortcut::process(Adafruit_SSD1306& oled) {
   oled.setCursor(0, 16);
   writeCenter(oled, getShortcut());
 
-  oled.drawFastVLine( 10, 44, 20, SSD1306_WHITE);
-  oled.drawFastVLine( 27, 44, 20, SSD1306_WHITE);
-  oled.drawFastVLine( 44, 44, 20, SSD1306_WHITE);
-  oled.drawFastVLine( 61, 37, 27, SSD1306_WHITE);
-  oled.drawFastVLine( 66, 37, 27, SSD1306_WHITE);
-  oled.drawFastVLine( 83, 44, 20, SSD1306_WHITE);
+  oled.drawFastVLine(10, 44, 20, SSD1306_WHITE);
+  oled.drawFastVLine(27, 44, 20, SSD1306_WHITE);
+  oled.drawFastVLine(44, 44, 20, SSD1306_WHITE);
+  oled.drawFastVLine(61, 37, 27, SSD1306_WHITE);
+  oled.drawFastVLine(66, 37, 27, SSD1306_WHITE);
+  oled.drawFastVLine(83, 44, 20, SSD1306_WHITE);
   oled.drawFastVLine(100, 44, 20, SSD1306_WHITE);
   oled.drawFastVLine(117, 44, 20, SSD1306_WHITE);
 
@@ -47,12 +43,24 @@ void HUDShortcut::process(Adafruit_SSD1306& oled) {
   };
 
   switch (_shortcut_key) {
-  case 's': draw_gauge( 12, _shortcut_count + 1); break;
-  case 'd': draw_gauge( 29, _shortcut_count + 1); break;
-  case 'f': draw_gauge( 46, _shortcut_count + 1); break;
-  case 'j': draw_gauge( 68, _shortcut_count + 1); break;
-  case 'k': draw_gauge( 85, _shortcut_count + 1); break;
-  case 'l': draw_gauge(102, _shortcut_count + 1); break;
+    case 's':
+      draw_gauge(12, _shortcut_count + 1);
+      break;
+    case 'd':
+      draw_gauge(29, _shortcut_count + 1);
+      break;
+    case 'f':
+      draw_gauge(46, _shortcut_count + 1);
+      break;
+    case 'j':
+      draw_gauge(68, _shortcut_count + 1);
+      break;
+    case 'k':
+      draw_gauge(85, _shortcut_count + 1);
+      break;
+    case 'l':
+      draw_gauge(102, _shortcut_count + 1);
+      break;
   }
 
   timer_ms_t timeout_time = (_shortcut_key == 0) ? TIMEOUT_INACTIVE_MS : TIMEOUT_INPUT_MS;
@@ -75,10 +83,8 @@ void HUDShortcut::process(Adafruit_SSD1306& oled) {
   }
 }
 
-
 void HUDShortcut::release() {
 }
-
 
 void HUDShortcut::pressKey(uint16_t key, uint8_t mode) {
   // ignore initial inputs
@@ -90,13 +96,11 @@ void HUDShortcut::pressKey(uint16_t key, uint8_t mode) {
   if (lower_key != 0) {
     _shortcut_key = lower_key;
     _shortcut_count = SHORTCUT_CLICK_COUNT_MAX;
-  }
-  else {
+  } else {
     if (_shortcut_key != key) {
       _shortcut_key = key;
       _shortcut_count = 0;
-    }
-    else {
+    } else {
       ++_shortcut_count %= SHORTCUT_CLICK_COUNT_MAX;
     }
 
@@ -107,40 +111,53 @@ void HUDShortcut::pressKey(uint16_t key, uint8_t mode) {
   nextHUD(&hud_dashboard, true);
 }
 
-
 uint16_t HUDShortcut::upperToLower(uint16_t key) {
   switch (key) {
-  case 'F': return 'f';
-  case 'D': return 'd';
-  case 'S': return 's';
-  case 'A': return 'a';
-  case 'J': return 'j';
-  case 'K': return 'k';
-  case 'L': return 'l';
-  case ':': return ';';
+    case 'F':
+      return 'f';
+    case 'D':
+      return 'd';
+    case 'S':
+      return 's';
+    case 'A':
+      return 'a';
+    case 'J':
+      return 'j';
+    case 'K':
+      return 'k';
+    case 'L':
+      return 'l';
+    case ':':
+      return ';';
   }
 
   return 0;
 }
 
-
 const char* HUDShortcut::getShortcut() {
-  uint8_t click_count = std::min(_shortcut_count, (uint8_t)SHORTCUT_CLICK_COUNT_MAX);
+  uint8_t click_count = std::min(_shortcut_count, (uint8_t) SHORTCUT_CLICK_COUNT_MAX);
 
   switch (_shortcut_key) {
-  case 'f': return Protogen.getEmotionShortcut(0, 0, click_count);
-  case 'd': return Protogen.getEmotionShortcut(0, 1, click_count);
-  case 's': return Protogen.getEmotionShortcut(0, 2, click_count);
-  case 'a': break;
-  case 'j': return Protogen.getEmotionShortcut(1, 0, click_count);
-  case 'k': return Protogen.getEmotionShortcut(1, 1, click_count);
-  case 'l': return Protogen.getEmotionShortcut(1, 2, click_count);
-  case ';': break;
+    case 'f':
+      return Protogen.getEmotionShortcut(0, 0, click_count);
+    case 'd':
+      return Protogen.getEmotionShortcut(0, 1, click_count);
+    case 's':
+      return Protogen.getEmotionShortcut(0, 2, click_count);
+    case 'a':
+      break;
+    case 'j':
+      return Protogen.getEmotionShortcut(1, 0, click_count);
+    case 'k':
+      return Protogen.getEmotionShortcut(1, 1, click_count);
+    case 'l':
+      return Protogen.getEmotionShortcut(1, 2, click_count);
+    case ';':
+      break;
   }
-  
+
   return "";
 }
-
 
 void HUDShortcutSelect::init() {
   HUDMenu::init();
@@ -149,12 +166,12 @@ void HUDShortcutSelect::init() {
 
   clearMenu();
   for (const auto& it : Protogen.getShortcutList()) {
-    addMenu(it.c_str(), [](HUDBase*, const char* param) { Protogen.loadShortcut(param); }, it);
+    addMenu(
+        it.c_str(), [](HUDBase*, const char* param) { Protogen.loadShortcut(param); }, it);
   }
 
   refreshHighlight();
 }
-
 
 void HUDShortcutSelect::refreshHighlight() {
   _menuHasHighlight = false;
@@ -170,5 +187,4 @@ void HUDShortcutSelect::refreshHighlight() {
   HUDMenu::refreshHighlight();
 }
 
-
-};
+};  // namespace toaster

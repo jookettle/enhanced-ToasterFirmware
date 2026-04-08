@@ -1,12 +1,11 @@
 #pragma once
-#include "config/configure.h"
-#include "lib/timer.h"
 #include <Adafruit_SSD1306.h>
-#include "hud_font.h"
 
+#include "config/configure.h"
+#include "hud_font.h"
+#include "lib/timer.h"
 
 namespace toaster {
-
 
 class HUDBase {
 public:
@@ -27,7 +26,7 @@ public:
   virtual void pressKey(uint16_t key, uint8_t mode) {
   }
 
-  HUDBase *getNextHUD() {
+  HUDBase* getNextHUD() {
     return _next;
   }
 
@@ -43,7 +42,7 @@ protected:
   int _step{0};
   timer_ms_t _tick_ms{0};
   bool _dirty{false};
-  HUDBase *_next{nullptr};
+  HUDBase* _next{nullptr};
   bool _clearStack{false};
   bool _prevFlag{false};
 
@@ -65,7 +64,7 @@ protected:
   timer_ms_t getTimeElapsed() const {
     return (Timer::get_millis() - _tick_ms);
   }
-  
+
   static void writeSpecial(Adafruit_SSD1306& oled, const uint8_t* bitmap) {
     const int16_t BITMAP_W = 12;
     const int16_t BITMAP_H = 16;
@@ -92,7 +91,7 @@ protected:
   }
 
 public:
-  void nextHUD(HUDBase *next, bool clearStack = false) {
+  void nextHUD(HUDBase* next, bool clearStack = false) {
     _next = next;
     _clearStack = clearStack;
     _prevFlag = false;
@@ -106,7 +105,6 @@ protected:
   static const timer_ms_t TIMEOUT_INACTIVE_MS;
 };
 
-
 enum {
   KM_ASCII = 0,
   KM_KEYCODE,
@@ -114,14 +112,12 @@ enum {
   KM_MAX,
 };
 
-
 enum {
-  VK_LEFT  = 0x25,
-  VK_UP    = 0x26,
+  VK_LEFT = 0x25,
+  VK_UP = 0x26,
   VK_RIGHT = 0x27,
-  VK_DOWN  = 0x28,
+  VK_DOWN = 0x28,
 };
-
 
 extern const size_t BITMAP_PREV_WIDTH;
 extern const size_t BITMAP_PREV_HEIGHT;
@@ -152,4 +148,4 @@ extern const uint8_t PROGMEM BITMAP_SHUFFLE[];
 extern const uint8_t PROGMEM BITMAP_BACK[];
 extern const uint8_t PROGMEM BITMAP_CURSOR[];
 
-};
+};  // namespace toaster

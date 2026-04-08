@@ -1,7 +1,6 @@
 #pragma once
 #include "effect_base.h"
 
-
 namespace toaster {
 
 class EffectSideRainbow : public FlexEffect {
@@ -17,4 +16,4 @@ protected:
   virtual void process_circle(Display& display);
 };
 
-};
+};  // namespace toaster

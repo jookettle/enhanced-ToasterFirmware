@@ -1,16 +1,15 @@
 #include "yaml_array.h"
-#include "yaml_node.h"
-#include <string>
-#include <memory>
-#include "strutil.h"
 
+#include <memory>
+#include <string>
+
+#include "strutil.h"
+#include "yaml_node.h"
 
 namespace toaster {
 
 static const size_t YAML_INDENT = 2;
 static const char* WHITESPACE = " \t\n\r\f\v";
-
-
 
 static bool is_yaml_comment(const char* str) {
   const char* ptr = str;
@@ -32,7 +31,6 @@ static bool is_yaml_comment(const char* str) {
   return true;
 }
 
-
 static bool is_yaml_array(const char* str) {
   const char* ptr = str;
 
@@ -42,7 +40,6 @@ static bool is_yaml_array(const char* str) {
 
   return (ptr[0] == '-' && ptr[1] == ' ');
 }
-
 
 static std::string grab_line(const char* str) {
   const char* ptr = str;
@@ -54,7 +51,6 @@ static std::string grab_line(const char* str) {
   return std::string(str, ptr - str);
 }
 
-
 static const char* find_newline(const char* str) {
   const char* ptr = str;
 
@@ -65,7 +61,6 @@ static const char* find_newline(const char* str) {
   return ptr;
 }
 
-
 static size_t grab_indent(const char* str) {
   const char* ptr = str;
 
@@ -75,7 +70,6 @@ static size_t grab_indent(const char* str) {
 
   return ptr - str;
 }
-
 
 static std::string parse_value(const char* str) {
   int mode = 0;
@@ -91,34 +85,32 @@ static std::string parse_value(const char* str) {
 
   while (*ptr != 0 && end == false) {
     switch (mode) {
-    case 0:
-      if (*ptr == '\'') {
-        prefix = std::string(str, ptr - str);
-        ptr2 = ptr + 1;
-        mode = 100;
-      }
-      else if (*ptr == '\"') {
-        prefix = std::string(str, ptr - str);
-        ptr2 = ptr + 1;
-        mode = 200;
-      }
-      else if (*ptr == '#') {
-        end = true;
+      case 0:
+        if (*ptr == '\'') {
+          prefix = std::string(str, ptr - str);
+          ptr2 = ptr + 1;
+          mode = 100;
+        } else if (*ptr == '\"') {
+          prefix = std::string(str, ptr - str);
+          ptr2 = ptr + 1;
+          mode = 200;
+        } else if (*ptr == '#') {
+          end = true;
+          break;
+        }
         break;
-      }
-      break;
-    case 100: // '
-      if (*ptr == '\'') {
-        end = true;
+      case 100:  // '
+        if (*ptr == '\'') {
+          end = true;
+          break;
+        }
         break;
-      }
-      break;
-    case 200: // "
-      if (*ptr == '\"') {
-        end = true;
+      case 200:  // "
+        if (*ptr == '\"') {
+          end = true;
+          break;
+        }
         break;
-      }
-      break;
     }
     ++ptr;
   }
@@ -130,13 +122,12 @@ static std::string parse_value(const char* str) {
   return prefix + std::string(ptr2, (end) ? (ptr - ptr2 - 1) : (ptr - ptr2));
 }
 
-
 static uint8_t parse_key_value(const char* str, std::string& out_key, std::string& out_value) {
   const char* ptr = str;
   const char* ptr2;
   bool is_array = false;
 
-  if (is_yaml_array(str)) { // array
+  if (is_yaml_array(str)) {  // array
     is_array = true;
     str += 2;
     ptr = str;
@@ -149,8 +140,7 @@ static uint8_t parse_key_value(const char* str, std::string& out_key, std::strin
   if (*ptr != ':') {
     if (is_array == false) {
       return YamlNode::YAML_NONE;
-    }
-    else {
+    } else {
       out_key = "";
       out_value = parse_value(str);
 
@@ -168,10 +158,9 @@ static uint8_t parse_key_value(const char* str, std::string& out_key, std::strin
     out_value = trim(out_value);
 
     return is_array ? YamlNode::YAML_ARRAY : YamlNode::YAML_STRING;
-  }
-  else {
+  } else {
     if (!is_yaml_comment(ptr)) {
-      //return YamlNode::YAML_NONE;
+      // return YamlNode::YAML_NONE;
       out_key = "";
       out_value = parse_value(str);
       out_value = trim(out_value);
@@ -182,14 +171,13 @@ static uint8_t parse_key_value(const char* str, std::string& out_key, std::strin
     out_key = std::string(str, ptr2 - str);
     out_value = "";
 
-    return YamlNode::YAML_OBJECT; // or array
+    return YamlNode::YAML_OBJECT;  // or array
   }
 }
 
-
 static std::string parse_key(const char* str) {
   const char* ptr = str;
-  
+
   while (*ptr != 0 && *ptr != ':') {
     ++ptr;
   }
@@ -197,65 +185,57 @@ static std::string parse_key(const char* str) {
   return std::string(str, ptr - str);
 }
 
-
 void YamlNodeArray::pushString(const char* key, const char* str) {
-  push_back({ key, str });
+  push_back({key, str});
 }
-
 
 void YamlNodeArray::pushArray(const char* key) {
-  push_back({ key, YamlNode::YAML_ARRAY });
+  push_back({key, YamlNode::YAML_ARRAY});
 }
-
 
 void YamlNodeArray::pushObject(const char* key) {
-  push_back({ key, YamlNode::YAML_OBJECT });
+  push_back({key, YamlNode::YAML_OBJECT});
 }
-
 
 YamlNode* YamlNodeArray::find(const char* key) {
-   if (*key == 0) {
-     return nullptr;
-   }
+  if (*key == 0) {
+    return nullptr;
+  }
 
-   for (auto& it : *this) {
-     if (it.key == key) {
-       return &it;
-     }
-   }
+  for (auto& it : *this) {
+    if (it.key == key) {
+      return &it;
+    }
+  }
 
-   return nullptr;
+  return nullptr;
 }
-
 
 YamlNode* YamlNodeArray::findKeys(const char* keys) {
   return _findKeys(this, keys);
 }
 
-
 const YamlNode* YamlNodeArray::find(const char* key) const {
-   if (*key == 0) {
-     return nullptr;
-   }
+  if (*key == 0) {
+    return nullptr;
+  }
 
-   for (const auto& it : *this) {
-     if (it.key == key) {
-       return &it;
-     }
-   }
+  for (const auto& it : *this) {
+    if (it.key == key) {
+      return &it;
+    }
+  }
 
-   return nullptr;
+  return nullptr;
 }
-
 
 const YamlNode* YamlNodeArray::findKeys(const char* keys) const {
-  return _findKeys((YamlNodeArray*)this, keys);
+  return _findKeys((YamlNodeArray*) this, keys);
 }
-
 
 std::string YamlNodeArray::getString(const char* keys, const char* def_str) const {
   char* array_index = nullptr;
-  const YamlNode* node = _findKeys((YamlNodeArray*)this, keys, &array_index);
+  const YamlNode* node = _findKeys((YamlNodeArray*) this, keys, &array_index);
   if (node == nullptr) {
     return def_str;
   }
@@ -267,25 +247,21 @@ std::string YamlNodeArray::getString(const char* keys, const char* def_str) cons
   return def_str;
 }
 
-
 int YamlNodeArray::getInt(const char* keys, int def_value) const {
   std::string str = getString(keys, "");
   return (str.empty()) ? def_value : atoi(str.c_str());
 }
-
 
 float YamlNodeArray::getFloat(const char* keys, float def_value) const {
   std::string str = getString(keys, "");
   return (str.empty()) ? def_value : atoff(str.c_str());
 }
 
-
 std::string YamlNodeArray::toString(const char* newline, const char* indent) const {
   std::string str;
   _toString(*this, str, 0, newline, indent);
   return str;
 }
-
 
 YamlNodeArray YamlNodeArray::fromBytes(const char* data, size_t data_size) {
   YamlNodeArray yaml;
@@ -317,7 +293,7 @@ YamlNodeArray YamlNodeArray::fromBytes(const char* data, size_t data_size) {
       return YamlNodeArray("indent odd error");
     }
 
-    int line_depth = (int)(indent / YAML_INDENT);
+    int line_depth = (int) (indent / YAML_INDENT);
     if (line_depth - recent_depth > 1) {
       return YamlNodeArray("indent error");
     }
@@ -335,21 +311,18 @@ YamlNodeArray YamlNodeArray::fromBytes(const char* data, size_t data_size) {
 
     if (type == YamlNode::YAML_STRING) {
       stack.back()->pushString(key.c_str(), value.c_str());
-    }
-    else if (type == YamlNode::YAML_OBJECT) {
+    } else if (type == YamlNode::YAML_OBJECT) {
       stack.back()->pushObject(key.c_str());
       stack.back()->back().setObject();
       stack.push_back(&stack.back()->back().asObjects());
       recent_array = false;
-    }
-    else if (type == YamlNode::YAML_ARRAY) {
+    } else if (type == YamlNode::YAML_ARRAY) {
       char index_str[16];
       sprintf(index_str, "%d", stack.back()->size());
 
       if (key.empty()) {
         stack.back()->pushString(index_str, value.c_str());
-      }
-      else {
+      } else {
         stack.back()->pushObject(index_str);
         stack.back()->back().setObject();
         stack.push_back(&stack.back()->back().asObjects());
@@ -357,15 +330,13 @@ YamlNodeArray YamlNodeArray::fromBytes(const char* data, size_t data_size) {
         stack.back()->pushString(key.c_str(), value.c_str());
         recent_array = true;
       }
-    }
-    else {
+    } else {
       return YamlNodeArray("format error");
     }
   }
 
   return yaml;
 }
-
 
 #ifdef USE_ARDUINO
 YamlNodeArray YamlNodeArray::fromFile(const char* filename, fs::FS& filesystem) {
@@ -413,7 +384,6 @@ YamlNodeArray YamlNodeArray::fromFile(const char* filename) {
 }
 #endif
 
-
 YamlNode* YamlNodeArray::_findKeys(YamlNodeArray* yaml, const char* keys, char** array_index) {
   while (*keys != 0) {
     std::string key = parse_key(keys);
@@ -422,21 +392,18 @@ YamlNode* YamlNodeArray::_findKeys(YamlNodeArray* yaml, const char* keys, char**
 
     YamlNode* node = yaml->find(key.c_str());
     if (node == nullptr) {
-        break;
-    }
-    else if (node->isString()) {
+      break;
+    } else if (node->isString()) {
       if (*keys != 0) {
         break;
       }
       return node;
-    }
-    else if (node->isObject()) {
+    } else if (node->isObject()) {
       if (*keys == 0) {
         return node;
       }
       yaml = &node->asObjects();
-    }
-    else {
+    } else {
       break;
     }
   }
@@ -444,43 +411,41 @@ YamlNode* YamlNodeArray::_findKeys(YamlNodeArray* yaml, const char* keys, char**
   return nullptr;
 }
 
-
-void YamlNodeArray::_toString(const YamlNodeArray& nodes, std::string& str, int depth, const char* newline, const char* indent, bool is_array) {
+void YamlNodeArray::_toString(const YamlNodeArray& nodes, std::string& str, int depth, const char* newline,
+                              const char* indent, bool is_array) {
   for (const auto& it : nodes) {
     if (is_array) {
       is_array = false;
-    }
-    else {
-      for (int i = 0; i < depth; i++) str += indent;
+    } else {
+      for (int i = 0; i < depth; i++)
+        str += indent;
     }
 
     switch (it.getType()) {
-    case YamlNode::YAML_OBJECT:
-      if (isdigit(it.key[0])) {
-        str += "- ";
-        _toString(it.asObjects(), str, depth + 1, newline, indent, true);
-        is_array = false;
-      }
-      else {
-        str += it.key;
-        str += ':';
+      case YamlNode::YAML_OBJECT:
+        if (isdigit(it.key[0])) {
+          str += "- ";
+          _toString(it.asObjects(), str, depth + 1, newline, indent, true);
+          is_array = false;
+        } else {
+          str += it.key;
+          str += ':';
+          str += newline;
+          _toString(it.asObjects(), str, depth + 1, newline, indent, false);
+        }
+        break;
+      case YamlNode::YAML_STRING:
+        if (isdigit(it.key[0])) {
+          str += "- ";
+        } else {
+          str += it.key;
+          str += ": ";
+        }
+        str += it.asString();
         str += newline;
-        _toString(it.asObjects(), str, depth + 1, newline, indent, false);
-      }
-      break;
-    case YamlNode::YAML_STRING:
-      if (isdigit(it.key[0])) {
-        str += "- ";
-      }
-      else {
-        str += it.key;
-        str += ": ";
-      }
-      str += it.asString();
-      str += newline;
-      break;
+        break;
     }
   }
 }
 
-};
+};  // namespace toaster

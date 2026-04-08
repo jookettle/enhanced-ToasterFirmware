@@ -1,0 +1,33 @@
+---
+# clang-format configuration for enhanced-ToasterFirmware
+# Aligned with cpp-usage.md rules
+
+Language: Cpp
+BasedOnStyle: Google
+
+# Indentation: Use 2 spaces for indentation. No tabs.
+IndentWidth: 2
+UseTab: Never
+
+# Braces: Use K&R style (braces on the same line)
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# Line Length: Aim for 100-120 characters per line
+ColumnLimit: 120
+
+# Namespaces: All project-owned code must reside within the toaster namespace
+NamespaceIndentation: None
+
+# Other common settings
+AccessModifierOffset: -2
+PointerAlignment: Left
+SpaceAfterCStyleCast: true
+SpaceBeforeRangeBasedForLoopColon: true
+SortIncludes: true
+IncludeBlocks: Regroup
+
+# Indent cases in switch
+IndentCaseLabels: true

@@ -1,9 +1,9 @@
-#include <Arduino.h>
-#include <Wire.h>
 #include "boopsensor.h"
 
-#include "lib/logger.h"
+#include <Arduino.h>
+#include <Wire.h>
 
+#include "lib/logger.h"
 
 namespace toaster {
 
@@ -13,7 +13,6 @@ static const uint32_t TOF_FREQUENCY = 50;
 static const uint32_t TOF_TIMEOUT_MS = 100;
 static const uint32_t TOF_INIT_TIMEOUT_MS = 500;
 static const uint32_t BOOP_TIMEOUT_MS = 1000;
-
 
 bool BoopSensor::begin(uint8_t i2c_addr, uint16_t threshold, int sampling) {
   if (_init) {
@@ -27,14 +26,13 @@ bool BoopSensor::begin(uint8_t i2c_addr, uint16_t threshold, int sampling) {
   if (!tof_init()) {
     return false;
   }
-  
+
   Worker::begin(TOF_FREQUENCY);
 
   _init = true;
 
   return true;
 }
-
 
 bool BoopSensor::work() {
   if (_init == false || _error) {
@@ -75,8 +73,7 @@ bool BoopSensor::work() {
       _boop = !_boop;
       _boop_count = 0;
     }
-  }
-  else {
+  } else {
     _boop_count = 0;
   }
 
@@ -88,7 +85,6 @@ bool BoopSensor::work() {
   return true;
 }
 
-
 bool BoopSensor::isBoop() const {
   if (_enabled == false) {
     return false;
@@ -97,7 +93,7 @@ bool BoopSensor::isBoop() const {
   if (_emulation) {
     return true;
   }
-  
+
   if (_init == false || _error) {
     return false;
   }
@@ -108,7 +104,6 @@ bool BoopSensor::isBoop() const {
 
   return _boop;
 }
-
 
 bool BoopSensor::tof_init() {
   timer_ms_t tick_ms = Timer::get_millis();
@@ -124,7 +119,7 @@ bool BoopSensor::tof_init() {
     delay(20);
   }
 
-  VL53L1_Error status = _tof.Begin(_i2c << 1); // VL53L1X_ULD shifts the address internally
+  VL53L1_Error status = _tof.Begin(_i2c << 1);  // VL53L1X_ULD shifts the address internally
   if (status != VL53L1_ERROR_NONE) {
     TF_LOGW(TAG, "VL53L1X Begin failed %d", status);
     return false;
@@ -137,7 +132,7 @@ bool BoopSensor::tof_init() {
     TF_LOGE(TAG, "VL53L1X SetDistanceMode failed %d", status);
     return false;
   }
-  
+
   // Allowed values: 15, 20, 33, 50, 100, 200, 500
   // uint16_t timing_budget = 15;
   uint16_t timing_budget = 20;
@@ -167,8 +162,7 @@ void BoopSensor::tof_error(bool critical) {
       _error = true;
 
       TF_LOGE(TAG, "VL53L1X reset failed. now disabled.");
-    }
-    else {
+    } else {
       TF_LOGD(TAG, "VL53L1X reset done.");
     }
   }
@@ -178,4 +172,4 @@ void BoopSensor::tof_no_error() {
   _errors = 0;
 }
 
-};
+};  // namespace toaster

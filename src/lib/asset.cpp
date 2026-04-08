@@ -1,12 +1,11 @@
-#include "config/configure.h"
 #include "asset.h"
-#include "logger.h"
 
+#include "config/configure.h"
+#include "logger.h"
 
 namespace toaster {
 
 static const char* TAG = "Asset";
-
 
 Asset::Asset(const char* path, bool from_sd, bool rgb565, bool loop, uint32_t mjpeg_fps) {
   const char* ext = strrchr(path, '.');
@@ -36,13 +35,11 @@ Asset::Asset(const char* path, bool from_sd, bool rgb565, bool loop, uint32_t mj
   if (image_type != Image::IMAGE_NONE) {
     _type = ASSET_IMAGE;
     _image = new Image(path, from_sd, rgb565);
-  }
-  else if (video_type != Video::VIDEO_NONE) {
+  } else if (video_type != Video::VIDEO_NONE) {
     _type = ASSET_VIDEO;
     _video = new Video(path, from_sd, loop, mjpeg_fps);
   }
 }
-
 
 Asset::~Asset() {
   release();
@@ -54,8 +51,7 @@ void Asset::release() {
       delete _image;
       _image = nullptr;
     }
-  }
-  else if (_type == ASSET_VIDEO) {
+  } else if (_type == ASSET_VIDEO) {
     if (_video != nullptr) {
       delete _video;
       _video = nullptr;
@@ -63,5 +59,4 @@ void Asset::release() {
   }
 }
 
-
-};
+};  // namespace toaster

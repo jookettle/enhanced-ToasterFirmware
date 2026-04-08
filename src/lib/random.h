@@ -2,7 +2,6 @@
 #include <cmath>
 #include <random>
 
-
 namespace toaster {
 
 class Random {
@@ -30,16 +29,17 @@ public:
     double r = grandom();
     r = std::min(std::max(r, RMIN), RMAX);
     double r1 = (r - RMIN) / (RMAX - RMIN);
-    return (int)(r1 * n);
+    return (int) (r1 * n);
   }
 
-  static std::mt19937& getGenerator() { return _gen; }
+  static std::mt19937& getGenerator() {
+    return _gen;
+  }
 
 protected:
   static std::random_device _rd;
   static std::mt19937 _gen;
   static std::normal_distribution<> _dist;
-
 };
 
-};
+};  // namespace toaster

@@ -1,24 +1,24 @@
 #pragma once
-#include <vector>
 #include <string>
+#include <vector>
 
 #ifdef USE_ARDUINO
 #include <Arduino.h>
 #include <FS.h>
 #endif
 
-
 namespace toaster {
 
 class YamlNode;
 
-
 class YamlNodeArray : public std::vector<YamlNode> {
 public:
-  YamlNodeArray() {}
+  YamlNodeArray() {
+  }
 
 protected:
-  YamlNodeArray(const char* error) : _error(error) {}
+  YamlNodeArray(const char* error) : _error(error) {
+  }
 
 public:
   void pushString(const char* key, const char* str);
@@ -69,12 +69,11 @@ protected:
 
 protected:
   static YamlNode* _findKeys(YamlNodeArray* yaml, const char* keys, char** array_index = nullptr);
-  static void _toString(const YamlNodeArray& nodes, std::string& str, int depth, const char* newline, const char* indent, bool is_array = false);
-
+  static void _toString(const YamlNodeArray& nodes, std::string& str, int depth, const char* newline,
+                        const char* indent, bool is_array = false);
 };
 
-};
-
+};  // namespace toaster
 
 #include <iostream>
 

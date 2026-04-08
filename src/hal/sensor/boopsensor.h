@@ -2,12 +2,12 @@
 #include "VL53L1X_ULD.h"
 #include "lib/worker.h"
 
-
 namespace toaster {
 
 class BoopSensor : public Worker {
 public:
-  BoopSensor() {}
+  BoopSensor() {
+  }
 
 public:
   virtual bool begin(uint8_t i2c_addr, uint16_t threshold, int sampling);
@@ -42,7 +42,7 @@ public:
   bool getEnabled() const {
     return _enabled;
   }
-  
+
   void setEmulation(bool emulation) {
     _emulation = emulation;
   }
@@ -76,7 +76,6 @@ protected:
   bool _error{false};
   uint32_t _errors{0};
   uint32_t _error_total{0};
-
 };
 
-};
+};  // namespace toaster

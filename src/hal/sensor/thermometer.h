@@ -1,17 +1,19 @@
 #pragma once
-#include "lib/worker.h"
 #include "Adafruit_SHT31.h"
-
+#include "lib/worker.h"
 
 namespace toaster {
 
 class Thermometer : public Worker {
 public:
-  Thermometer() {}
+  Thermometer() {
+  }
   virtual ~Thermometer();
 
 private:
-  bool begin() { return false; }
+  bool begin() {
+    return false;
+  }
 
 public:
   bool beginSHT31(uint32_t period, uint8_t i2c = 0x44);
@@ -46,7 +48,6 @@ protected:
     void* _ptr{nullptr};
     Adafruit_SHT31* _sht31;
   };
-
 };
 
-};
+};  // namespace toaster

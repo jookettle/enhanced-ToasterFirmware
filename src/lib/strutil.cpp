@@ -1,11 +1,11 @@
 #include "strutil.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+
 #include <algorithm>
 #include <cctype>
-
 
 namespace toaster {
 
@@ -14,10 +14,12 @@ std::vector<std::string> my_split(const std::string& str, const std::string& del
   size_t prev = 0, pos = 0;
   do {
     pos = str.find(delim, prev);
-    if (pos == std::string::npos) pos = str.length();
+    if (pos == std::string::npos)
+      pos = str.length();
     std::string token = str.substr(prev, pos - prev);
     trim(token);
-    if (!token.empty()) tokens.push_back(token);
+    if (!token.empty())
+      tokens.push_back(token);
     prev = pos + delim.length();
   } while (pos < str.length() && prev < str.length());
   return tokens;
@@ -28,35 +30,34 @@ uint32_t parse_time_str(const char* str) {
   double n = strtod(str, &ptr);
 
   if (strcmp(ptr, "d") == 0) {
-    return (uint32_t)round(n * 86400000);
+    return (uint32_t) round(n * 86400000);
   }
 
   if (strcmp(ptr, "h") == 0) {
-    return (uint32_t)round(n * 3600000);
+    return (uint32_t) round(n * 3600000);
   }
 
   if (strcmp(ptr, "min") == 0) {
-    return (uint32_t)round(n * 60000);
+    return (uint32_t) round(n * 60000);
   }
 
   if (strcmp(ptr, "s") == 0) {
-    return (uint32_t)round(n * 1000);
+    return (uint32_t) round(n * 1000);
   }
 
   if (strcmp(ptr, "ms") == 0) {
-    return (uint32_t)round(n);
+    return (uint32_t) round(n);
   }
 
   return 0;
 }
 
-
 static uint32_t hex2dec(char ch) {
-  return (ch >= '0' && ch <= '9') ? (ch - '0') : 
-    (ch >= 'A' && ch <= 'F') ? (ch - 'A' + 10) : 
-    (ch >= 'a' && ch <= 'f') ? (ch - 'a' + 10) : 0;
+  return (ch >= '0' && ch <= '9')   ? (ch - '0')
+         : (ch >= 'A' && ch <= 'F') ? (ch - 'A' + 10)
+         : (ch >= 'a' && ch <= 'f') ? (ch - 'a' + 10)
+                                    : 0;
 }
-
 
 uint32_t parse_hex(const char* str) {
   const char* ptr = str;
@@ -75,32 +76,32 @@ uint32_t parse_hex(const char* str) {
       ++ptr;
     }
   }
-  
+
   if (ptr[0] == '#') {
     ptr += 1;
 
     if (strlen(ptr) == 6) {
-      value = ((hex2dec(ptr[0]) << 4) | (hex2dec(ptr[1]) << 0) | (hex2dec(ptr[2]) << 12) | (hex2dec(ptr[3]) << 8) | (hex2dec(ptr[4]) << 20) | (hex2dec(ptr[5]) << 16));
+      value = ((hex2dec(ptr[0]) << 4) | (hex2dec(ptr[1]) << 0) | (hex2dec(ptr[2]) << 12) | (hex2dec(ptr[3]) << 8) |
+               (hex2dec(ptr[4]) << 20) | (hex2dec(ptr[5]) << 16));
     }
   }
 
   return value;
 }
 
-
 bool parse_bool(const char* str) {
   if (strcmp(str, "true") == 0 || strcmp(str, "yes") == 0 || strcmp(str, "on") == 0 || strcmp(str, "enable") == 0) {
     return true;
   }
 
-  return (atoi(str) != 0);  
-  // if (strcmp(str, "false") == 0 || strcmp(str, "no") == 0 || strcmp(str, "off") == 0 || strcmp(str, "disable") == 0) {
+  return (atoi(str) != 0);
+  // if (strcmp(str, "false") == 0 || strcmp(str, "no") == 0 || strcmp(str, "off") == 0 || strcmp(str, "disable") == 0)
+  // {
   //   return false;
   // }
 
   // return false;
 }
-
 
 bool parse_separate(const char* str, const char* token, std::string& left, std::string& right) {
   const char* ptr = strstr(str, token);
@@ -115,7 +116,6 @@ bool parse_separate(const char* str, const char* token, std::string& left, std::
   return true;
 }
 
-
 bool parse_mac(const char* str, uint8_t* mac) {
   if (strlen(str) != 17) {
     return false;
@@ -125,16 +125,15 @@ bool parse_mac(const char* str, uint8_t* mac) {
     return false;
   }
 
-  mac[0] = (hex2dec(str[ 0]) << 4) | (hex2dec(str[ 1]) << 0);
-  mac[1] = (hex2dec(str[ 3]) << 4) | (hex2dec(str[ 4]) << 0);
-  mac[2] = (hex2dec(str[ 6]) << 4) | (hex2dec(str[ 7]) << 0);
-  mac[3] = (hex2dec(str[ 9]) << 4) | (hex2dec(str[10]) << 0);
+  mac[0] = (hex2dec(str[0]) << 4) | (hex2dec(str[1]) << 0);
+  mac[1] = (hex2dec(str[3]) << 4) | (hex2dec(str[4]) << 0);
+  mac[2] = (hex2dec(str[6]) << 4) | (hex2dec(str[7]) << 0);
+  mac[3] = (hex2dec(str[9]) << 4) | (hex2dec(str[10]) << 0);
   mac[4] = (hex2dec(str[12]) << 4) | (hex2dec(str[13]) << 0);
   mac[5] = (hex2dec(str[15]) << 4) | (hex2dec(str[16]) << 0);
 
   return true;
 }
-
 
 std::string to_lower(const std::string& s) {
   std::string result = s;
@@ -142,5 +141,4 @@ std::string to_lower(const std::string& s) {
   return result;
 }
 
-
-};
+};  // namespace toaster

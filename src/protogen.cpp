@@ -1,24 +1,22 @@
 #include "protogen.h"
-#include "effects/effects.h"
 
+#include <algorithm>
+#include <map>
+#include <random>
+
+#include "effects/effects.h"
 #include "huds/hud.h"
 #include "huds/hud_emotions.h"
 #include "lib/logger.h"
 #include "lib/strutil.h"
-#include <map>
-#include <algorithm>
-#include <random>
-
 
 namespace toaster {
 
 static const char* TAG = "Protogen";
 
-
 Toaster Protogen;
 const char* Toaster::_tf_version = "2026.1.1";
 const char* Toaster::DEFAULT_BASE_PATH = "/emotions/default";
-
 
 static const int ADC_MAX = 4095;
 
@@ -28,81 +26,187 @@ static const char* EMOTIONS_DIR = "/emotions";
 static const char* EMOTIONS_DEFAULT_YAML = "/emotions/default/emotion.yaml";
 static const char* EMOTION_DEFAULT = "default";
 
-static const char* EMOTIONS_SHORTCUT_YAML = "/emotions/shortcut.yaml"; // OBSOLETE
+static const char* EMOTIONS_SHORTCUT_YAML = "/emotions/shortcut.yaml";  // OBSOLETE
 static const char* SHORTCUT_DIR = "/shortcut";
 static const char* SHORTCUT_DEFAULT = "default";
 
 static const std::map<std::string, uint8_t> SIDE_PANEL_TYPE = {
-  {"strip", SIDE_PANEL_STRIP},
-  {"circle", SIDE_PANEL_CIRCLE},
+    {"strip", SIDE_PANEL_STRIP},
+    {"circle", SIDE_PANEL_CIRCLE},
 };
 
 static const std::map<std::string, uint8_t> ESP_NOW_TYPE = {
-  {"i2c", ESP_NOW_I2C},
-  {"local", ESP_NOW_LOCAL},
+    {"i2c", ESP_NOW_I2C},
+    {"local", ESP_NOW_LOCAL},
 };
 
 static const std::map<std::string, uint8_t> RTC_FORMAT = {
-  {"hm", RTC_FORMAT_HM},
-  {"hms", RTC_FORMAT_HMS},
-  {"hm_no_blinking", RTC_FORMAT_HM_NO_BLINKING},
-  {"hms_no_blinking", RTC_FORMAT_HMS_NO_BLINKING},
+    {"hm", RTC_FORMAT_HM},
+    {"hms", RTC_FORMAT_HMS},
+    {"hm_no_blinking", RTC_FORMAT_HM_NO_BLINKING},
+    {"hms_no_blinking", RTC_FORMAT_HMS_NO_BLINKING},
 };
 
 const std::vector<std::pair<float, float>> SIDE_PANEL_CIRCLE_DATA = {
-  //    angle, distance
-    {   0.00f, 0.00f, },
-    {   0.00f, 0.38f, },
-    {  45.00f, 0.38f, },
-    {  90.00f, 0.38f, },
-    { 135.00f, 0.38f, },
-    { 180.00f, 0.38f, },
-    { 225.00f, 0.38f, },
-    { 270.00f, 0.38f, },
-    { 315.00f, 0.38f, },
-    {   0.00f, 0.70f, },
-    {  30.00f, 0.70f, },
-    {  60.00f, 0.70f, },
-    {  90.00f, 0.70f, },
-    { 120.00f, 0.70f, },
-    { 150.00f, 0.70f, },
-    { 180.00f, 0.70f, },
-    { 210.00f, 0.70f, },
-    { 240.00f, 0.70f, },
-    { 270.00f, 0.70f, },
-    { 300.00f, 0.70f, },
-    { 330.00f, 0.70f, },
-    {   0.00f, 1.00f, },
-    {  22.50f, 1.00f, },
-    {  45.00f, 1.00f, },
-    {  67.50f, 1.00f, },
-    {  90.00f, 1.00f, },
-    { 112.50f, 1.00f, },
-    { 135.00f, 1.00f, },
-    { 157.50f, 1.00f, },
-    { 180.00f, 1.00f, },
-    { 202.50f, 1.00f, },
-    { 225.00f, 1.00f, },
-    { 247.50f, 1.00f, },
-    { 270.00f, 1.00f, },
-    { 292.50f, 1.00f, },
-    { 315.00f, 1.00f, },
-    { 337.50f, 1.00f, },
+    //    angle, distance
+    {
+        0.00f,
+        0.00f,
+    },
+    {
+        0.00f,
+        0.38f,
+    },
+    {
+        45.00f,
+        0.38f,
+    },
+    {
+        90.00f,
+        0.38f,
+    },
+    {
+        135.00f,
+        0.38f,
+    },
+    {
+        180.00f,
+        0.38f,
+    },
+    {
+        225.00f,
+        0.38f,
+    },
+    {
+        270.00f,
+        0.38f,
+    },
+    {
+        315.00f,
+        0.38f,
+    },
+    {
+        0.00f,
+        0.70f,
+    },
+    {
+        30.00f,
+        0.70f,
+    },
+    {
+        60.00f,
+        0.70f,
+    },
+    {
+        90.00f,
+        0.70f,
+    },
+    {
+        120.00f,
+        0.70f,
+    },
+    {
+        150.00f,
+        0.70f,
+    },
+    {
+        180.00f,
+        0.70f,
+    },
+    {
+        210.00f,
+        0.70f,
+    },
+    {
+        240.00f,
+        0.70f,
+    },
+    {
+        270.00f,
+        0.70f,
+    },
+    {
+        300.00f,
+        0.70f,
+    },
+    {
+        330.00f,
+        0.70f,
+    },
+    {
+        0.00f,
+        1.00f,
+    },
+    {
+        22.50f,
+        1.00f,
+    },
+    {
+        45.00f,
+        1.00f,
+    },
+    {
+        67.50f,
+        1.00f,
+    },
+    {
+        90.00f,
+        1.00f,
+    },
+    {
+        112.50f,
+        1.00f,
+    },
+    {
+        135.00f,
+        1.00f,
+    },
+    {
+        157.50f,
+        1.00f,
+    },
+    {
+        180.00f,
+        1.00f,
+    },
+    {
+        202.50f,
+        1.00f,
+    },
+    {
+        225.00f,
+        1.00f,
+    },
+    {
+        247.50f,
+        1.00f,
+    },
+    {
+        270.00f,
+        1.00f,
+    },
+    {
+        292.50f,
+        1.00f,
+    },
+    {
+        315.00f,
+        1.00f,
+    },
+    {
+        337.50f,
+        1.00f,
+    },
 };
 
 static const std::map<std::string, PROTOGEN_COLOR_MODE> COLOR_MODE = {
-  {"personal", PCM_PERSONAL},
-  {"personal2", PCM_PERSONAL2},
-  {"personal3", PCM_PERSONAL3},
-  {"original", PCM_ORIGINAL},
-  {"rainbow_single", PCM_RAINBOW_SINGLE},
-  {"rainbow", PCM_RAINBOW},
-  {"gradation", PCM_GRADATION},
+    {"personal", PCM_PERSONAL},   {"personal2", PCM_PERSONAL2},           {"personal3", PCM_PERSONAL3},
+    {"original", PCM_ORIGINAL},   {"rainbow_single", PCM_RAINBOW_SINGLE}, {"rainbow", PCM_RAINBOW},
+    {"gradation", PCM_GRADATION},
 };
 
 Toaster::Toaster() {
 }
-
 
 bool Toaster::begin() {
   if (_init) {
@@ -124,9 +228,8 @@ bool Toaster::begin() {
   if (SD.begin(PIN_FSPI_CS, SPI)) {
     _sd_use = true;
 
-    TF_LOGI(TAG, "SD card found (type: %d, size: %lld)", (int)SD.cardType(), SD.cardSize() / 1024 / 1024);
-  }
-  else {
+    TF_LOGI(TAG, "SD card found (type: %d, size: %lld)", (int) SD.cardType(), SD.cardSize() / 1024 / 1024);
+  } else {
     TF_LOGW(TAG, "begin: SD begin failed");
   }
 #endif
@@ -151,13 +254,13 @@ bool Toaster::begin() {
   }
 
   // TF_LOGD(TAG, "config.yaml\n\n%s", config_yaml.toString().c_str());
-  
+
   YamlNodeArray emotion_yaml = YamlNodeArray::fromFile(EMOTIONS_DEFAULT_YAML, FFat);
 
   if (emotion_yaml.isError()) {
-    TF_LOGD(TAG, "begin: %s does not exist or format error (%s). try load in config.yaml", EMOTIONS_DEFAULT_YAML, emotion_yaml.getLastError());
-  }
-  else {
+    TF_LOGD(TAG, "begin: %s does not exist or format error (%s). try load in config.yaml", EMOTIONS_DEFAULT_YAML,
+            emotion_yaml.getLastError());
+  } else {
     int emotion_version = config_yaml.getInt("version", 0);
     if (emotion_version > MAX_YAML_VERSION) {
       TF_LOGE(TAG, "begin: emotions.yaml version error (%d, required %d)", emotion_version, MAX_YAML_VERSION);
@@ -166,10 +269,9 @@ bool Toaster::begin() {
   }
 
   uint32_t i2c_freq = config_yaml.getInt("hardware:i2c:frequency", 100000);
-	if (!Wire.begin(-1, -1, i2c_freq)) {
+  if (!Wire.begin(-1, -1, i2c_freq)) {
     TF_LOGE(TAG, "begin: I2C begin failed (frequency: %d)", i2c_freq);
-  }
-  else {
+  } else {
     TF_LOGI(TAG, "begin: I2C begin succeed (frequency: %d)", i2c_freq);
   }
 
@@ -190,8 +292,7 @@ bool Toaster::begin() {
 
   if (_version == 1) {
     loadPhotoresistor(config_yaml);
-  }
-  else {
+  } else {
     loadLightSensor(config_yaml);
   }
 
@@ -204,7 +305,7 @@ bool Toaster::begin() {
 
   loadShortcutList();
   loadShortcut(SHORTCUT_DEFAULT);
-  
+
   _interruptSemaphore = xSemaphoreCreateRecursiveMutex();
   if (_interruptSemaphore == nullptr) {
     TF_LOGE(TAG, "begin: failed to create interrupt mutex");
@@ -218,28 +319,29 @@ bool Toaster::begin() {
 
   _init = true;
 
-  auto core_result = xTaskCreatePinnedToCore([](void* param) {
-    auto pthis = (Toaster*)param;
-    while (1) {
-      pthis->_hud.loop();
-      pthis->_espnow.loop();
-      pthis->_boopsensor.loop();
-      pthis->_lightsensor.loop();
-      pthis->_thermometer.loop();
-      pthis->_rtc.loop();
+  auto core_result = xTaskCreatePinnedToCore(
+      [](void* param) {
+        auto pthis = (Toaster*) param;
+        while (1) {
+          pthis->_hud.loop();
+          pthis->_espnow.loop();
+          pthis->_boopsensor.loop();
+          pthis->_lightsensor.loop();
+          pthis->_thermometer.loop();
+          pthis->_rtc.loop();
 
-      delay(1);
-    }
-    }, "hud", 4096, this, 1, nullptr, PRO_CPU_NUM);
+          delay(1);
+        }
+      },
+      "hud", 4096, this, 1, nullptr, PRO_CPU_NUM);
   if (core_result != pdPASS) {
     TF_LOGE(TAG, "xTaskCreatePinnedToCore failed (%d).", core_result);
   }
-  
+
   loadDefaultEmotion(config_yaml);
 
   return true;
 }
-
 
 void Toaster::loop() {
   _serialdebug.loop();
@@ -247,7 +349,6 @@ void Toaster::loop() {
 
   Worker::loop();
 }
-
 
 bool Toaster::work() {
   syncLock();
@@ -260,7 +361,9 @@ bool Toaster::work() {
   _display.beginDraw();
   _display.clear();
 
-  timer_pf_t pf = {PF_NONE, };
+  timer_pf_t pf = {
+      PF_NONE,
+  };
 
   Effect::setDirty();
   for (int i = 0; i < EFFECT_MAX; i++) {
@@ -275,40 +378,37 @@ bool Toaster::work() {
   if (isAdaptiveFps() && pf.type != PF_NONE) {
     setPF(pf);
     _hud.setPF(pf);
-  }
-  else {
+  } else {
     setFPS(_hub75_fps);
     _hud.setFPS(_hud_fps);
   }
-  
+
   _display.endDraw();
 
   if (_side_display_use) {
     _side_display.beginDraw();
     _side_display.clear();
-    
+
     if (_side_effect != nullptr) {
       _side_effect->process(_side_display);
     }
-    
+
     _side_display.endDraw();
   }
 
   if (_lightsensor_use) {
     float light = _lightsensor.getValue();
-    if (light <= _ls_auto.getDataPoints().front().data_from
-      || light >= _ls_auto.getDataPoints().back().data_from
-      || abs(_ls_recent - light) >= _ls_hys) {
+    if (light <= _ls_auto.getDataPoints().front().data_from || light >= _ls_auto.getDataPoints().back().data_from ||
+        abs(_ls_recent - light) >= _ls_hys) {
       _ls_recent = light;
       refreshAutoBrightness();
     }
   }
-  
+
   syncUnlock();
 
   return true;
 }
-
 
 bool Toaster::workPerSecond() {
   if (_serialdebug.isTextMode()) {
@@ -326,7 +426,7 @@ bool Toaster::workPerSecond() {
     }
     if (n_ret >= remaining) {
       TF_LOGW(TAG, "workPerSecond: log buffer truncated (%d >= %d)", n_ret, remaining);
-      remaining = 0; // stop appends but keep what we have
+      remaining = 0;  // stop appends but keep what we have
       return false;
     }
     p += n_ret;
@@ -334,27 +434,35 @@ bool Toaster::workPerSecond() {
     return true;
   };
 
-  if (!safe_append(snprintf(p, remaining, "FPS: %d", getRecentFPS()))) return true;
+  if (!safe_append(snprintf(p, remaining, "FPS: %d", getRecentFPS())))
+    return true;
 
   if (_hud_use) {
-    if (!safe_append(snprintf(p, remaining, ", HUD: %d", _hud.getRecentFPS()))) return true;
+    if (!safe_append(snprintf(p, remaining, ", HUD: %d", _hud.getRecentFPS())))
+      return true;
   }
 
   if (_boopsensor_use) {
-    if (!safe_append(snprintf(p, remaining, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal()))) return true;
+    if (!safe_append(
+            snprintf(p, remaining, ", Boop: %d (%d)", _boopsensor.getRecentFPS(), _boopsensor.getErrorTotal())))
+      return true;
   }
 
   if (_lightsensor_use) {
-    if (!safe_append(snprintf(p, remaining, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(), _lightsensor.getValue(), _display.getBrightness() / 255.0f))) return true;
-  }
-  else {
-    if (!safe_append(snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f))) return true;
+    if (!safe_append(snprintf(p, remaining, ", LS: %d (%.1f -> %.2f)", _lightsensor.getRecentFPS(),
+                              _lightsensor.getValue(), _display.getBrightness() / 255.0f)))
+      return true;
+  } else {
+    if (!safe_append(snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f)))
+      return true;
   }
 
-  if (!safe_append(snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap()))) return true;
-  
+  if (!safe_append(snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap())))
+    return true;
+
   if (psramFound()) {
-    if (!safe_append(snprintf(p, remaining, " (%u)", ESP.getFreePsram()))) return true;
+    if (!safe_append(snprintf(p, remaining, " (%u)", ESP.getFreePsram())))
+      return true;
   }
 
   TF_LOGD(TAG, "%s", sz);
@@ -362,25 +470,22 @@ bool Toaster::workPerSecond() {
   return true;
 }
 
-
 void Toaster::setNextEmotion(const char* emotion) {
   _next_emotion = emotion;
 }
 
-
 bool Toaster::setEmotion(const char* emotion) {
   TF_LOGD(TAG, "setEmotion: %s", emotion);
-  
+
   int index = findEmotion(emotion);
   if (index >= 0) {
-    return setEmotion((size_t)index);
+    return setEmotion((size_t) index);
   }
 
   TF_LOGW(TAG, "setEmotion: %s not found", emotion);
-  
+
   return false;
 }
-
 
 bool Toaster::setEmotion(size_t index) {
   syncLock();
@@ -412,12 +517,10 @@ bool Toaster::setEmotion(size_t index) {
   return true;
 }
 
-
 const char* Toaster::getEmotionGroup() const {
   const char* p = strrchr(_emotions[_emotion_index].base_path.c_str(), '/');
   return (p != nullptr) ? (p + 1) : "";
 }
-
 
 void Toaster::shuffleEmotion() {
   if (_shuffle_deck.empty()) {
@@ -425,7 +528,7 @@ void Toaster::shuffleEmotion() {
 
     size_t emotion_index = getEmotionIndex();
     size_t emotion_count = getEmotionCount();
-    
+
     if (emotion_count == 0) {
       return;
     }
@@ -437,21 +540,18 @@ void Toaster::shuffleEmotion() {
         _shuffle_deck.push_back(i);
       }
     }
-    
+
     std::shuffle(_shuffle_deck.begin(), _shuffle_deck.end(), std::default_random_engine(Timer::get_micros()));
   }
-  
+
   if (!_shuffle_deck.empty()) {
     setEmotion(_shuffle_deck.front());
     _shuffle_deck.erase(_shuffle_deck.begin());
   }
 }
 
-
 bool Toaster::setEmotionNext() {
-  auto isExclude = [](const char* name) -> bool {
-    return (strcasecmp(name, "white") == 0);
-  };
+  auto isExclude = [](const char* name) -> bool { return (strcasecmp(name, "white") == 0); };
 
   for (size_t i = _emotion_index + 1; i < _emotions.size(); i++) {
     if (!isExclude(_emotions[i].name.c_str())) {
@@ -464,7 +564,7 @@ bool Toaster::setEmotionNext() {
       return setEmotion(i);
     }
   }
-  
+
   return false;
 }
 
@@ -480,7 +580,6 @@ void Toaster::displayEmotionList() {
     Serial.printf("%s\n", it.name.c_str());
   }
 }
-
 
 bool Toaster::loadShortcut(const char* shortcut) {
   for (size_t i = 0; i < _shortcut_list.size(); i++) {
@@ -511,7 +610,7 @@ bool Toaster::loadShortcut(const char* shortcut) {
   _shortcuts[0][2][1] = yaml.getString("shortcut:left:ring_2");
   _shortcuts[0][2][2] = yaml.getString("shortcut:left:ring_3");
   _shortcuts[0][2][3] = yaml.getString("shortcut:left:ring_long");
-  
+
   _shortcuts[1][0][0] = yaml.getString("shortcut:right:index");
   _shortcuts[1][0][1] = yaml.getString("shortcut:right:index_2");
   _shortcuts[1][0][2] = yaml.getString("shortcut:right:index_3");
@@ -528,20 +627,17 @@ bool Toaster::loadShortcut(const char* shortcut) {
   return true;
 }
 
-
 const char* Toaster::getEmotionShortcut(uint8_t hand, uint8_t finger, uint8_t action) {
   if (_shortcuts[hand][finger][action].empty()) {
     if (action == SHORTCUT_CLICK_COUNT_MAX) {
       return getEmotionShortcut(hand, finger, 0);
-    }
-    else if (action > 0) {
+    } else if (action > 0) {
       return getEmotionShortcut(hand, finger, action - 1);
     }
   }
 
   return _shortcuts[hand][finger][action].c_str();
 }
-
 
 void Toaster::setEffect(int index, const char* new_effect, const char* base_path) {
   const char* prev_effect = (_effect[index] != nullptr) ? _effect[index]->getName() : "";
@@ -558,7 +654,6 @@ void Toaster::setEffect(int index, const char* new_effect, const char* base_path
     }
   }
 }
-
 
 void Toaster::setSideEffect(const char* new_effect1, const char* base_path) {
   if (_side_display_use == false) {
@@ -581,7 +676,6 @@ void Toaster::setSideEffect(const char* new_effect1, const char* base_path) {
   }
 }
 
-
 bool Toaster::setColorMode(const char* mode) {
   auto color_mode = COLOR_MODE.find(mode);
   if (color_mode == COLOR_MODE.end()) {
@@ -590,7 +684,6 @@ bool Toaster::setColorMode(const char* mode) {
 
   return Effect::setColorMode(color_mode->second);
 }
-
 
 void Toaster::refreshAutoBrightness() {
   float new_brightness;
@@ -602,39 +695,34 @@ void Toaster::refreshAutoBrightness() {
   refreshAutoBrightness(new_brightness);
 }
 
-
 void Toaster::refreshAutoBrightness(float brightness) {
-  uint8_t new_brightness_8 = (uint8_t)(brightness * 255.0f);
+  uint8_t new_brightness_8 = (uint8_t) (brightness * 255.0f);
   _display.setBrightness(new_brightness_8);
 
   if (_side_display_use) {
     float new_brightness_side = std::min(brightness * _side_brightness_rate, 1.0f);
-    uint8_t new_brightness_side_8 = (uint8_t)(new_brightness_side * 255.0f);
+    uint8_t new_brightness_side_8 = (uint8_t) (new_brightness_side * 255.0f);
     _side_display.setBrightness(new_brightness_side_8);
   }
 }
-
 
 void Toaster::toast() {
   TF_LOGW(TAG, "toast: Sorry, this feature is not supported.");
 }
 
-
 void Toaster::syncLock(TickType_t xBlockTime) {
   if (_interruptSemaphore != nullptr) {
     if (xSemaphoreTakeRecursive(_interruptSemaphore, xBlockTime) != pdTRUE) {
-      TF_LOGW(TAG, "syncLock: failed to acquire recursive mutex (timeout: %u ticks)", (uint32_t)xBlockTime);
+      TF_LOGW(TAG, "syncLock: failed to acquire recursive mutex (timeout: %u ticks)", (uint32_t) xBlockTime);
     }
   }
 }
-
 
 void Toaster::syncUnlock() {
   if (_interruptSemaphore != nullptr) {
     xSemaphoreGiveRecursive(_interruptSemaphore);
   }
 }
-
 
 bool Toaster::isBlank() const {
   for (int i = 0; i < EFFECT_MAX; i++) {
@@ -645,7 +733,6 @@ bool Toaster::isBlank() const {
 
   return true;
 }
-
 
 bool Toaster::isAdaptiveFps() const {
   uint8_t count = 0;
@@ -659,7 +746,6 @@ bool Toaster::isAdaptiveFps() const {
   return (count <= 1);
 }
 
-
 bool Toaster::isGame() const {
   for (int i = 0; i < EFFECT_MAX; i++) {
     if (_effect[i] != nullptr) {
@@ -668,75 +754,70 @@ bool Toaster::isGame() const {
       }
     }
   }
-  
+
   return false;
 }
-
 
 const char* Toaster::getTimeStr() const {
   static char time_str[16];
 
   switch (_rtc_format) {
-  case RTC_FORMAT_HM:
-    snprintf(time_str, sizeof(time_str), "%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getMinute());
-    break;
-  case RTC_FORMAT_HMS: 
-    snprintf(time_str, sizeof(time_str), "%02d%c%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getMinute(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getSecond());
-    break;
-  case RTC_FORMAT_HM_NO_BLINKING:
-    snprintf(time_str, sizeof(time_str), "%02d:%02d", _rtc.getHour(), _rtc.getMinute());
-    break;
-  case RTC_FORMAT_HMS_NO_BLINKING: 
-    snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d", _rtc.getHour(), _rtc.getMinute(), _rtc.getSecond());
-    break;
+    case RTC_FORMAT_HM:
+      snprintf(time_str, sizeof(time_str), "%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ',
+               _rtc.getMinute());
+      break;
+    case RTC_FORMAT_HMS:
+      snprintf(time_str, sizeof(time_str), "%02d%c%02d%c%02d", _rtc.getHour(), _rtc.getBlink() == 0 ? ':' : ' ',
+               _rtc.getMinute(), _rtc.getBlink() == 0 ? ':' : ' ', _rtc.getSecond());
+      break;
+    case RTC_FORMAT_HM_NO_BLINKING:
+      snprintf(time_str, sizeof(time_str), "%02d:%02d", _rtc.getHour(), _rtc.getMinute());
+      break;
+    case RTC_FORMAT_HMS_NO_BLINKING:
+      snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d", _rtc.getHour(), _rtc.getMinute(), _rtc.getSecond());
+      break;
   }
-  
+
   return time_str;
 }
-
 
 bool Toaster::isEmotionExist(const char* name) const {
   return (findEmotion(name) >= 0);
 }
 
-
 int Toaster::findEmotion(const char* name) const {
   auto it = _emotion_map.find(to_lower(name));
   if (it != _emotion_map.end()) {
-    return (int)it->second;
+    return (int) it->second;
   }
 
   return -1;
 }
-
 
 static std::string makeGroupName(const char* base_path, bool nosd = false) {
   std::string group;
 
   if (base_path[0] == 0) {
     group = EMOTION_DEFAULT;
-  }
-  else if (!nosd && strncmp(base_path, "/sd/", 4) == 0) {
+  } else if (!nosd && strncmp(base_path, "/sd/", 4) == 0) {
     const char* p = strrchr(base_path + 3, '/');
     if (p == nullptr) {
       return "";
     }
-    
+
     group = "sd/";
     group += p + 1;
-  }
-  else {
+  } else {
     const char* p = strrchr(base_path, '/');
     if (p == nullptr) {
       return "";
     }
-    
+
     group = p + 1;
   }
 
   return group;
 }
-
 
 void Toaster::addHUDEmotion(const char* base_path, const char* emotion, const char* display_name) {
   std::string group = makeGroupName(base_path);
@@ -756,7 +837,6 @@ void Toaster::addHUDEmotion(const char* base_path, const char* emotion, const ch
   hud_emotions.back().addEmotion(display_name, emotion);
 }
 
-
 bool Toaster::removeHUDEmotion(const char* base_path, const char* emotion) {
   std::string group = makeGroupName(base_path, true);
 
@@ -769,7 +849,6 @@ bool Toaster::removeHUDEmotion(const char* base_path, const char* emotion) {
   return false;
 }
 
-
 void Toaster::clearEmptyHUDEmotions() {
   for (auto it = hud_emotions.begin(); it != hud_emotions.end(); ++it) {
     if (it->isEmpty()) {
@@ -777,7 +856,6 @@ void Toaster::clearEmptyHUDEmotions() {
     }
   }
 }
-
 
 bool Toaster::loadHub75(const YamlNodeArray& yaml) {
   HUB75_I2S_CFG::i2s_pins hub75_pins;
@@ -794,7 +872,7 @@ bool Toaster::loadHub75(const YamlNodeArray& yaml) {
   hub75_pins.c = yaml.getInt("hardware:hub75:c_pin", 5);
   hub75_pins.d = yaml.getInt("hardware:hub75:d_pin", 33);
   hub75_pins.e = yaml.getInt("hardware:hub75:e_pin", 32);
-  
+
   hub75_pins.lat = yaml.getInt("hardware:hub75:lat_pin", 4);
   hub75_pins.oe = yaml.getInt("hardware:hub75:oe_pin", 15);
   hub75_pins.clk = yaml.getInt("hardware:hub75:clk_pin", 18);
@@ -806,12 +884,11 @@ bool Toaster::loadHub75(const YamlNodeArray& yaml) {
   }
 
   _default_brightness = yaml.getFloat("hardware:hub75:default_brightness", 1.0);
-  
-  TF_LOGD(TAG, "HUB75 refresh rate: %d -> %d", (int)min_refresh_rate, _display.get_refresh_rate());
+
+  TF_LOGD(TAG, "HUB75 refresh rate: %d -> %d", (int) min_refresh_rate, _display.get_refresh_rate());
 
   return true;
 }
-
 
 bool Toaster::loadSidePanel(const YamlNodeArray& yaml) {
   _side_display_use = yaml.isKeysExist("hardware:side_panel");
@@ -833,7 +910,6 @@ bool Toaster::loadSidePanel(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 bool Toaster::loadHUD(const YamlNodeArray& yaml) {
   _hud_use = yaml.isKeysExist("hardware:hud");
   if (_hud_use) {
@@ -851,7 +927,6 @@ bool Toaster::loadHUD(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 bool Toaster::loadPhotoresistor(const YamlNodeArray& yaml) {
   _lightsensor_use = yaml.isKeysExist("hardware:photoresistor");
   if (_lightsensor_use) {
@@ -863,15 +938,15 @@ bool Toaster::loadPhotoresistor(const YamlNodeArray& yaml) {
 
     _lightsensor.beginLDR(pr_pin, pr_alpha, pr_alpha_init);
     _ls_recent = _lightsensor.getValue();
-  
+
     auto cal_points = yaml.findKeys("hardware:photoresistor:calibration:points");
     if (cal_points == nullptr || cal_points->asObjects().size() < 2) {
       _ls_auto.pushDataPoint({1024, 0.25f});
       _ls_auto.pushDataPoint({3200, 1.0f});
-    }
-    else {
+    } else {
       for (const auto& it : cal_points->asObjects()) {
-        if (it.isString() == false) continue;
+        if (it.isString() == false)
+          continue;
 
         std::string left;
         std::string right;
@@ -888,38 +963,35 @@ bool Toaster::loadPhotoresistor(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 bool Toaster::loadLightSensor(const YamlNodeArray& yaml) {
   _lightsensor_use = yaml.isKeysExist("hardware:lightsensor");
   if (_lightsensor_use) {
     float ls_alpha = yaml.getFloat("hardware:lightsensor:alpha", 0.98);
     float ls_alpha_init = yaml.getFloat("hardware:lightsensor:alpha_init", 0.9);
-    
+
     std::string ls_type = yaml.getString("hardware:lightsensor:type", "none");
     if (ls_type == "ldr") {
       int ls_pin = yaml.getInt("hardware:lightsensor:pin", 34);
       _lightsensor.beginLDR(ls_pin, ls_alpha, ls_alpha_init);
 
       float hys = yaml.getFloat("hardware:lightsensor:hysteresis", 0.05);
-      _ls_hys = (int)(hys * ADC_MAX);
-    }
-    else if (ls_type == "bh1750") {
+      _ls_hys = (int) (hys * ADC_MAX);
+    } else if (ls_type == "bh1750") {
       int ls_i2c = parse_hex(yaml.getString("hardware:lightsensor:i2c", "0x23").c_str());
       if (!_lightsensor.beginBH1750(ls_i2c, ls_alpha, ls_alpha_init)) {
         _lightsensor_use = false;
         TF_LOGW(TAG, "loadLightSensor: BH1750(0x%02x) not found", ls_i2c);
         return false;
       }
-      
+
       float hys = yaml.getFloat("hardware:lightsensor:hysteresis", 10);
       _ls_hys = hys;
-    }
-    else {
+    } else {
       _lightsensor_use = false;
-      
+
       return true;
     }
-    
+
     _ls_recent = _lightsensor.getValue();
 
     auto cal_points = yaml.findKeys("hardware:lightsensor:calibration:points");
@@ -927,10 +999,10 @@ bool Toaster::loadLightSensor(const YamlNodeArray& yaml) {
       if (cal_points == nullptr || cal_points->asObjects().size() < 2) {
         _ls_auto.pushDataPoint({10, 0.5f});
         _ls_auto.pushDataPoint({50, 1.0f});
-      }
-      else {
+      } else {
         for (const auto& it : cal_points->asObjects()) {
-          if (it.isString() == false) continue;
+          if (it.isString() == false)
+            continue;
 
           std::string left;
           std::string right;
@@ -940,15 +1012,14 @@ bool Toaster::loadLightSensor(const YamlNodeArray& yaml) {
           _ls_auto.pushDataPoint({sensor, brightness});
         }
       }
-    }
-    else {
+    } else {
       if (cal_points == nullptr || cal_points->asObjects().size() < 2) {
         _ls_auto.pushDataPoint({1024, 0.25f});
         _ls_auto.pushDataPoint({3200, 1.0f});
-      }
-      else {
+      } else {
         for (const auto& it : cal_points->asObjects()) {
-          if (it.isString() == false) continue;
+          if (it.isString() == false)
+            continue;
 
           std::string left;
           std::string right;
@@ -966,7 +1037,6 @@ bool Toaster::loadLightSensor(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 bool Toaster::loadBoopSensor(const YamlNodeArray& yaml) {
   _boopsensor_use = yaml.isKeysExist("hardware:boopsensor");
   if (_boopsensor_use) {
@@ -978,11 +1048,10 @@ bool Toaster::loadBoopSensor(const YamlNodeArray& yaml) {
     uint8_t i2c = parse_hex(yaml.getString("hardware:boopsensor:i2c", "0x29").c_str());
     uint16_t threshold = yaml.getInt("hardware:boopsensor:threshold", 20);
     int sampling = yaml.getInt("hardware:boopsensor:sampling", 3);
-    
+
     if (_boopsensor.begin(i2c, threshold, sampling)) {
       TF_LOGI(TAG, "loadBoopSensor: VL53L1X(0x%02x) connected.", i2c);
-    }
-    else {
+    } else {
       TF_LOGW(TAG, "loadBoopSensor: VL53L1X(0x%02x) not found.", i2c);
       return false;
     }
@@ -990,7 +1059,6 @@ bool Toaster::loadBoopSensor(const YamlNodeArray& yaml) {
 
   return true;
 }
-
 
 bool Toaster::loadThermometer(const YamlNodeArray& yaml) {
   _thermometer_use = yaml.isKeysExist("hardware:thermometer");
@@ -1002,11 +1070,10 @@ bool Toaster::loadThermometer(const YamlNodeArray& yaml) {
 
     uint8_t i2c = parse_hex(yaml.getString("hardware:thermometer:i2c", "0x44").c_str());
     uint32_t period = parse_time_str(yaml.getString("hardware:thermometer:period", "15s").c_str());
-    
+
     if (_thermometer.beginSHT31(period, i2c)) {
       TF_LOGI(TAG, "loadThermometer: SHT31(0x%02x) connected.", i2c);
-    }
-    else {
+    } else {
       TF_LOGW(TAG, "loadThermometer: SHT31(0x%02x) not found.", i2c);
       return false;
     }
@@ -1014,7 +1081,6 @@ bool Toaster::loadThermometer(const YamlNodeArray& yaml) {
 
   return true;
 }
-
 
 bool Toaster::loadRTC(const YamlNodeArray& yaml) {
   _rtc_use = yaml.isKeysExist("hardware:rtc");
@@ -1030,12 +1096,10 @@ bool Toaster::loadRTC(const YamlNodeArray& yaml) {
     if (_rtc.beginDS3231(nofail)) {
       if (_rtc.isSynced()) {
         TF_LOGI(TAG, "loadRTC: DS3231(0x%02x) connected.", i2c);
-      }
-      else {
+      } else {
         TF_LOGI(TAG, "loadRTC: DS3231(0x%02x) not found, use as uptime.", i2c);
       }
-    }
-    else {
+    } else {
       TF_LOGW(TAG, "loadRTC: DS3231(0x%02x) not found.", i2c);
       return false;
     }
@@ -1047,7 +1111,6 @@ bool Toaster::loadRTC(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 bool Toaster::loadRemote(const YamlNodeArray& yaml) {
   bool key_exist = yaml.isKeysExist("hardware:esp_now");
   bool key_exist2 = yaml.isKeysExist("hardware:i2c_esp_now");
@@ -1056,19 +1119,17 @@ bool Toaster::loadRemote(const YamlNodeArray& yaml) {
     auto type = ESP_NOW_TYPE.find(yaml.getString("hardware:esp_now:type", "none"));
     _esp_now_type = (type != ESP_NOW_TYPE.end()) ? type->second : ESP_NOW_NONE;
     if (_esp_now_type == ESP_NOW_I2C) {
-      uint8_t i2c = parse_hex(yaml.getString(key_exist ? "hardware:esp_now:i2c" : "hardware:i2c_esp_now:i2c", "0x15").c_str());
+      uint8_t i2c =
+          parse_hex(yaml.getString(key_exist ? "hardware:esp_now:i2c" : "hardware:i2c_esp_now:i2c", "0x15").c_str());
       if (_espnow.beginI2C(i2c)) {
         TF_LOGI(TAG, "loadRemote: ESP-Now Receiver (0x%02x) connected.", i2c);
-      }
-      else {
+      } else {
         TF_LOGW(TAG, "loadRemote: ESP-Now Receiver (0x%02x) not found.", i2c);
       }
-    }
-    else if (_esp_now_type == ESP_NOW_LOCAL) {
+    } else if (_esp_now_type == ESP_NOW_LOCAL) {
       if (_espnow.beginLocal()) {
         TF_LOGI(TAG, "loadRemote: ESP-Now initialized.");
-      }
-      else {
+      } else {
         TF_LOGW(TAG, "loadRemote: ESP-Now initialization failed.");
       }
     }
@@ -1078,11 +1139,13 @@ bool Toaster::loadRemote(const YamlNodeArray& yaml) {
     auto whitelist = yaml.findKeys(key_exist ? "hardware:esp_now:whitelist" : "hardware:i2c_esp_now:whitelist");
     if (whitelist != nullptr) {
       for (const auto& it : whitelist->asObjects()) {
-        if (it.isString() == false) continue;
-        
+        if (it.isString() == false)
+          continue;
+
         uint8_t mac[6];
         if (parse_mac(it.asString().c_str(), mac)) {
-          TF_LOGD(TAG, "loadRemote: whitelist added %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+          TF_LOGD(TAG, "loadRemote: whitelist added %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3],
+                  mac[4], mac[5]);
           _espnow.addWhitelist(mac);
         }
       }
@@ -1104,7 +1167,6 @@ bool Toaster::loadRemote(const YamlNodeArray& yaml) {
 
   return true;
 }
-
 
 bool Toaster::loadPersonality(const YamlNodeArray& yaml) {
   std::map<std::string, std::string> color_map;
@@ -1166,27 +1228,27 @@ bool Toaster::loadPersonality(const YamlNodeArray& yaml) {
     set_color("color_nose", 0, Effect::PC_NOSE, 0x00ff00);
     set_color("color_mouth", 0, Effect::PC_MOUTH, 0x00ff00);
     set_color("color_side", 0, Effect::PC_SIDE, 0x00ff00);
-    
+
     set_color("color_right_eyes", 0, Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
     set_color("color_right_nose", 0, Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
     set_color("color_right_mouth", 0, Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
     set_color("color_right_side", 0, Effect::PC_SIDE + Effect::PC_MAX, 0x00ff00);
-    
+
     set_color("color2_eyes", 1, Effect::PC_EYES, 0x00ff00);
     set_color("color2_nose", 1, Effect::PC_NOSE, 0x00ff00);
     set_color("color2_mouth", 1, Effect::PC_MOUTH, 0x00ff00);
     set_color("color2_side", 1, Effect::PC_SIDE, 0x00ff00);
-    
+
     set_color("color2_right_eyes", 1, Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
     set_color("color2_right_nose", 1, Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
     set_color("color2_right_mouth", 1, Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
     set_color("color2_right_side", 1, Effect::PC_SIDE + Effect::PC_MAX, 0x00ff00);
-    
+
     set_color("color3_eyes", 2, Effect::PC_EYES, 0x00ff00);
     set_color("color3_nose", 2, Effect::PC_NOSE, 0x00ff00);
     set_color("color3_mouth", 2, Effect::PC_MOUTH, 0x00ff00);
     set_color("color3_side", 2, Effect::PC_SIDE, 0x00ff00);
-    
+
     set_color("color3_right_eyes", 2, Effect::PC_EYES + Effect::PC_MAX, 0x00ff00);
     set_color("color3_right_nose", 2, Effect::PC_NOSE + Effect::PC_MAX, 0x00ff00);
     set_color("color3_right_mouth", 2, Effect::PC_MOUTH + Effect::PC_MAX, 0x00ff00);
@@ -1195,9 +1257,9 @@ bool Toaster::loadPersonality(const YamlNodeArray& yaml) {
 
   auto color_mode = COLOR_MODE.find(yaml.getString("my_protogen:color_mode", "personal"));
   PROTOGEN_COLOR_MODE pcm = (color_mode != COLOR_MODE.end()) ? color_mode->second : PCM_PERSONAL;
-  
+
   Effect::setColorMode(pcm);
-  
+
   uint32_t rainbow_single_speed = parse_time_str(yaml.getString("my_protogen:rainbow_single_speed", "20ms").c_str());
   Effect::setRainbowSingleSpeed(rainbow_single_speed);
 
@@ -1219,27 +1281,26 @@ bool Toaster::loadPersonality(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 void Toaster::loadGradation(uint8_t index, const YamlNode* node) {
   Effect::clearGradationPoint(index);
 
   if (node == nullptr || node->asObjects().size() < 2) {
     Effect::setGradationPoint(index, 0.0f, 0, 0, 255);
     Effect::setGradationPoint(index, 1.0f, 0, 255, 0);
-  }
-  else {
+  } else {
     for (const auto& it : node->asObjects()) {
-      if (it.isString() == false) continue;
+      if (it.isString() == false)
+        continue;
 
       std::string left;
       std::string right;
       parse_separate(it.asString().c_str(), " -> ", left, right);
       uint32_t color = parse_hex(right.c_str());
-      Effect::setGradationPoint(index, atof(left.c_str()), (color >> 0) & 0xff, (color >> 8) & 0xff, (color >> 16) & 0xff);
+      Effect::setGradationPoint(index, atof(left.c_str()), (color >> 0) & 0xff, (color >> 8) & 0xff,
+                                (color >> 16) & 0xff);
     }
   }
 }
-
 
 size_t Toaster::loadEmotionsFromFS(const char* path, bool from_sd) {
   size_t e_total_count = 0;
@@ -1253,7 +1314,7 @@ size_t Toaster::loadEmotionsFromFS(const char* path, bool from_sd) {
   File dir = fs->open(EMOTIONS_DIR);
   if (dir) {
     String filename = dir.getNextFileName();
-  
+
     while (!filename.isEmpty()) {
       File sub_dir = fs->open(filename);
       if (sub_dir) {
@@ -1280,7 +1341,6 @@ size_t Toaster::loadEmotionsFromFS(const char* path, bool from_sd) {
   return e_total_count;
 }
 
-
 bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
   auto emotions = yaml.findKeys("emotions");
   if (emotions == nullptr || emotions->isObject() == false || emotions->asObjects().empty()) {
@@ -1288,29 +1348,35 @@ bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
   }
 
   bool is_default_loaded = false;
-  
+
   for (const auto& it : emotions->asObjects()) {
     const auto& emotion = it.asObjects();
-    
+
     auto name = emotion.findKeys("name");
     if (name != nullptr && name->asString() == "default") {
       auto eyes = emotion.findKeys("eyes");
-      if (eyes == nullptr) continue;
+      if (eyes == nullptr)
+        continue;
 
       auto nose = emotion.findKeys("nose");
-      if (nose == nullptr) continue;
+      if (nose == nullptr)
+        continue;
 
       auto mouth = emotion.findKeys("mouth");
-      if (mouth == nullptr) continue;
+      if (mouth == nullptr)
+        continue;
 
       auto special = emotion.findKeys("special");
-      if (special == nullptr) continue;
+      if (special == nullptr)
+        continue;
 
       auto special2 = emotion.findKeys("special2");
-      if (special2 == nullptr) continue;
+      if (special2 == nullptr)
+        continue;
 
       auto side = emotion.findKeys("side");
-      if (side == nullptr) continue;
+      if (side == nullptr)
+        continue;
 
       _emotion_default.name = name->asString();
       _emotion_default.eyes = eyes->asString();
@@ -1341,7 +1407,7 @@ bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
 
   hud_emotions.clear();
   hud_emotions.push_back(HUDEmotions(EMOTION_DEFAULT));
-  
+
   size_t e_count = loadEmotionEachYaml(yaml, DEFAULT_BASE_PATH, false);
   size_t e_total_count = e_count;
   TF_LOGI(TAG, "%d emotions loaded", e_count);
@@ -1363,7 +1429,6 @@ bool Toaster::loadEmotions(const YamlNodeArray& yaml) {
   return true;
 }
 
-
 size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_path, bool from_sd) {
   auto emotions = yaml.findKeys("emotions");
   if (emotions == nullptr || emotions->isObject() == false || emotions->asObjects().empty()) {
@@ -1378,9 +1443,10 @@ size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_
     }
 
     auto& emotion = it.asObjects();
-    
+
     auto name = emotion.findKeys("name");
-    if (name == nullptr) continue;
+    if (name == nullptr)
+      continue;
 
     auto eyes = emotion.findKeys("eyes");
     auto nose = emotion.findKeys("nose");
@@ -1421,25 +1487,22 @@ size_t Toaster::loadEmotionEachYaml(const YamlNodeArray& yaml, const char* base_
         _emotions[find] = data;
         removeHUDEmotion(data.base_path.c_str(), data.name.c_str());
         TF_LOGI(TAG, "emotion (%s) already exist. replaced.", name->asString().c_str());
-      }
-      else {
+      } else {
         TF_LOGW(TAG, "emotion (%s) already exist. ignored.", name->asString().c_str());
         continue;
       }
-    }
-    else {
+    } else {
       _emotions.push_back(data);
       _emotion_map[to_lower(data.name)] = _emotions.size() - 1;
     }
-    
+
     addHUDEmotion(dir.c_str(), name->asString().c_str());
 
     ++count;
   }
-  
+
   return count;
 }
-
 
 bool Toaster::loadDefaultEmotion(const YamlNodeArray& yaml) {
   if (_version == 1) {
@@ -1454,8 +1517,7 @@ bool Toaster::loadDefaultEmotion(const YamlNodeArray& yaml) {
     setEffect(3, "", SCRIPT_DEFAULT_PATH);
     setEffect(4, "", SCRIPT_DEFAULT_PATH);
     setSideEffect(side_default.c_str(), SCRIPT_DEFAULT_PATH);
-  }
-  else {
+  } else {
     std::string default_emotion = yaml.getString("my_protogen:default_emotion", "normal");
     if (!setEmotion(default_emotion.c_str())) {
       TF_LOGE(TAG, "loadPersonality: default_emotion %s not found", default_emotion.c_str());
@@ -1464,7 +1526,6 @@ bool Toaster::loadDefaultEmotion(const YamlNodeArray& yaml) {
 
   return true;
 }
-
 
 bool Toaster::loadNEC(const YamlNodeArray& yaml) {
   auto nec = yaml.findKeys("hardware:ir_remote:nec");
@@ -1484,16 +1545,14 @@ bool Toaster::loadNEC(const YamlNodeArray& yaml) {
     std::string mode = nec_item.getString("mode");
     if (emotion.empty() == false) {
       _ir_remote.addNEC_Emotion(code, emotion.c_str());
-    }
-    else if (keypress.empty() == false) {
+    } else if (keypress.empty() == false) {
       uint8_t keypress_code = (keypress.length() == 1) ? keypress[0] : parse_hex(keypress.c_str());
       _ir_remote.addNEC_Keypress(code, keypress_code, (strcasecmp(mode.c_str(), "keycode") == 0) ? 1 : 0);
     }
   }
-  
+
   return true;
 }
-
 
 bool Toaster::loadShortcutList() {
   _shortcut_list.push_back(SHORTCUT_DEFAULT);
@@ -1501,7 +1560,7 @@ bool Toaster::loadShortcutList() {
   File dir = FFat.open(SHORTCUT_DIR);
   if (dir) {
     String filename = dir.getNextFileName();
-  
+
     while (!filename.isEmpty()) {
       const char* p1 = strrchr(filename.c_str(), '/');
       if (p1 != nullptr) {
@@ -1519,11 +1578,10 @@ bool Toaster::loadShortcutList() {
 
     dir.close();
   }
-  
+
   TF_LOGI(TAG, "total %d shortcuts loaded!", _shortcut_list.size());
 
   return true;
 }
 
-
-};
+};  // namespace toaster

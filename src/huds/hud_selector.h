@@ -1,8 +1,7 @@
 #pragma once
-#include "hud_base.h"
-
 #include <vector>
 
+#include "hud_base.h"
 
 namespace toaster {
 
@@ -14,7 +13,8 @@ public:
   virtual void pressKey(uint16_t key, uint8_t mode);
 
 public:
-  virtual void selectString(const std::vector<std::string>& strings, int select_index, std::function<void(int, void*)> on_select, void* on_select_param = nullptr) {
+  virtual void selectString(const std::vector<std::string>& strings, int select_index,
+                            std::function<void(int, void*)> on_select, void* on_select_param = nullptr) {
     _select_index = select_index;
     _strings = strings;
     _on_select = on_select;
@@ -30,4 +30,4 @@ protected:
 
 extern HUDSelector hud_selector;
 
-};
+};  // namespace toaster
