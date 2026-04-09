@@ -403,9 +403,6 @@ inline void psramInit() {}
 
 class ESPMock {
 public:
-  uint32_t getPsramSize() { return 4 * 1024 * 1024; }
-  uint32_t getFreeHeap() { return 256 * 1024; }
-  uint32_t getFreePsram() { return 2 * 1024 * 1024; }
 };
 
 extern ESPMock ESP;

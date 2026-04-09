@@ -6,6 +6,7 @@
 
 #include "lib/logger.h"
 #include "lib/dither.h"
+#include <cctype>
 
 
 namespace toaster {
@@ -100,11 +101,13 @@ void HUDDashboard::release() {
 
 void HUDDashboard::pressKey(uint16_t key, uint8_t mode) {
   if (mode == 0) {
-    if (key == 'f' || key == 'd' || key == 's' || key == 'j' || key == 'k' || key == 'l') {
+    const uint16_t lower_key = static_cast<uint16_t>(std::tolower(static_cast<unsigned char>(key)));
+
+    if (lower_key == 'f' || lower_key == 'd' || lower_key == 's' || lower_key == 'j' || lower_key == 'k' || lower_key == 'l') {
       _unlock_tick_ms = millis();
 
-      if (_unlock_key != key) {
-        _unlock_key = key;
+      if (_unlock_key != lower_key) {
+        _unlock_key = lower_key;
         _unlock_count = 1;
       }
       else {

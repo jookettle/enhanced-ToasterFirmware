@@ -1,10 +1,14 @@
 #include <windows.h>
 
 #include "native_app.h"
+#include "native_memory.h"
 #include "native_scene.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
+#include <filesystem>
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -16,6 +20,7 @@ constexpr UINT kFrameTimerId = 1;
 constexpr UINT kFrameTimerMs = 33;
 constexpr int kOuterMargin = 16;
 constexpr int kCardGap = 12;
+constexpr auto kCacheRefreshInterval = std::chrono::seconds(2);
 
 HWND g_window = nullptr;
 HFONT g_title_font = nullptr;
@@ -167,6 +172,89 @@ void draw_text(HDC hdc, const RECT& rect, HFONT font, COLORREF color, const std:
   DrawTextA(hdc, text.c_str(), -1, &copy, format);
 }
 
+std::string format_bytes(uintmax_t bytes) {
+  static const char* kUnits[] = { "B", "KB", "MB", "GB", "TB" };
+  double value = static_cast<double>(bytes);
+  size_t unit = 0;
+  while (value >= 1024.0 && unit + 1 < (sizeof(kUnits) / sizeof(kUnits[0]))) {
+    value /= 1024.0;
+    ++unit;
+  }
+
+  char buffer[64];
+  if (unit == 0) {
+    std::snprintf(buffer, sizeof(buffer), "%.0f %s", value, kUnits[unit]);
+  }
+  else {
+    std::snprintf(buffer, sizeof(buffer), "%.1f %s", value, kUnits[unit]);
+  }
+  return buffer;
+}
+
+std::string format_usage(uintmax_t used, uintmax_t total) {
+  return format_bytes(used) + " / " + format_bytes(total);
+}
+
+struct CacheStats {
+  uintmax_t bytes{0};
+  size_t files{0};
+  bool valid{false};
+};
+
+CacheStats scan_cache_stats() {
+  CacheStats stats{};
+  const std::filesystem::path root = std::filesystem::current_path() / "data";
+  std::error_code ec;
+
+  if (!std::filesystem::exists(root, ec)) {
+    return stats;
+  }
+
+  for (std::filesystem::recursive_directory_iterator it(
+         root,
+         std::filesystem::directory_options::skip_permission_denied,
+         ec), end;
+       it != end;
+       it.increment(ec)) {
+    if (ec) {
+      ec.clear();
+      continue;
+    }
+
+    const auto& entry = *it;
+    ec.clear();
+    if (!entry.is_regular_file(ec)) {
+      continue;
+    }
+
+    const uintmax_t file_size = entry.file_size(ec);
+    if (ec) {
+      ec.clear();
+      continue;
+    }
+
+    stats.bytes += file_size;
+    ++stats.files;
+  }
+
+  stats.valid = true;
+  return stats;
+}
+
+CacheStats query_cache_stats() {
+  using clock = std::chrono::steady_clock;
+  static CacheStats cached{};
+  static clock::time_point last_scan{};
+
+  const auto now = clock::now();
+  if (!cached.valid || last_scan.time_since_epoch().count() == 0 || (now - last_scan) >= kCacheRefreshInterval) {
+    cached = scan_cache_stats();
+    last_scan = now;
+  }
+
+  return cached;
+}
+
 void draw_rgb_buffer(HDC hdc, const RECT& dst, const uint8_t* pixels, size_t src_w, size_t src_h) {
   if (pixels == nullptr || src_w == 0 || src_h == 0) {
     return;
@@ -277,7 +365,7 @@ void draw_header(HDC hdc, const RECT& client, const toaster::SimulatorSnapshot& 
 
   RECT title_rect = inset_rect(header, kOuterMargin, 10);
   title_rect.bottom = title_rect.top + 26;
-  draw_text(hdc, title_rect, g_title_font, RGB(228, 232, 236), "Protogen Native Simulator");
+  draw_text(hdc, title_rect, g_title_font, RGB(228, 232, 236), "Protogen Native Emulator");
 
   RECT subtitle_rect = title_rect;
   subtitle_rect.top = title_rect.bottom + 2;
@@ -335,10 +423,26 @@ void draw_controls_card(HDC hdc, const RECT& rect) {
 void draw_status_card(HDC hdc, const RECT& rect, const toaster::SimulatorSnapshot& snap) {
   RECT inner = inset_rect(rect, 14, 44);
   std::vector<std::string> lines;
-  lines.push_back(std::string("Simulation: ") + (native_is_running() ? "active" : "stopping"));
-  lines.push_back(std::string("Hub: ") + std::to_string(snap.hub_width) + "x" + std::to_string(snap.hub_height));
-  lines.push_back(std::string("OLED: ") + std::to_string(snap.oled_width) + "x" + std::to_string(snap.oled_height));
-  lines.push_back(std::string("Side: ") + (snap.side_enabled ? "enabled" : "disabled"));
+  const NativeMemoryStats memory = native_query_memory_stats();
+  const CacheStats cache = query_cache_stats();
+  lines.push_back(std::string("Emulation: ") + (native_is_running() ? "active" : "stopping"));
+  lines.push_back(
+    std::string("Outputs: HUB ")
+    + std::to_string(snap.hub_width) + "x" + std::to_string(snap.hub_height)
+    + " / OLED " + std::to_string(snap.oled_width) + "x" + std::to_string(snap.oled_height)
+    + " / Side " + (snap.side_enabled ? "enabled" : "disabled"));
+  lines.push_back(
+    memory.valid
+      ? std::string("Working set: ") + format_bytes(memory.working_set)
+      : std::string("Working set: unavailable"));
+  lines.push_back(
+    memory.valid
+      ? std::string("Private bytes: ") + format_bytes(memory.private_bytes)
+      : std::string("Private bytes: unavailable"));
+  lines.push_back(
+    cache.valid
+      ? std::string("Cache used: ") + format_bytes(cache.bytes) + " in data/ (" + std::to_string(cache.files) + " files)"
+      : std::string("Cache used: unavailable"));
   if (!snap.status_line.empty()) {
     lines.push_back("Last: " + snap.status_line);
   }
@@ -561,7 +665,7 @@ LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 }
 
 int run_native_gui(HINSTANCE hInstance) {
-  const char* class_name = "ProtogenNativeSimulatorWindow";
+  const char* class_name = "ProtogenNativeEmulatorWindow";
 
   WNDCLASSA wc{};
   wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -581,7 +685,7 @@ int run_native_gui(HINSTANCE hInstance) {
   HWND hwnd = CreateWindowExA(
     0,
     class_name,
-    "Protogen Native Simulator",
+    "Protogen Native Emulator",
     WS_OVERLAPPEDWINDOW | WS_VISIBLE,
     CW_USEDEFAULT,
     CW_USEDEFAULT,

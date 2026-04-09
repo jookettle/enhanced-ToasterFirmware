@@ -8,6 +8,11 @@
 #include <map>
 #include <algorithm>
 #include <random>
+#include <cstdio>
+
+#ifdef NATIVE_SIMULATOR
+#include "native_memory.h"
+#endif
 
 
 namespace toaster {
@@ -100,6 +105,29 @@ static const std::map<std::string, PROTOGEN_COLOR_MODE> COLOR_MODE = {
   {"gradation", PCM_GRADATION},
 };
 
+#ifdef NATIVE_SIMULATOR
+static std::string format_bytes(uintmax_t bytes) {
+  static const char* kUnits[] = { "B", "KB", "MB", "GB", "TB" };
+  double value = static_cast<double>(bytes);
+  size_t unit = 0;
+
+  while (value >= 1024.0 && unit + 1 < (sizeof(kUnits) / sizeof(kUnits[0]))) {
+    value /= 1024.0;
+    ++unit;
+  }
+
+  char buffer[64];
+  if (unit == 0) {
+    snprintf(buffer, sizeof(buffer), "%llu %s", static_cast<unsigned long long>(bytes), kUnits[unit]);
+  }
+  else {
+    snprintf(buffer, sizeof(buffer), "%.1f %s", value, kUnits[unit]);
+  }
+
+  return buffer;
+}
+#endif
+
 Toaster::Toaster() {
 }
 
@@ -113,10 +141,24 @@ bool Toaster::begin() {
 
   TF_LOGI(TAG, "ToasterFirmware %s", _tf_version);
 
+#ifdef NATIVE_SIMULATOR
+  const NativeMemoryStats native_memory = native_query_memory_stats();
+  if (native_memory.valid) {
+    TF_LOGI(
+      TAG,
+      "Native memory: working set=%s, private bytes=%s",
+      format_bytes(native_memory.working_set).c_str(),
+      format_bytes(native_memory.private_bytes).c_str());
+  }
+  else {
+    TF_LOGI(TAG, "Native memory: unavailable");
+  }
+#else
   if (psramFound()) {
     psramInit();
     TF_LOGI(TAG, "PSRAM found: %d", ESP.getPsramSize());
   }
+#endif
 
 #ifdef USE_SD
   SPI.begin();
@@ -351,11 +393,22 @@ bool Toaster::workPerSecond() {
     if (!safe_append(snprintf(p, remaining, ", B: %.2f", _display.getBrightness() / 255.0f))) return true;
   }
 
+#ifdef NATIVE_SIMULATOR
+  const NativeMemoryStats native_memory = native_query_memory_stats();
+  if (native_memory.valid) {
+    if (!safe_append(snprintf(p, remaining, ", working_set: %s", format_bytes(native_memory.working_set).c_str()))) return true;
+    if (!safe_append(snprintf(p, remaining, " (private: %s)", format_bytes(native_memory.private_bytes).c_str()))) return true;
+  }
+  else {
+    if (!safe_append(snprintf(p, remaining, ", working_set: unavailable"))) return true;
+  }
+#else
   if (!safe_append(snprintf(p, remaining, ", heap: %u", ESP.getFreeHeap()))) return true;
   
   if (psramFound()) {
     if (!safe_append(snprintf(p, remaining, " (%u)", ESP.getFreePsram()))) return true;
   }
+#endif
 
   TF_LOGD(TAG, "%s", sz);
 

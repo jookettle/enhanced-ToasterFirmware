@@ -159,7 +159,7 @@ void drain_input_queue() {
 }
 
 void simulation_loop() {
-    toaster::simulator_log_append("Starting Protogen Native GUI Simulator...\n");
+    toaster::simulator_log_append("Starting Protogen Native GUI Emulator...\n");
     toaster::simulator_log_append("Press q or Esc to quit.\n");
     toaster::simulator_log_append("Controls: 1-9 emotions, F/D/S/J/K/L menu, arrows in menus, TAB next emotion.\n");
 
