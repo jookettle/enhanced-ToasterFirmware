@@ -125,7 +125,9 @@ public:
   }
 
   void setStaticMode(bool mode) {
+    syncLock();
     Effect::setStaticMode(mode);
+    syncUnlock();
   }
 
   PROTOGEN_COLOR_MODE getColorMode() const {
@@ -133,7 +135,10 @@ public:
   }
 
   bool setColorMode(PROTOGEN_COLOR_MODE mode) {
-    return Effect::setColorMode(mode);
+    syncLock();
+    bool result = Effect::setColorMode(mode);
+    syncUnlock();
+    return result;
   }
 
   bool setColorMode(const char* mode);

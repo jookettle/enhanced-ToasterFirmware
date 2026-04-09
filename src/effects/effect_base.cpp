@@ -9,10 +9,10 @@ namespace toaster {
 std::vector<Effect*> Effect::_effects;
 timer_us_t Effect::_sync_timer_us = 0;
 
-bool Effect::_staticMode = false;
+std::atomic<bool> Effect::_staticMode{false};
 timer_us_t Effect::_static_mode_tick_us = 0;
 timer_us_t Effect::_color_tick_us = 0;
-PROTOGEN_COLOR_MODE Effect::_colorMode = PCM_DEFAULT;
+std::atomic<PROTOGEN_COLOR_MODE> Effect::_colorMode{PCM_DEFAULT};
 uint8_t Effect::_personalIndex = 0;
 COLOR_FUNC Effect::_colorFunc = color_func_personal;
 uint8_t Effect::_personalColor[3][8][3] = {
@@ -167,7 +167,7 @@ void Effect::h2rgb(uint16_t h, uint8_t& out_r, uint8_t& out_g, uint8_t& out_b) {
 
 
 timer_ms_t Effect::color_millis() {
-  if (_staticMode) {
+  if (_staticMode.load()) {
     return (_static_mode_tick_us - _color_tick_us) / 1000;
   }
 

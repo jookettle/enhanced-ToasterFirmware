@@ -38,7 +38,7 @@ void EffectScript::process(Display& display) {
   _video_flag = false;
   
   bool boop = Protogen._boopsensor.isBoop() && !_parser.getBoopSequences().empty();
-  if (_staticMode == false) {
+  if (_staticMode.load() == false) {
     if (_boop == false && boop) {
       _boop = true;
       setStep(0);
@@ -443,7 +443,7 @@ void EffectScript::processVideo(Display& display) {
 
       display.draw_image(_video_legacy_frame->getImage(), (DRAW_MODE)video_info.mode, _video_offset_x, _video_offset_y, 0);
 
-      if (_staticMode == false) {
+      if (_staticMode.load() == false) {
         if (_step >= video_info.end - 1) {
           setStep(video_info.loop ? video_info.start : -1);
 
@@ -482,7 +482,7 @@ void EffectScript::processVideo(Display& display) {
     else {
       COLOR_FUNC color_func = color_func_original;
 
-      switch (_colorMode) {
+      switch (_colorMode.load()) {
       case PCM_PERSONAL:
         color_func = color_func_gray_personal;
         break;
@@ -506,7 +506,7 @@ void EffectScript::processVideo(Display& display) {
       display.draw_image_newcolor(asset->getVideo()->getImage(), color_func, 0, (DRAW_MODE)video_info.mode, _video_offset_x, _video_offset_y, 0);
     }
 
-    if (_staticMode == false) {
+    if (_staticMode.load() == false) {
       if (Protogen.isAdaptiveFps() || timeout(asset->getVideo()->getPF_ms())) {
         asset->getVideo()->nextFrame(true);
       }

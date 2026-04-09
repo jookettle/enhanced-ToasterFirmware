@@ -62,7 +62,7 @@ void EffectFestive::process(Display& display) {
   
   const int EASE_MAX = 6;
 
-  if (_staticMode == false) {
+  if (_staticMode.load() == false) {
     for (int x = 0; x < display.getWidth() / 2; x++) {
       if (random(10) == 0) {
         int newHeight = gaussianRandom(display.getHeight() + 1);

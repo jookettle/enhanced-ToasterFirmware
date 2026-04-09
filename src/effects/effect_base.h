@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include "config/configure.h"
 
 #include "hal/display/display.h"
@@ -64,16 +65,16 @@ public:
 
 public:
   static bool getStaticMode() {
-    return _staticMode;
+    return _staticMode.load();
   }
 
   static void setStaticMode(bool mode) {
-    if (_staticMode != mode) {
-      _staticMode = mode;
+    if (_staticMode.load() != mode) {
+      _staticMode.store(mode);
 
       timer_us_t tick_us = Timer::get_micros();
       
-      if (_staticMode) {
+      if (mode) {
         _static_mode_tick_us = tick_us;
       }
       else {
@@ -88,7 +89,7 @@ public:
   }
 
   static PROTOGEN_COLOR_MODE getColorMode() {
-    return _colorMode;
+    return _colorMode.load();
 
   }
 
@@ -119,7 +120,7 @@ public:
       return false;
     }
 
-    _colorMode = mode;
+    _colorMode.store(mode);
     setDirty();
     return true;
   }
@@ -189,7 +190,7 @@ protected:
   void restartTimer() {
     _tick_us = _sync_timer_us;
 
-    if (_staticMode) {
+    if (_staticMode.load()) {
       _static_mode_tick_us = _tick_us;
     }
   }
@@ -201,7 +202,7 @@ protected:
   }
 
   bool timeout(uint32_t time_ms) {
-    if (_staticMode) {
+    if (_staticMode.load()) {
       return false;
     }
 
@@ -245,10 +246,10 @@ public:
 
 
 protected:
-  static bool _staticMode;
+  static std::atomic<bool> _staticMode;
   static timer_us_t _static_mode_tick_us;
   static timer_us_t _color_tick_us;
-  static PROTOGEN_COLOR_MODE _colorMode;
+  static std::atomic<PROTOGEN_COLOR_MODE> _colorMode;
 public:
   static COLOR_FUNC _colorFunc;
   static uint8_t _personalIndex;

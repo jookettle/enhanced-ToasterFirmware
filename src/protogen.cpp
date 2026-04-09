@@ -417,20 +417,30 @@ bool Toaster::workPerSecond() {
 
 
 void Toaster::setNextEmotion(const char* emotion) {
-  _next_emotion = emotion;
+  syncLock();
+  _next_emotion = (emotion != nullptr) ? emotion : "";
+  syncUnlock();
 }
 
 
 bool Toaster::setEmotion(const char* emotion) {
+  if (emotion == nullptr) {
+    TF_LOGW(TAG, "setEmotion: null emotion");
+    return false;
+  }
+
+  syncLock();
   TF_LOGD(TAG, "setEmotion: %s", emotion);
   
   int index = findEmotion(emotion);
   if (index >= 0) {
-    return setEmotion((size_t)index);
+    bool result = setEmotion((size_t)index);
+    syncUnlock();
+    return result;
   }
 
   TF_LOGW(TAG, "setEmotion: %s not found", emotion);
-  
+  syncUnlock();
   return false;
 }
 
@@ -473,6 +483,8 @@ const char* Toaster::getEmotionGroup() const {
 
 
 void Toaster::shuffleEmotion() {
+  syncLock();
+
   if (_shuffle_deck.empty()) {
     TF_LOGD(TAG, "shuffle list...");
 
@@ -480,6 +492,7 @@ void Toaster::shuffleEmotion() {
     size_t emotion_count = getEmotionCount();
     
     if (emotion_count == 0) {
+      syncUnlock();
       return;
     }
 
@@ -498,26 +511,35 @@ void Toaster::shuffleEmotion() {
     setEmotion(_shuffle_deck.front());
     _shuffle_deck.erase(_shuffle_deck.begin());
   }
+
+  syncUnlock();
 }
 
 
 bool Toaster::setEmotionNext() {
+  syncLock();
+
   auto isExclude = [](const char* name) -> bool {
     return (strcasecmp(name, "white") == 0);
   };
 
   for (size_t i = _emotion_index + 1; i < _emotions.size(); i++) {
     if (!isExclude(_emotions[i].name.c_str())) {
-      return setEmotion(i);
+      bool result = setEmotion(i);
+      syncUnlock();
+      return result;
     }
   }
 
   for (size_t i = 0; i < _emotion_index; i++) {
     if (!isExclude(_emotions[i].name.c_str())) {
-      return setEmotion(i);
+      bool result = setEmotion(i);
+      syncUnlock();
+      return result;
     }
   }
   
+  syncUnlock();
   return false;
 }
 
@@ -636,12 +658,20 @@ void Toaster::setSideEffect(const char* new_effect1, const char* base_path) {
 
 
 bool Toaster::setColorMode(const char* mode) {
+  syncLock();
+  if (mode == nullptr) {
+    syncUnlock();
+    return false;
+  }
   auto color_mode = COLOR_MODE.find(mode);
   if (color_mode == COLOR_MODE.end()) {
+    syncUnlock();
     return false;
   }
 
-  return Effect::setColorMode(color_mode->second);
+  bool result = Effect::setColorMode(color_mode->second);
+  syncUnlock();
+  return result;
 }
 
 
