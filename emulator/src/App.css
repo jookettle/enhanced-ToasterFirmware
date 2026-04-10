@@ -1,0 +1,355 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-color);
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(210, 100%, 15%, 0.5) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(199, 89%, 15%, 0.5) 0, transparent 50%);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 64px;
+  z-index: 10;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-section h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.logo-section h1 span {
+  color: var(--accent-color);
+  font-weight: 400;
+}
+
+.icon.accent {
+  color: var(--accent-color);
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.fps-indicator {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7280;
+}
+
+.dot.pulse {
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+main {
+  display: grid;
+  grid-template-columns: 280px 1fr 340px;
+  flex: 1;
+  overflow: hidden;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.glass-panel {
+  border-radius: 1rem;
+}
+
+/* Sidebar Sections */
+aside section {
+  padding: 1.5rem;
+}
+
+aside h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.button-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--accent-color);
+  color: #000;
+}
+
+.btn-primary.stop {
+  background: #ef4444;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid var(--border-color);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* Display Area */
+.display-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.matrix-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.matrix-wrapper {
+  background: #000;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.8);
+  border: 2px solid #222;
+  position: relative;
+  overflow: hidden;
+}
+
+.led-canvas {
+  width: 640px; /* 64 * 10 */
+  height: 320px; /* 32 * 10 */
+  image-rendering: pixelated;
+  display: block;
+}
+
+.canvas-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 640px;
+  height: 320px;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(circle, transparent 20%, #000 70%),
+    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 10px 10px; /* Matches pixel scale */
+  z-index: 5;
+}
+
+.display-label {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.hardware-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Terminal */
+.terminal-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Prevents flex children from pushing out of the parent height */
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.terminal-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 1rem;
+  font-size: 0.8125rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.log-entry {
+  margin-bottom: 0.25rem;
+  display: flex;
+  gap: 0.5rem;
+  word-break: break-all;
+}
+
+.log-time { color: var(--text-secondary); }
+.log-level { font-weight: 700; width: 45px; }
+
+.info .log-level { color: var(--accent-color); }
+.warn .log-level { color: #f59e0b; }
+.error .log-level { color: #ef4444; }
+
+.terminal-placeholder {
+  color: #374151;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border: 2px dashed var(--border-color);
+  border-radius: 1rem;
+  color: var(--text-secondary);
+  transition: all 0.3s;
+}
+
+.drop-zone.success {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+/* ESP32-S3 Hardware Graphic */
+.hardware-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: rgba(30, 30, 35, 0.4);
+}
+
+.esp32-s3-chip {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #2c2c2e 0%, #1a1a1b 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.chip-label {
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  z-index: 2;
+}
+
+.chip-antenna {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 20px;
+  border-bottom: 2px solid rgba(255, 165, 0, 0.3);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 5px,
+    rgba(255, 165, 0, 0.2) 5px,
+    rgba(255, 165, 0, 0.2) 7px
+  );
+}
+
+.chip-pads {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffd700 0px,
+    #ffd700 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  opacity: 0.5;
+}
+
+.esp32-s3-chip::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent 90deg
+  );
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
