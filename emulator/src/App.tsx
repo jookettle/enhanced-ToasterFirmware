@@ -105,8 +105,7 @@ function App() {
 
   const handleStart = () => {
     if (!binLoaded) {
-      addLog("Please load a firmware binary first.", "WARN");
-      return;
+      addLog("No binary loaded — starting in mock mode.", "WARN");
     }
     setIsRunning(true);
     addLog("Emulation started.");

@@ -13,6 +13,7 @@ const FB_BASE = 0x3FF00000 >>> 0;
 const STREAM_PORT = Number(process.env.STREAM_PORT || 8081);
 const wss = new WebSocketServer({ port: STREAM_PORT });
 wss.on('listening', () => console.log(`[TEST] WebSocket frame stream ws://localhost:${STREAM_PORT}`));
+wss.on('connection', () => console.log(`[TEST] WS client connected (clients=${wss.clients.size})`));
 
 function broadcastFrame(buf) {
   const data = Buffer.from(buf);
@@ -45,6 +46,14 @@ async function run() {
   const cpu = new XtensaCPU();
   const hal = new ESP32HAL((msg) => cpu.onLog(msg));
   cpu.hal = hal;
+
+  // Always-broadcast interval so clients connecting later still receive frames.
+  // This broadcasts the current framebuffer periodically (harmless if unchanged).
+  setInterval(() => {
+    try {
+      broadcastFrame(cpu.frameBuffer);
+    } catch (e) { }
+  }, 200);
 
   let frameIdx = 0;
   cpu.onLog = (m) => { if (m) console.log('[LOG]', m); };
@@ -100,6 +109,13 @@ async function run() {
     cpu.loadImage(img.entryAddr, img.segments);
     console.log('[TEST] Starting simulation...');
 
+    // Ensure we broadcast frames periodically so clients that connect
+    // after startup still receive a visible buffer (useful when firmware
+    // halts early).
+    const broadcastInterval = setInterval(() => {
+      try { broadcastFrame(cpu.frameBuffer); } catch (e) { }
+    }, 200);
+
     cpu.isRunning = true;
     let steps = 0;
     const MAX_STEPS = process.env.INFINITE ? Number.MAX_SAFE_INTEGER : 200000;
@@ -112,6 +128,7 @@ async function run() {
     }
 
     console.log('\n[TEST] Simulation ended. Steps:', steps);
+    clearInterval(broadcastInterval);
     broadcastFrame(cpu.frameBuffer);
     frameIdx++;
   } else {

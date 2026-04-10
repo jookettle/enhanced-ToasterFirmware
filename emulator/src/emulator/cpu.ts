@@ -32,6 +32,8 @@ export class XtensaCPU {
   public trace: string[] = [];
   private readonly TRACE_SIZE = 100;
   private nullSlideCount = 0;
+  private unknownSkipCount = 0;
+  private readonly UNKNOWN_SKIP_LIMIT = 64;
 
   constructor() {
     this.rom.fill(0x00);
@@ -198,6 +200,8 @@ export class XtensaCPU {
      }
 
     try {
+      // Reset unknown-skip counter when actively executing regular instructions
+      this.unknownSkipCount = 0;
       const t_24 = (b0 >> 4) & 0x0F;
       const s_24 = (b1 & 0x0F);
       const r_24 = (b1 >> 4) & 0x0F;
@@ -427,7 +431,7 @@ export class XtensaCPU {
             this.pc = (ra & 0x3FFFFFFF) | (this.pc & 0xC0000000);
             this.addTrace(`RETW.N (Incr=${windowIncr*4})`, b0, b1); return;
           }
-          this.haltUnknown(b0, b1, 0, `Unknown Narrow op0=D`); return;
+          this.haltUnknown(b0, b1, 0, `Unknown Opcode (Narrow op0=D)`); return;
         case 0x0E: // MOVI.N
           {
              const t = (b0 >> 4) & 0xF;
@@ -450,8 +454,21 @@ export class XtensaCPU {
   }
 
   private haltUnknown(b0: number, b1: number, b2: number, reason?: string) {
-    this.isRunning = false;
     const msg = reason || `Unknown Opcode 0x${b0.toString(16)} 0x${b1.toString(16)} 0x${b2.toString(16)}`;
+    // If this is an unknown-opcode halt, attempt a limited skip to let
+    // firmware continue (useful for partially-implemented instruction sets).
+    if (msg.includes('Unknown Opcode')) {
+      if (this.unknownSkipCount < this.UNKNOWN_SKIP_LIMIT) {
+        this.unknownSkipCount++;
+        const is16Bit = ((b0 & 0x0F) >= 0x8);
+        const instrLen = is16Bit ? 2 : 3;
+        this.onLog(`[CPU] Unknown opcode at 0x${this.pc.toString(16)} - skipping ${instrLen} bytes (attempt ${this.unknownSkipCount})`);
+        this.pc = (this.pc + instrLen) >>> 0;
+        return;
+      }
+    }
+
+    this.isRunning = false;
     this.onLog(`[CPU] STRICT HALT: ${msg} at 0x${this.pc.toString(16)}`);
     this.onLog(this.dumpRegisters());
     this.onLog(`[CPU] Trace:\n${this.trace.join('\n')}`);
