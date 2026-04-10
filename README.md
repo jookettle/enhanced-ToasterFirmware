@@ -9,7 +9,6 @@
   <img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge" alt="GPLv3 License">
   <img src="https://img.shields.io/badge/Platform-ESP32-E64646.svg?style=for-the-badge" alt="Platform ESP32">
   <img src="https://img.shields.io/badge/Language-C%2B%2B-00599C.svg?style=for-the-badge" alt="Language C++">
-  <img src="https://img.shields.io/badge/Performance-60FPS-brightgreen.svg?style=for-the-badge" alt="60 FPS">
 </p>
 
 ---
