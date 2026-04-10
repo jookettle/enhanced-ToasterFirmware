@@ -1,12 +1,12 @@
 ---
 trigger: always_on
 glob: "**/*.{cpp,h,hpp}"
-description: General C++ coding standards for the enhanced-ToasterFirmware project.
+description: General C++ coding standards for the NeoToasterFirmware project.
 ---
 
 # C++ Usage Standards
 
-To ensure code quality and consistency across the `enhanced-ToasterFirmware` codebase, follow these C++ standards.
+To ensure code quality and consistency across the `NeoToasterFirmware` codebase, follow these C++ standards.
 
 ## 1. File Structure & Headers
 - **Header Guards**: Use `#pragma once` at the top of every header file.

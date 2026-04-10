@@ -6,7 +6,7 @@ description: Guidelines for following project-specific architectural patterns.
 
 # Project Architecture & Patterns
 
-The `enhanced-ToasterFirmware` project uses several key architectural patterns to manage state, visual effects, and hardware interaction.
+The `NeoToasterFirmware` project uses several key architectural patterns to manage state, visual effects, and hardware interaction.
 
 ## 1. The `Worker` Pattern
 Most background tasks should inherit from the `Worker` class located in `src/lib/worker.h`.

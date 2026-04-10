@@ -111,7 +111,7 @@ bool Toaster::begin() {
 
   _serialdebug.begin();
 
-  TF_LOGI(TAG, "ToasterFirmware %s", _tf_version);
+  TF_LOGI(TAG, "NeoToasterFirmware %s", _tf_version);
 
   if (psramFound()) {
     psramInit();

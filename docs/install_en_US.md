@@ -14,7 +14,7 @@ The ESP32-S3 uses USB CDC. While the default Windows driver should work to some 
 
 
 # Configuration
-ToasterFirmware uses FFAT, a lightweight file system, to store data files in Flash.
+NeoToasterFirmware uses FFAT, a lightweight file system, to store data files in Flash.
 When doing `Upload Filesystem Image`, all files in the `/data` folder will be uploaded, and the full path name can be up to 31 characters long(up to /123456789012345678901234567890), so please be careful.
 
 Among them, most settings are managed in the `config.yaml` file. Basically, it follows the syntax of yaml, but it does not include all functions, so please format it as best as possible.

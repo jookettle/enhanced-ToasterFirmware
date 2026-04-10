@@ -6,7 +6,7 @@ description: Rules for multi-threading and task management on ESP32.
 
 # ESP32 FreeRTOS & Concurrency
 
-The `enhanced-ToasterFirmware` utilizes the ESP32's dual-core architecture. Follow these rules to ensure thread safety and optimal task management.
+The `NeoToasterFirmware` utilizes the ESP32's dual-core architecture. Follow these rules to ensure thread safety and optimal task management.
 
 ## 1. Task Management
 - **Core Affinity**: Use `xTaskCreatePinnedToCore` to specify which core a task should run on. Typically, the main application runs on Core 1 (`APP_CPU_NUM`), while networking and background HAL processing (like the HUD task) can run on Core 0 (`PRO_CPU_NUM`).

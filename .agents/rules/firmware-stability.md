@@ -6,7 +6,7 @@ description: Stability and performance rules for firmware development.
 
 # Firmware Stability & Performance
 
-To ensure the high reliability and responsiveness required for the `enhanced-ToasterFirmware` project, adhere to these stability and performance guidelines.
+To ensure the high reliability and responsiveness required for the `NeoToasterFirmware` project, adhere to these stability and performance guidelines.
 
 ## 1. Non-Blocking Logic
 - **Avoid `delay()`**: Do **not** use `delay()` within `work()`, `loop()`, or any function called frequently. Use the `Worker` class or `Timer::get_millis()` for periodic tasks.
