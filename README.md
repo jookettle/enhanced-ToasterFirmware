@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="images/banner.png" alt="NeoToasterFirmware Banner" width="800">
-</p>
-
 # <p align="center">NeoToasterFirmware</p>
 
 <p align="center">
@@ -43,10 +39,10 @@ Explore the documentation to get your NeoToaster up and running:
 ## Management
 
 ### Maintainer
-- **[jookettle / Jinpyo Joo](https://github.com/jookettle)** – Current development and enhancements.
+- **[jookettle](https://github.com/jookettle)** – Current development and enhancements.
 
 ### Original Creator
-- **[디테일 / DETAIL (deltafish32)](https://x.com/deltafish32)** – Creator of the original ToasterFirmware.
+- **[deltafish32](https://github.com/deltafish32)** – Creator of the original ToasterFirmware.
 
 ---
 
