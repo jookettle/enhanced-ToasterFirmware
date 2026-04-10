@@ -1,47 +1,4 @@
 
-# Open-source license
-소스가 삽입된 오픈소스 목록입니다. 그 외 사용된 라이브러리는 `platformio.ini` 파일을 참고해주세요.
-This is a list of open sources with embedded sources. Please refer to the `platformio.ini` file for other libraries used.
-
-
-## ESP32-upng
-<https://github.com/lagunax/ESP32-upng>
-
-ESP_upng -- derived from LodePNG version 20100808
-==========================================
-
-Copying
--------
-upng:
-Copyright (c) 2005-2010 Lode Vandevenne
-Copyright (c) 2010 Sean Middleditch
-ESP32upng (port for ESP32):
-Copyright (c) 2019 Vitaliy Novoselov
-
-This software is provided 'as-is', without any express or implied
-warranty. In no event will the authors be held liable for any damages
-arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
-
-  1. The origin of this software must not be misrepresented; you must not
-  claim that you wrote the original software. If you use this software
-  in a product, an acknowledgment in the product documentation would be
-  appreciated but is not required.
-
-  2. Altered source versions must be plainly marked as such, and must not be
-  misrepresented as being the original software.
-
-  3. This notice may not be removed or altered from any source
-  distribution.
-
-
-## ESP32 ADC Calibrate
-<https://github.com/e-tinkers/esp32-adc-calibrate>
-
-
 
 # License
 GNU GENERAL PUBLIC LICENSE
@@ -235,8 +192,8 @@ If you develop a new program, and you want it to be of the greatest possible use
 
 To do so, attach the following notices to the program. It is safest to attach them to the start of each source file to most effectively state the exclusion of warranty; and each file should have at least the “copyright” line and a pointer to where the full notice is found.
 
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) <year>  <name of author>
+    NeoToasterFirmware: Open source Protogen Firmware.
+    Copyright (C) 2024-2026 DETAIL (deltafish32)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -254,7 +211,7 @@ Also add information on how to contact you by electronic and paper mail.
 
 If the program does terminal interaction, make it output a short notice like this when it starts in an interactive mode:
 
-    <program>  Copyright (C) <year>  <name of author>
+    NeoToasterFirmware  Copyright (C) 2024-2026  DETAIL (deltafish32)
     This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
     This is free software, and you are welcome to redistribute it
     under certain conditions; type `show c' for details.

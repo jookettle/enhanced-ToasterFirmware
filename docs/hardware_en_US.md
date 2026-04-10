@@ -166,7 +166,7 @@ I tested the VL53L0X sensor, but it had issues with not penetrating through PETG
 
 
 ## VL53L1X
-This is a laser ToF sensor that can measure up to 4m distance and up to 50Hz cycle. It is the only sensor currently supported by ToasterFirmware, and due to other I2C device processing, it can measure up to a 30Hz cycle.
+This is a laser ToF sensor that can measure up to 4m distance and up to 50Hz cycle. It is the only sensor currently supported by NeoToasterFirmware, and due to other I2C device processing, it can measure up to a 30Hz cycle.
 
 
 

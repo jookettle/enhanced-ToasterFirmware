@@ -1,60 +1,68 @@
-[한국어](README.md)
-[English](README_en_US.md)
+<p align="center">
+  <img src="images/banner.png" alt="NeoToasterFirmware Banner" width="800">
+</p>
 
-# ToasterFirmware
-오픈소스 프로토젠 펌웨어입니다. ^w^
+# <p align="center">NeoToasterFirmware</p>
 
+<p align="center">
+  <strong>The ultimate high-performance Protogen firmware for ESP32.</strong><br>
+  <em>Smooth animations, deep customization, and seamless control for your futuristic visor.</em>
+</p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge" alt="GPLv3 License">
+  <img src="https://img.shields.io/badge/Platform-ESP32-E64646.svg?style=for-the-badge" alt="Platform ESP32">
+  <img src="https://img.shields.io/badge/Language-C%2B%2B-00599C.svg?style=for-the-badge" alt="Language C++">
+  <img src="https://img.shields.io/badge/Performance-60FPS-brightgreen.svg?style=for-the-badge" alt="60 FPS">
+</p>
 
-# 특징
-- ESP32로 저렴하게 프로토젠을 만들어보세요.
-- 다양한 표정을 쉽고 간단하게 만들 수 있습니다. 블루스크린도 빼먹을 수 없죠!
-- 60FPS로 미려하고 매끄럽게 구동됩니다.
-- 그림을 수정하지 않고 나만의 색상으로 바꾸세요. 무지갯빛 얼굴도 물론 가능합니다!
-- 바이저를 쓰고도 내 표정을 실시간으로 확인 할 수 있습니다.
-- 손쉽게 사진 모드로 바꾸고 표정 변화를 멈추세요. 실수로 눈을 깜빡일까 걱정 할 필요가 없습니다!
-- 아쉽게도 식빵을 굽는 기능은 포함되지 않습니다.
+---
 
+## Key Features
 
+| Category | Highlights |
+| :--- | :--- |
+| **Visuals** | 60FPS smooth animations, Real-time color modification without asset changes, Rainbow & Gradation modes. |
+| **Expressions** | Easily create custom emotions via PNG. Essential BSOD included. Built-in blink logic. |
+| **Hardware** | Optimized for ESP32 & ESP32-S3. Supports HUB75 Matrix, NeoPixel strips, and RTC. |
+| **Modes** | dedicated Photo Mode to freeze blinking for that perfect shot. |
+| **Bread** | *Note: Due to hardware constraints, bread baking is currently not supported.* |
 
-# [하드웨어](docs/hardware.md)
+---
 
+## Project Guides
 
+Explore the documentation to get your NeoToaster up and running:
 
-# [설치 및 사용법](docs/install.md)
+- [**Hardware Setup**](docs/hardware_en_US.md) – Wiring, pinmaps, and component requirements.
+- [**Installation**](docs/install_en_US.md) – Step-by-step guide to flashing your ESP32.
+- [**Changelog**](CHANGELOG.md) – Tracking progress and latest updates.
 
+---
 
+## Management
 
-# FAQ
-Q: DM으로 궁금한 것 물어봐도 돼요?<br>
-A: 네!
+### Maintainer
+- **[jookettle / Jinpyo Joo](https://github.com/jookettle)** – Current development and enhancements.
 
-Q: 상업적으로 사용해도 되나요?<br>
-A: 아니오. (단호)
+### Original Creator
+- **[디테일 / DETAIL (deltafish32)](https://x.com/deltafish32)** – Creator of the original ToasterFirmware.
 
-Q: 구입 할 수 있는 보드가 있나요?<br>
-A: `Adafruit MatrixPortal S3` 보드를 권장합니다.
+---
 
-Q: ESP32 대신 다른 보드를 사용해도 되나요?<br>
-A: ESP32, ESP32-S3로 테스트되었으며, ESP32-C3, ESP32-S2 등 보드에서는 테스트되지 않았습니다. 코어 개수, RAM 용량에서 차이가 있으므로 최소한 소스를 수정해야 구동 가능하며, 수정하더라도 원활한 사용이 어려울 수 있습니다.
+## Licensing
 
+### Code Base
+Licensed under **[GNU GPLv3](LICENSE.md)**. Use, modify, and share freely while keeping it open-source.
 
+### Media Assets
+All **images, expressions, and media files** belong to **[deltafish32](https://github.com/deltafish32)**.
+> [!IMPORTANT]
+> Media assets must be used **non-commercially** only.
 
-# [Changelog](CHANGELOG.md)
+### Third-Party
+For details on external libraries (upng, etc.), refer to **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)**.
 
-
-
-# 기여하신 분
-- 사토루 [X(Twitter)](https://x.com/leopard_sato_)
-- 수면양말 [X(Twitter)](https://x.com/SheepPonyFP)
-- 유진 [X(Twitter)](https://x.com/Unknown_1251)
-
-
-
-# 프로젝트 관리자
-- 디테일 / DETAIL [X(Twitter)](https://x.com/deltafish32)
-
-
-
-# [License](LICENSE.md)
-GPLv3 라이센스를 따릅니다. 해당 문서를 참고해주세요.
+<p align="center">
+  <br><strong>NeoToaster Project</strong> – <em>Bridging technology and identity.</em>
+</p>
