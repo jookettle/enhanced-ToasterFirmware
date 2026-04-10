@@ -58,7 +58,3 @@ All **images, expressions, and media files** belong to **[deltafish32](https://g
 
 ### Third-Party
 For details on external libraries (upng, etc.), refer to **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)**.
-
-<p align="center">
-  <br><strong>NeoToaster Project</strong> – <em>Bridging technology and identity.</em>
-</p>
