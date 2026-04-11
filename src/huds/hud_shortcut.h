@@ -1,7 +1,6 @@
 #pragma once
 #include "hud_menu.h"
 
-
 namespace toaster {
 
 class HUDShortcut : public HUDBase {
@@ -18,9 +17,7 @@ protected:
 protected:
   static uint16_t upperToLower(uint16_t key);
   const char* getShortcut();
-
 };
-
 
 class HUDShortcutSelect : public HUDMenu {
 public:
@@ -28,11 +25,9 @@ public:
 
 protected:
   virtual void refreshHighlight();
-
 };
-
 
 extern HUDShortcut hud_shortcut;
 extern HUDShortcutSelect hud_shortcut_select;
 
-};
+};  // namespace toaster

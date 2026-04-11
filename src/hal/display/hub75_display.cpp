@@ -1,23 +1,22 @@
-#include "config/configure.h"
 #include "hub75_display.h"
-#include "lib/logger.h"
 
+#include "config/configure.h"
 #include "config/configure_mask.h"
-
+#include "lib/logger.h"
 
 namespace toaster {
 
 static const char* TAG = "Hub75Display";
 
-
 Hub75Display::Hub75Display() {
 }
 
-
 bool Hub75Display::begin(int width, int height, int chain) {
-  return begin(width, height, chain, {R1_PIN_DEFAULT, G1_PIN_DEFAULT, B1_PIN_DEFAULT, R2_PIN_DEFAULT, G2_PIN_DEFAULT, B2_PIN_DEFAULT,
-    A_PIN_DEFAULT, B_PIN_DEFAULT, C_PIN_DEFAULT, D_PIN_DEFAULT, E_PIN_DEFAULT,
-    LAT_PIN_DEFAULT, OE_PIN_DEFAULT, CLK_PIN_DEFAULT}, 240);
+  return begin(
+      width, height, chain,
+      {R1_PIN_DEFAULT, G1_PIN_DEFAULT, B1_PIN_DEFAULT, R2_PIN_DEFAULT, G2_PIN_DEFAULT, B2_PIN_DEFAULT, A_PIN_DEFAULT,
+       B_PIN_DEFAULT, C_PIN_DEFAULT, D_PIN_DEFAULT, E_PIN_DEFAULT, LAT_PIN_DEFAULT, OE_PIN_DEFAULT, CLK_PIN_DEFAULT},
+      240);
 }
 
 bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pins pins, uint16_t min_refresh_rate) {
@@ -38,7 +37,7 @@ bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pi
   // max 488@HZ_10M
   // max 1220@HZ_20M
   mxconfig.i2sspeed = (min_refresh_rate > 480) ? HUB75_I2S_CFG::HZ_20M : HUB75_I2S_CFG::HZ_10M;
-  
+
   mxconfig.min_refresh_rate = min_refresh_rate;
 
   _dma_display = new MatrixPanel_I2S_DMA(mxconfig);
@@ -54,11 +53,9 @@ bool Hub75Display::begin(int width, int height, int chain, HUB75_I2S_CFG::i2s_pi
   return true;
 }
 
-
 void Hub75Display::beginDraw() {
   _dma_display->setBrightness8(_brightness);
 }
-
 
 void Hub75Display::endDraw() {
   for (int y = 0; y < _height; y++) {
@@ -67,8 +64,7 @@ void Hub75Display::endDraw() {
       int pindex = (y * _panel_width + px);
       if ((CLIP_MASK[(pindex / 8)] & (0x80 >> (pindex % 8))) == 0) {
         _dma_display->drawPixelRGB888(x, y, 0, 0, 0);
-      }
-      else {
+      } else {
         int index = (y * _width + x) * 3;
         _dma_display->drawPixelRGB888(x, y, _buffer[index + 0], _buffer[index + 1], _buffer[index + 2]);
       }
@@ -78,8 +74,8 @@ void Hub75Display::endDraw() {
   Display::endDraw();
 }
 
-
-bool Hub75Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode, int offset_x, int offset_y, int rotate_cw) {
+bool Hub75Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode,
+                                       int offset_x, int offset_y, int rotate_cw) {
   if (image == nullptr) {
     TF_LOGE(TAG, "image draw failed (nullptr).");
     return false;
@@ -95,8 +91,9 @@ bool Hub75Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func
     for (int x = 0; x < width; x++) {
       int index = (y * width + x) * (bpp + has_alpha);
       uint8_t a = has_alpha ? buffer[index + bpp] : 255;
-      if (a == 0) continue;
-      
+      if (a == 0)
+        continue;
+
       uint8_t r1;
       uint8_t g1;
       uint8_t b1;
@@ -105,25 +102,24 @@ bool Hub75Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func
         r1 = buffer[index + 0];
         g1 = buffer[index + 1];
         b1 = buffer[index + 2];
+      } else {
+        Image::rgb565be_to_rgb888(*((uint16_t*) (buffer + index)), r1, g1, b1);
       }
-      else {
-        Image::rgb565be_to_rgb888(*((uint16_t*)(buffer + index)), r1, g1, b1);
-      }
-      
+
       int xr, yr;
       xy_rotate(xr, yr, x, y, width, height, rotate_cw);
-      
+
       int x1 = xr + offset_x;
       int y1 = yr + offset_y;
 
-      if (x1 >= 0 && x1 < _panel_width
-       && y1 >= 0 && y1 < _height) {
+      if (x1 >= 0 && x1 < _panel_width && y1 >= 0 && y1 < _height) {
         color_func(x1, y1, r1, g1, b1, a, param);
         setPixelAlpha(x1, y1, r1, g1, b1, a);
 
         if (draw_mode != DRAW_SINGLE) {
-          int x2 = (draw_mode == DRAW_COPY) ? (x1 + _panel_width) : 
-                   (draw_mode == DRAW_MIRROR) ? (_width - (xr + offset_x) - 1) : (xr + _width - offset_x - width);
+          int x2 = (draw_mode == DRAW_COPY)     ? (x1 + _panel_width)
+                   : (draw_mode == DRAW_MIRROR) ? (_width - (xr + offset_x) - 1)
+                                                : (xr + _width - offset_x - width);
           int y2 = (draw_mode == DRAW_COPY) ? y1 : (yr + offset_y);
 
           color_func(x2, y2, r1, g1, b1, a, param);
@@ -132,22 +128,21 @@ bool Hub75Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func
       }
     }
   }
-  
+
   return true;
 }
 
-
-bool Hub75Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode, 
-  int offset_x, int offset_y, int w, int h, int source_x, int source_y, int rotate_cw) {
-
+bool Hub75Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode,
+                                          int offset_x, int offset_y, int w, int h, int source_x, int source_y,
+                                          int rotate_cw) {
   if (image == nullptr) {
     TF_LOGE(TAG, "image draw failed (nullptr).");
     return false;
   }
 
   auto image_width = image->getWidth();
-  auto width = std::min(w, (int)image_width);
-  auto height = std::min(h, (int)image->getHeight());
+  auto width = std::min(w, (int) image_width);
+  auto height = std::min(h, (int) image->getHeight());
   auto bpp = image->getBpp();
   auto has_alpha = image->getHasAlpha();
   auto buffer = image->getBuffer();
@@ -156,8 +151,9 @@ bool Hub75Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_f
     for (int x = 0; x < width; x++) {
       int index = ((y + source_y) * image_width + (x + source_x)) * (bpp + has_alpha);
       uint8_t a = has_alpha ? buffer[index + bpp] : 255;
-      if (a == 0) continue;
-      
+      if (a == 0)
+        continue;
+
       uint8_t r1;
       uint8_t g1;
       uint8_t b1;
@@ -166,36 +162,34 @@ bool Hub75Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_f
         r1 = buffer[index + 0];
         g1 = buffer[index + 1];
         b1 = buffer[index + 2];
+      } else {
+        Image::rgb565be_to_rgb888(*((uint16_t*) (buffer + index)), r1, g1, b1);
       }
-      else {
-        Image::rgb565be_to_rgb888(*((uint16_t*)(buffer + index)), r1, g1, b1);
-      }
-      
+
       int xr, yr;
       xy_rotate(xr, yr, x, y, width, height, rotate_cw);
-      
+
       int x1 = xr + offset_x;
       int y1 = yr + offset_y;
 
-      if (x1 >= 0 && x1 < (draw_mode == DRAW_SINGLE ? _width : _panel_width)
-       && y1 >= 0 && y1 < _height) {
+      if (x1 >= 0 && x1 < (draw_mode == DRAW_SINGLE ? _width : _panel_width) && y1 >= 0 && y1 < _height) {
         color_func(x1, y1, r1, g1, b1, a, param);
         setPixelAlpha(x1, y1, r1, g1, b1, a);
 
         if (draw_mode != DRAW_SINGLE) {
-          int x2 = (draw_mode == DRAW_COPY) ? (x1 + _panel_width) : 
-                   (draw_mode == DRAW_MIRROR) ? (_width - (xr + offset_x) - 1) : (xr + _width - offset_x - width);
+          int x2 = (draw_mode == DRAW_COPY)     ? (x1 + _panel_width)
+                   : (draw_mode == DRAW_MIRROR) ? (_width - (xr + offset_x) - 1)
+                                                : (xr + _width - offset_x - width);
           int y2 = (draw_mode == DRAW_COPY) ? y1 : (yr + offset_y);
 
           color_func(x2, y2, r1, g1, b1, a, param);
           setPixelAlpha(x2, y2, r1, g1, b1, a);
         }
-       }
+      }
     }
   }
-  
+
   return true;
 }
 
-
-};
+};  // namespace toaster

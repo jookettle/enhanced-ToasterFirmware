@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace toaster {
 
 typedef enum _PROTOGEN_COLOR_MODE {

@@ -5,22 +5,7 @@ This project includes the following open-source software and technical assets.
 
 ---
 
-## ESP32-upng
-<https://github.com/lagunax/ESP32-upng>
-
-ESP_upng -- derived from LodePNG version 20100808
-==========================================
-
-Copyright (c) 2005-2010 Lode Vandevenne
-Copyright (c) 2010 Sean Middleditch
-Copyright (c) 2019 Vitaliy Novoselov (ESP32 Port)
-
-Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
-2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
-
----
+<!-- ESP32-upng removed: replaced by pre-converted image assets or alternative decoders. -->
 
 ## ESP32 ADC Calibrate
 <https://github.com/e-tinkers/esp32-adc-calibrate>

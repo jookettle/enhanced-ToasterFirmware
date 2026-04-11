@@ -1,7 +1,7 @@
 #pragma once
-#include "hud_base.h"
 #include <vector>
 
+#include "hud_base.h"
 
 namespace toaster {
 
@@ -75,7 +75,6 @@ protected:
   virtual bool selectMenu(int index);
   virtual void refreshHighlight();
   virtual void shuffle();
-
 };
 
-};
+};  // namespace toaster

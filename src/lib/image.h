@@ -1,12 +1,11 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
 #include <FFat.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "timer.h"
 
-
 namespace toaster {
-
 
 class Image {
 public:
@@ -58,11 +57,11 @@ public:
 
 public:
   static inline void rgb565be_to_rgb888(uint16_t rgb565, uint8_t& r, uint8_t& g, uint8_t& b) {
-    r = (((((uint32_t)rgb565 >> 11) & 0x1f) * 527) + 23) >> 6;
-    g = (((((uint32_t)rgb565 >>  5) & 0x3f) * 259) + 33) >> 6;
-    b = (((((uint32_t)rgb565 >>  0) & 0x1f) * 527) + 23) >> 6;
+    r = (((((uint32_t) rgb565 >> 11) & 0x1f) * 527) + 23) >> 6;
+    g = (((((uint32_t) rgb565 >> 5) & 0x3f) * 259) + 33) >> 6;
+    b = (((((uint32_t) rgb565 >> 0) & 0x1f) * 527) + 23) >> 6;
   }
-  
+
   static inline uint16_t rgb888_to_rgb565be(uint8_t r, uint8_t g, uint8_t b) {
     return ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
   }
@@ -72,10 +71,10 @@ protected:
   size_t _height{0};
 
   uint8_t _type{IMAGE_NONE};
-  uint8_t _bpp{0}; // 2: RGB565, 3: RGB888
+  uint8_t _bpp{0};  // 2: RGB565, 3: RGB888
   uint8_t _has_alpha{0};
   uint8_t _spare0{0};
-  
+
   uint8_t* _buffer{nullptr};
   size_t _size{0};
 
@@ -85,8 +84,6 @@ protected:
   bool load_png(const char* path, bool from_sd, bool rgb565);
   bool load_jpeg_from_bytes(const uint8_t* buffer, size_t size);
   bool load_jpeg(const char* path, bool from_sd);
-
 };
 
-
-};
+};  // namespace toaster

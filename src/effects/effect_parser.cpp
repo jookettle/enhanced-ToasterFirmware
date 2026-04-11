@@ -1,48 +1,43 @@
 #include "effect_parser.h"
-#include <string.h>
-#include <map>
 
 #include <FFat.h>
+#include <string.h>
+
+#include <map>
 
 #ifdef USE_SD
 #include "SD.h"
 #endif
 
 #include "effect_base.h"
-#include "lib/strutil.h"
 #include "lib/logger.h"
-
+#include "lib/strutil.h"
 
 namespace toaster {
 
 static const char* TAG = "EffectParser";
 
-
 static const std::map<std::string, uint8_t> METHODS = {
-  {"none", Effect::SM_NONE},
-  {"draw", Effect::SM_DRAW},
-  {"draw_90", Effect::SM_DRAW_90},
-  {"draw_180", Effect::SM_DRAW_180},
-  {"draw_270", Effect::SM_DRAW_270},
-  {"video", Effect::SM_VIDEO},
-  {"video_loop", Effect::SM_VIDEO_LOOP},
+    {"none", Effect::SM_NONE},
+    {"draw", Effect::SM_DRAW},
+    {"draw_90", Effect::SM_DRAW_90},
+    {"draw_180", Effect::SM_DRAW_180},
+    {"draw_270", Effect::SM_DRAW_270},
+    {"video", Effect::SM_VIDEO},
+    {"video_loop", Effect::SM_VIDEO_LOOP},
 };
 
 static const std::map<std::string, uint8_t> COLORS = {
-  {"original", Effect::PC_ORIGINAL},
-  {"eyes", Effect::PC_EYES},
-  {"nose", Effect::PC_NOSE},
-  {"mouth", Effect::PC_MOUTH},
-  {"side", Effect::PC_SIDE},
+    {"original", Effect::PC_ORIGINAL}, {"eyes", Effect::PC_EYES}, {"nose", Effect::PC_NOSE},
+    {"mouth", Effect::PC_MOUTH},       {"side", Effect::PC_SIDE},
 };
 
 static const std::map<std::string, uint8_t> MODES = {
-  {"single", Effect::DM_SINGLE},
-  {"copy", Effect::DM_COPY},
-  {"mirror", Effect::DM_MIRROR},
-  {"mirror_only_offset", Effect::DM_MIRROR_ONLY_OFFSET},
+    {"single", Effect::DM_SINGLE},
+    {"copy", Effect::DM_COPY},
+    {"mirror", Effect::DM_MIRROR},
+    {"mirror_only_offset", Effect::DM_MIRROR_ONLY_OFFSET},
 };
-
 
 bool EffectParser::open(const char* filename, bool from_sd) {
   release();
@@ -53,8 +48,7 @@ bool EffectParser::open(const char* filename, bool from_sd) {
 #ifdef USE_SD
     yaml = YamlNodeArray::fromFile(filename, SD);
 #endif
-  }
-  else {
+  } else {
     yaml = YamlNodeArray::fromFile(filename, FFat);
   }
 
@@ -95,11 +89,9 @@ bool EffectParser::open(const char* filename, bool from_sd) {
 
       if (result == PD_SUCCESS) {
         _sequences.push_back(ds);
-      }
-      else if (result == PD_SKIP) {
+      } else if (result == PD_SKIP) {
         continue;
-      }
-      else {
+      } else {
         return false;
       }
     }
@@ -112,25 +104,22 @@ bool EffectParser::open(const char* filename, bool from_sd) {
 
         if (result == PD_SUCCESS) {
           _boop_sequences.push_back(ds);
-        }
-        else if (result == PD_SKIP) {
+        } else if (result == PD_SKIP) {
           continue;
-        }
-        else {
+        } else {
           return false;
         }
       }
     }
-  }
-  else { //if (_type == ST_VIDEO) {
+  } else {  // if (_type == ST_VIDEO) {
     _video.path = yaml.getString("video:path", "");
     _video.start = yaml.getInt("video:start", 1);
     _video.end = yaml.getInt("video:end", 1);
     _video.fps = yaml.getInt("video:fps", 15);
-    
+
     auto mode = MODES.find(yaml.getString("video:mode", "mirror_only_offset"));
     _video.mode = (mode != MODES.end()) ? mode->second : Effect::DM_MIRROR_ONLY_OFFSET;
-    
+
     _video.loop = parse_bool(yaml.getString("video:loop", "true").c_str());
 
     _video.offset_x = yaml.getInt("video:offset_x", 0);
@@ -138,7 +127,7 @@ bool EffectParser::open(const char* filename, bool from_sd) {
     _video.offset_mode = (yaml.getString("video:offset", "auto") == "auto") ? 1 : 0;
     _video.color = (yaml.getString("video:color", "original") == "original") ? 0 : 1;
   }
-  
+
   TF_LOGD(TAG, "yaml parsed (%lld us)", Timer::get_micros() - tick);
 
   return true;
@@ -146,7 +135,7 @@ bool EffectParser::open(const char* filename, bool from_sd) {
 
 uint8_t EffectParser::parseDrawSequence(const std::string& str, DRAW_SEQUENCE& ds, std::string& error) {
   auto split_result = my_split(str, ",");
-  
+
   if (split_result.empty()) {
     return PD_SKIP;
   }
@@ -159,68 +148,66 @@ uint8_t EffectParser::parseDrawSequence(const std::string& str, DRAW_SEQUENCE& d
   ds.method = method->second;
 
   switch (ds.method) {
-  case Effect::SM_NONE:
-    if (split_result.size() < 2) {
-      return PD_SKIP;
-    }
+    case Effect::SM_NONE:
+      if (split_result.size() < 2) {
+        return PD_SKIP;
+      }
 
-    ds.display_time = (uint32_t)(atof(split_result[1].c_str()) * 1000);
-    return PD_SUCCESS;
-  case Effect::SM_DRAW:
-  case Effect::SM_DRAW_90:
-  case Effect::SM_DRAW_180:
-  case Effect::SM_DRAW_270: {
-    if (split_result.size() < 7) {
-      error = "not enough arguments in [sequences]";
-      return PD_FAIL;
-    }
+      ds.display_time = (uint32_t) (atof(split_result[1].c_str()) * 1000);
+      return PD_SUCCESS;
+    case Effect::SM_DRAW:
+    case Effect::SM_DRAW_90:
+    case Effect::SM_DRAW_180:
+    case Effect::SM_DRAW_270: {
+      if (split_result.size() < 7) {
+        error = "not enough arguments in [sequences]";
+        return PD_FAIL;
+      }
 
-    ds.image = atoi(split_result[1].c_str());
+      ds.image = atoi(split_result[1].c_str());
 
-    auto color = COLORS.find(split_result[2].c_str());
-    if (color == COLORS.end()) {
-      error = "failed to parse [color] in [sequences]";
-      return PD_FAIL;
-    }
-    ds.color = color->second;
+      auto color = COLORS.find(split_result[2].c_str());
+      if (color == COLORS.end()) {
+        error = "failed to parse [color] in [sequences]";
+        return PD_FAIL;
+      }
+      ds.color = color->second;
 
-    auto mode = MODES.find(split_result[3].c_str());
-    if (mode == MODES.end()) {
-      error = "failed to parse [mode] in [sequences]";
-      return PD_FAIL;
-    }
-    ds.mode = mode->second;
+      auto mode = MODES.find(split_result[3].c_str());
+      if (mode == MODES.end()) {
+        error = "failed to parse [mode] in [sequences]";
+        return PD_FAIL;
+      }
+      ds.mode = mode->second;
 
-    ds.offset_x = atoi(split_result[4].c_str());
-    ds.offset_y = atoi(split_result[5].c_str());
-    ds.display_time = (uint32_t)(atof(split_result[6].c_str()) * 1000);
-    return PD_SUCCESS;
-  }
-    break;
-  case Effect::SM_VIDEO:
-  case Effect::SM_VIDEO_LOOP: {
-    if (split_result.size() < 5) {
-      error = "not enough arguments in [sequences]";
-      return PD_FAIL;
-    }
+      ds.offset_x = atoi(split_result[4].c_str());
+      ds.offset_y = atoi(split_result[5].c_str());
+      ds.display_time = (uint32_t) (atof(split_result[6].c_str()) * 1000);
+      return PD_SUCCESS;
+    } break;
+    case Effect::SM_VIDEO:
+    case Effect::SM_VIDEO_LOOP: {
+      if (split_result.size() < 5) {
+        error = "not enough arguments in [sequences]";
+        return PD_FAIL;
+      }
 
-    ds.image = atoi(split_result[1].c_str());
+      ds.image = atoi(split_result[1].c_str());
 
-    auto mode = MODES.find(split_result[2].c_str());
-    if (mode == MODES.end()) {
-      error = "failed to parse [mode] in [sequences]";
-      return PD_FAIL;
-    }
-    ds.mode = mode->second;
+      auto mode = MODES.find(split_result[2].c_str());
+      if (mode == MODES.end()) {
+        error = "failed to parse [mode] in [sequences]";
+        return PD_FAIL;
+      }
+      ds.mode = mode->second;
 
-    ds.offset_x = atoi(split_result[3].c_str());
-    ds.offset_y = atoi(split_result[4].c_str());
-    return PD_SUCCESS;
-  }
-    break;
+      ds.offset_x = atoi(split_result[3].c_str());
+      ds.offset_y = atoi(split_result[4].c_str());
+      return PD_SUCCESS;
+    } break;
   }
 
   return PD_SKIP;
 }
 
-};
+};  // namespace toaster

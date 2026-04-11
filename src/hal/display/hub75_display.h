@@ -1,12 +1,9 @@
 #pragma once
 
-#include "display.h"
-
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <FFat.h>
 
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-
-
+#include "display.h"
 
 namespace toaster {
 
@@ -23,10 +20,12 @@ public:
   virtual void endDraw();
 
 public:
-  virtual bool draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uint8_t param = 0, DRAW_MODE draw_mode = DRAW_DEFAULT, int offset_x = 0, int offset_y = 0, int rotate_cw = 0);
-  virtual bool draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, uint8_t param = 0, DRAW_MODE draw_mode = DRAW_DEFAULT, 
-    int offset_x = 0, int offset_y = 0, int w = 0, int h = 0, 
-    int source_x = 0, int source_y = 0, int rotate_cw = 0);
+  virtual bool draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uint8_t param = 0,
+                                   DRAW_MODE draw_mode = DRAW_DEFAULT, int offset_x = 0, int offset_y = 0,
+                                   int rotate_cw = 0);
+  virtual bool draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, uint8_t param = 0,
+                                      DRAW_MODE draw_mode = DRAW_DEFAULT, int offset_x = 0, int offset_y = 0, int w = 0,
+                                      int h = 0, int source_x = 0, int source_y = 0, int rotate_cw = 0);
 
 public:
   int get_refresh_rate() const {
@@ -34,11 +33,10 @@ public:
   }
 
 protected:
-  MatrixPanel_I2S_DMA *_dma_display{nullptr};
+  MatrixPanel_I2S_DMA* _dma_display{nullptr};
   uint8_t _chain{0};
   size_t _panel_width{0};
   int _applied_refresh_rate{0};
-
 };
 
-};
+};  // namespace toaster

@@ -1,7 +1,6 @@
 #pragma once
 #include "effect_base.h"
 
-
 namespace toaster {
 
 class EffectWhite : public FlexEffect {
@@ -18,11 +17,8 @@ public:
   }
 
   virtual void release(Display& display) {
-    
     Effect::release(display);
   }
-
-
 };
 
-};
+};  // namespace toaster

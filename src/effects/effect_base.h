@@ -1,13 +1,10 @@
 #pragma once
 #include "config/configure.h"
-
 #include "hal/display/display.h"
-#include "lib/timer.h"
-#include "lib/random.h"
 #include "lib/linear_calibrate.h"
-
+#include "lib/random.h"
+#include "lib/timer.h"
 #include "protogen_color_mode.h"
-
 
 namespace toaster {
 
@@ -16,16 +13,15 @@ public:
   Effect(const char* name);
   virtual ~Effect();
 
-
 public:
   virtual void init(Display& display) {
     setStep(0);
   }
-  
+
   virtual void process(Display& display) = 0;
   virtual void release(Display& display) {
   }
-  
+
   virtual const char* getName() const {
     return _name;
   }
@@ -51,7 +47,9 @@ public:
   }
 
   virtual timer_pf_t getVideoPF() const {
-    return {PF_NONE, };
+    return {
+        PF_NONE,
+    };
   }
 
   virtual void restart() {
@@ -60,7 +58,6 @@ public:
   virtual bool loadScript(const char* name) {
     return false;
   }
-
 
 public:
   static bool getStaticMode() {
@@ -72,16 +69,15 @@ public:
       _staticMode = mode;
 
       timer_us_t tick_us = Timer::get_micros();
-      
+
       if (_staticMode) {
         _static_mode_tick_us = tick_us;
-      }
-      else {
+      } else {
         timer_us_t tick_paused_us = tick_us - _static_mode_tick_us;
         for (auto& it : _effects) {
           it->_tick_us += tick_paused_us;
         }
-        
+
         _color_tick_us += tick_us - _static_mode_tick_us;
       }
     }
@@ -89,34 +85,33 @@ public:
 
   static PROTOGEN_COLOR_MODE getColorMode() {
     return _colorMode;
-
   }
 
   static bool setColorMode(PROTOGEN_COLOR_MODE mode) {
     switch (mode) {
-    case PCM_ORIGINAL:
-      _colorFunc = color_func_original;
-      break;
-    case PCM_PERSONAL:
-      _colorFunc = color_func_personal;
-      break;
-    case PCM_PERSONAL2:
-      _colorFunc = color_func_personal2;
-      break;
-    case PCM_PERSONAL3:
-      _colorFunc = color_func_personal3;
-      break;
-    case PCM_RAINBOW_SINGLE:
-      _colorFunc = color_func_rainbow_single;
-      break;
-    case PCM_RAINBOW:
-      _colorFunc = color_func_rainbow;
-      break;
-    case PCM_GRADATION:
-      _colorFunc = color_func_gradation;
-      break;
-    default:
-      return false;
+      case PCM_ORIGINAL:
+        _colorFunc = color_func_original;
+        break;
+      case PCM_PERSONAL:
+        _colorFunc = color_func_personal;
+        break;
+      case PCM_PERSONAL2:
+        _colorFunc = color_func_personal2;
+        break;
+      case PCM_PERSONAL3:
+        _colorFunc = color_func_personal3;
+        break;
+      case PCM_RAINBOW_SINGLE:
+        _colorFunc = color_func_rainbow_single;
+        break;
+      case PCM_RAINBOW:
+        _colorFunc = color_func_rainbow;
+        break;
+      case PCM_GRADATION:
+        _colorFunc = color_func_gradation;
+        break;
+      default:
+        return false;
     }
 
     _colorMode = mode;
@@ -175,13 +170,13 @@ public:
   static Effect* findFromHardcoded(const char* name);
   static Effect* findFromScript(const char* name, uint8_t script_index, const char* base_path);
 
-
 protected:
   static std::vector<Effect*> _effects;
 
-
 protected:
-  const char* _name{0,};
+  const char* _name{
+      0,
+  };
   int _step{0};
   timer_us_t _tick_us{0};
   static timer_us_t _sync_timer_us;
@@ -207,7 +202,6 @@ protected:
 
     return ((_sync_timer_us - _tick_us) >= (time_ms * 1000));
   }
-
 
 public:
   enum {
@@ -243,12 +237,12 @@ public:
     DM_MIRROR_ONLY_OFFSET,
   };
 
-
 protected:
   static bool _staticMode;
   static timer_us_t _static_mode_tick_us;
   static timer_us_t _color_tick_us;
   static PROTOGEN_COLOR_MODE _colorMode;
+
 public:
   static COLOR_FUNC _colorFunc;
   static uint8_t _personalIndex;
@@ -272,15 +266,12 @@ public:
   static uint8_t _gradation_greens[2][HUB75_PANEL_RES_X];
   static uint8_t _gradation_blues[2][HUB75_PANEL_RES_X];
 
-
-public: 
+public:
   // h: 0 ~ 359
   static void h2rgb(uint16_t h, uint8_t& out_r, uint8_t& out_g, uint8_t& out_b);
 
-
 protected:
   static timer_ms_t color_millis();
-
 
 public:
   static void color_func_original(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
@@ -290,32 +281,26 @@ public:
   static void color_func_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_rainbow(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gradation(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
-  
+
   static void color_func_gray_personal(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gray_personal2(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gray_personal3(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
-  static void color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
+  static void color_func_gray_rainbow_single(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a,
+                                             uint8_t param);
   static void color_func_gray_rainbow(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
   static void color_func_gray_gradation(int x, int y, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t a, uint8_t param);
-  
 };
-
-
 
 class FlexEffect : public Effect {
 public:
   FlexEffect(const char* name) : Effect(name) {
   }
-  
 };
-
-
 
 class FixedEffect : public Effect {
 public:
   FixedEffect(const char* name) : Effect(name) {
   }
-  
 };
 
-};
+};  // namespace toaster

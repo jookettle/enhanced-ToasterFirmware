@@ -1,10 +1,8 @@
 #pragma once
-#include <vector>
 #include <string>
-
+#include <vector>
 
 #include "yaml_array.h"
-
 
 namespace toaster {
 
@@ -38,14 +36,14 @@ public:
     return (_type == YAML_OBJECT);
   }
 
-public: // YAML_STRING
+public:  // YAML_STRING
   void setString(const char* str);
 
   const std::string& asString() const {
     return *_value;
   }
 
-public: // YAML_OBJECT
+public:  // YAML_OBJECT
   void setObject();
 
   void pushObject(const YamlNode& other);
@@ -67,13 +65,12 @@ public:
   };
 
 protected:
-  uint8_t _type{ 0 };
+  uint8_t _type{0};
   union {
-    void* _ptr{ nullptr };
+    void* _ptr{nullptr};
     std::string* _value;
     YamlNodeArray* _sub;
   };
-
 };
 
-};
+};  // namespace toaster

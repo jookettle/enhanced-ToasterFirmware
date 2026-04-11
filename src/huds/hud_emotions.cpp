@@ -1,15 +1,12 @@
 #include "hud_emotions.h"
 
-
 #include "huds.h"
 #include "protogen.h"
-
 
 namespace toaster {
 
 std::vector<HUDEmotions> hud_emotions;
 HUDEmotionDir hud_emotiondir;
-
 
 void HUDEmotions::init() {
   HUDMenu::init();
@@ -20,10 +17,9 @@ void HUDEmotions::init() {
   refreshHighlight();
 }
 
-
 void HUDEmotions::refreshHighlight() {
   _menuHasHighlight = false;
-  
+
   for (size_t i = 0; i < _menuData.size(); i++) {
     if (_menuData[i].type == MENU_FUNC && strcmp(_menuData[i].param.c_str(), Protogen.getEmotion()) == 0) {
       _menuHighlight = i;
@@ -34,7 +30,6 @@ void HUDEmotions::refreshHighlight() {
 
   HUDMenu::refreshHighlight();
 }
-
 
 void HUDEmotionDir::init() {
   HUDMenu::init();
@@ -50,7 +45,6 @@ void HUDEmotionDir::init() {
   refreshHighlight();
 }
 
-
 void HUDEmotionDir::refreshHighlight() {
   _menuHasHighlight = false;
 
@@ -65,12 +59,9 @@ void HUDEmotionDir::refreshHighlight() {
   HUDMenu::refreshHighlight();
 }
 
-
 void HUDEmotionDir::shuffle() {
   Protogen.shuffleEmotion();
   refreshHighlight();
 }
 
-
-};
-
+};  // namespace toaster

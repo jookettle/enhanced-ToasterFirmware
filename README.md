@@ -57,4 +57,4 @@ All **images, expressions, and media files** belong to **[deltafish32](https://g
 > Media assets must be used **non-commercially** only.
 
 ### Third-Party
-For details on external libraries (upng, etc.), refer to **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)**.
+For details on external libraries, refer to **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)**.

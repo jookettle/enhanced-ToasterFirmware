@@ -1,20 +1,18 @@
-#include <Arduino.h>
 #include "lightsensor.h"
-#include "lib/esp32_adc_lut.h"
 
+#include <Arduino.h>
+
+#include "lib/esp32_adc_lut.h"
 
 namespace toaster {
 
-
 static const uint32_t LIGHT_SENSOR_FREQUENCY = 30;
-
 
 static float analogReadLUT(uint8_t pin) {
   uint16_t value = analogRead(pin);
 
   return ((value >= 4096) ? value : ADC_LUT[value]);
 }
-
 
 LightSensor::~LightSensor() {
   if (_type == LST_BH1750) {
@@ -25,7 +23,6 @@ LightSensor::~LightSensor() {
   }
 }
 
-
 bool LightSensor::beginLDR(int pin, float alpha, float alpha_init) {
   _type = LST_LDR;
 
@@ -34,10 +31,9 @@ bool LightSensor::beginLDR(int pin, float alpha, float alpha_init) {
   _alpha_init = isnan(alpha_init) ? _alpha : _alpha_init;
 
   pinMode(_pin, INPUT);
-  
+
   return _begin();
 }
-
 
 bool LightSensor::beginBH1750(uint8_t i2c, float alpha, float alpha_init) {
   _pin = i2c;
@@ -50,20 +46,18 @@ bool LightSensor::beginBH1750(uint8_t i2c, float alpha, float alpha_init) {
   }
 
   _type = LST_BH1750;
-  
+
   return _begin();
 }
-
 
 bool LightSensor::work() {
   if (_type == LST_NONE) {
     return false;
   }
-  
+
   _value = (read() * (1 - _alpha)) + (_value * _alpha);
   return true;
 }
-
 
 bool LightSensor::_begin() {
   _value = read();
@@ -76,7 +70,6 @@ bool LightSensor::_begin() {
   return true;
 }
 
-
 float LightSensor::read() {
   if (_type == LST_LDR) {
     return analogReadLUT(_pin);
@@ -88,5 +81,4 @@ float LightSensor::read() {
   return 0.0f;
 }
 
-
-};
+};  // namespace toaster

@@ -1,10 +1,9 @@
 #pragma once
 #include <vector>
 
-
 namespace toaster {
 
-template<typename T_FROM, typename T_TO = T_FROM>
+template <typename T_FROM, typename T_TO = T_FROM>
 class LinearCalibrate {
 public:
   typedef struct _DATA_POINT {
@@ -57,8 +56,7 @@ public:
         data_to = _data_points.back().data_to;
         return true;
       }
-    }
-    else {
+    } else {
       if (data_from < _data_points.front().data_from || data_from > _data_points.back().data_from) {
         return false;
       }
@@ -76,7 +74,8 @@ public:
     T_FROM nearest_lower = _data_points[0].data_from;
     T_TO nearest_lower_value = _data_points[0].data_to;
     for (int i = 1; i < data_points_size; i++) {
-      if (_data_points[i].data_from > data_from) continue;
+      if (_data_points[i].data_from > data_from)
+        continue;
 
       if ((data_from - nearest_lower) >= (data_from - _data_points[i].data_from)) {
         nearest_lower = _data_points[i].data_from;
@@ -87,7 +86,8 @@ public:
     T_FROM nearest_upper = _data_points[data_points_size - 1].data_from;
     T_TO nearest_upper_value = _data_points[data_points_size - 1].data_to;
     for (int i = data_points_size - 1; i >= 0; i--) {
-      if (_data_points[i].data_from < data_from) continue;
+      if (_data_points[i].data_from < data_from)
+        continue;
 
       if ((nearest_upper - data_from) >= (_data_points[i].data_from - data_from)) {
         nearest_upper = _data_points[i].data_from;
@@ -96,7 +96,8 @@ public:
     }
 
     // linear
-    data_to = ((data_from - nearest_lower) * nearest_upper_value + (nearest_upper - data_from) * nearest_lower_value) / (nearest_upper - nearest_lower);
+    data_to = ((data_from - nearest_lower) * nearest_upper_value + (nearest_upper - data_from) * nearest_lower_value) /
+              (nearest_upper - nearest_lower);
     return true;
   }
 
@@ -104,10 +105,9 @@ protected:
   std::vector<DATA_POINT> _data_points;
 
   void sortDataPoints() {
-    std::stable_sort(_data_points.begin(), _data_points.end(), [](DATA_POINT a, DATA_POINT b) {
-      return a.data_from < b.data_from;
-      });
+    std::stable_sort(_data_points.begin(), _data_points.end(),
+                     [](DATA_POINT a, DATA_POINT b) { return a.data_from < b.data_from; });
   }
 };
 
-};
+};  // namespace toaster

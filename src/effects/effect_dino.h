@@ -1,16 +1,16 @@
 #pragma once
-#include "effect_base.h"
 #include <memory>
 
+#include "effect_base.h"
 
 namespace toaster {
-
 
 class EffectDino;
 
 class DinoObject {
 public:
-  DinoObject(int x, int y, int w, int h, bool hitable) : _x(x), _y(y), _width(w), _height(h), _hitable(hitable), _valid(true) {
+  DinoObject(int x, int y, int w, int h, bool hitable)
+      : _x(x), _y(y), _width(w), _height(h), _hitable(hitable), _valid(true) {
   }
 
   virtual ~DinoObject() = default;
@@ -22,8 +22,11 @@ public:
     }
   }
 
-  virtual void draw(Display& display, EffectDino& dino) {}
-  virtual bool hittest(int x, int y) { return false; }
+  virtual void draw(Display& display, EffectDino& dino) {
+  }
+  virtual bool hittest(int x, int y) {
+    return false;
+  }
 
 public:
   bool _valid{true};
@@ -33,7 +36,6 @@ public:
   int _width{0};
   int _height{0};
 };
-
 
 class DinoCactus : public DinoObject {
 public:
@@ -47,12 +49,11 @@ public:
   int _type;
 };
 
-
 class EffectDino : public FixedEffect {
 public:
   EffectDino(const char* name) : FixedEffect(name) {
   }
-  
+
   virtual void init(Display& display);
   virtual void process(Display& display);
   virtual void release(Display& display);
@@ -76,9 +77,11 @@ protected:
   std::vector<int> _tiles;
   int _tile_x{0};
   bool _prev_static_mode{false};
-  
+
 public:
-  Image* _image_dino{nullptr,};
+  Image* _image_dino{
+      nullptr,
+  };
 
 public:
   int getDinoX();
@@ -92,4 +95,4 @@ protected:
   void printScore(Display& display, int score);
 };
 
-};
+};  // namespace toaster

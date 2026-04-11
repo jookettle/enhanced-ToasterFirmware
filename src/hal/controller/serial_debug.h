@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "huds/hud_base.h"
 
+#include "huds/hud_base.h"
 
 namespace toaster {
 
@@ -29,7 +29,6 @@ protected:
 protected:
   const char* serial_buffer_read();
   void printAfterCursor(bool erase = false);
-
 };
 
-};
+};  // namespace toaster

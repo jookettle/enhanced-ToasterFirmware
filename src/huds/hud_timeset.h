@@ -1,8 +1,7 @@
 #pragma once
-#include "hud_base.h"
-
 #include <vector>
 
+#include "hud_base.h"
 
 namespace toaster {
 
@@ -21,4 +20,4 @@ public:
 
 extern HUDTimeset hud_timeset;
 
-};
+};  // namespace toaster

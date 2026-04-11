@@ -1,16 +1,14 @@
-#include "config/configure.h"
 #include "display.h"
-#include "lib/logger.h"
 
+#include "config/configure.h"
+#include "lib/logger.h"
 
 namespace toaster {
 
 static const char* TAG = "Display";
 
-
 Display::Display() {
 }
-
 
 bool Display::begin(int width, int height) {
   _width = width;
@@ -24,10 +22,8 @@ bool Display::begin(int width, int height) {
   return (_buffer != nullptr);
 }
 
-
 void Display::beginDraw() {
 }
-
 
 void Display::endDraw() {
   // _total_r = _total_g = _total_b = 0;
@@ -39,15 +35,13 @@ void Display::endDraw() {
   // }
 }
 
-
 void Display::clear() {
   memset(_buffer, 0, _width * _height * 3 * sizeof(uint8_t));
 }
 
-
 void Display::fill(uint8_t r, uint8_t g, uint8_t b) {
   const int pixels = _width * _height * 3;
-  uint8_t *ptr = _buffer;
+  uint8_t* ptr = _buffer;
   for (int i = 0; i < pixels; i += 3) {
     *ptr++ = r;
     *ptr++ = g;
@@ -55,11 +49,9 @@ void Display::fill(uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-
 void Display::fillWhite() {
   memset(_buffer, 255, _width * _height * 3 * sizeof(uint8_t));
 }
-
 
 void Display::fillHalf(uint8_t lr, uint8_t r, uint8_t g, uint8_t b) {
   for (int i = 0; i < _height; i++) {
@@ -72,8 +64,8 @@ void Display::fillHalf(uint8_t lr, uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-
-bool Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode, int offset_x, int offset_y, int rotate_cw) {
+bool Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode,
+                                  int offset_x, int offset_y, int rotate_cw) {
   if (image == nullptr) {
     TF_LOGE(TAG, "image draw failed (nullptr).");
     return false;
@@ -89,8 +81,9 @@ bool Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uin
     for (int x = 0; x < width; x++) {
       int index = (y * width + x) * (bpp + has_alpha);
       uint8_t a = has_alpha ? buffer[index + bpp] : 255;
-      if (a == 0) continue;
-      
+      if (a == 0)
+        continue;
+
       uint8_t r1;
       uint8_t g1;
       uint8_t b1;
@@ -99,14 +92,13 @@ bool Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uin
         r1 = buffer[index + 0];
         g1 = buffer[index + 1];
         b1 = buffer[index + 2];
+      } else {
+        Image::rgb565be_to_rgb888(*((uint16_t*) (buffer + index)), r1, g1, b1);
       }
-      else {
-        Image::rgb565be_to_rgb888(*((uint16_t*)(buffer + index)), r1, g1, b1);
-      }
-      
+
       int xr, yr;
       xy_rotate(xr, yr, x, y, width, height, rotate_cw);
-      
+
       int x1 = xr + offset_x;
       int y1 = yr + offset_y;
 
@@ -119,18 +111,17 @@ bool Display::draw_image_newcolor(const Image* image, COLOR_FUNC color_func, uin
   return true;
 }
 
-
-bool Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode, 
-  int offset_x, int offset_y, int w, int h, int source_x, int source_y, int rotate_cw) {
-
+bool Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, uint8_t param, DRAW_MODE draw_mode,
+                                     int offset_x, int offset_y, int w, int h, int source_x, int source_y,
+                                     int rotate_cw) {
   if (image == nullptr) {
     TF_LOGE(TAG, "image draw failed (nullptr).");
     return false;
   }
 
   auto image_width = image->getWidth();
-  auto width = std::min(w, (int)image_width);
-  auto height = std::min(h, (int)image->getHeight());
+  auto width = std::min(w, (int) image_width);
+  auto height = std::min(h, (int) image->getHeight());
   auto bpp = image->getBpp();
   auto has_alpha = image->getHasAlpha();
   auto buffer = image->getBuffer();
@@ -139,8 +130,9 @@ bool Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, 
     for (int x = 0; x < width; x++) {
       int index = ((y + source_y) * image_width + (x + source_x)) * (bpp + has_alpha);
       uint8_t a = has_alpha ? buffer[index + bpp] : 255;
-      if (a == 0) continue;
-      
+      if (a == 0)
+        continue;
+
       uint8_t r1;
       uint8_t g1;
       uint8_t b1;
@@ -149,14 +141,13 @@ bool Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, 
         r1 = buffer[index + 0];
         g1 = buffer[index + 1];
         b1 = buffer[index + 2];
+      } else {
+        Image::rgb565be_to_rgb888(*((uint16_t*) (buffer + index)), r1, g1, b1);
       }
-      else {
-        Image::rgb565be_to_rgb888(*((uint16_t*)(buffer + index)), r1, g1, b1);
-      }
-      
+
       int xr, yr;
       xy_rotate(xr, yr, x, y, width, height, rotate_cw);
-      
+
       int x1 = xr + offset_x;
       int y1 = yr + offset_y;
 
@@ -169,5 +160,4 @@ bool Display::draw_image_newcolor_ex(const Image* image, COLOR_FUNC color_func, 
   return true;
 }
 
-
-};
+};  // namespace toaster
