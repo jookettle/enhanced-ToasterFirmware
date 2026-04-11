@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, chore/pin-lib-deps]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, chore/pin-lib-deps]
 
 jobs:
   lint:
